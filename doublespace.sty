@@ -1,0 +1,151 @@
+%-------------------------------------------------------------------------------
+%
+% LaTeX Document style option "doublespace"
+% -- usage:  \documentstyle[...,doublespace,...]{...}
+%
+% This style option produces a double-spaced document by redefining
+% the LaTeX parameter \baselinestretch to 2.
+%
+% It also fixes a number of problems with standard LaTeX, as follows:
+%
+% 1. A new environment "singlespace" is provided, within which single
+%    spacing will apply.
+%    JFL - changed so that it works in regular text and so that vertical
+%    space is before and after is correctly computed
+% 2. Double spacing is turned off within footnotes and floats (figures
+%    and tables).
+% 3. Proper double spacing happens below tabular environments and in other
+%    places where LaTeX uses a strut.
+% 4. Slightly more space is inserted before footnotes.
+% 5. JFL - fixes spacing before and after displayed math
+%
+% Note: This version sets a baselinestretch of 2. If this is too much,
+%    put  \setstretch{1.7}  (or some appropriate value) before the
+%    \begin{document} command. To print the document with single spacing
+%    again, without removing "singlespace" environments, just put a
+%    \setstretch{1} at the top of the document.
+%
+% PLEASE REPORT ANY BUGS
+%
+% Modified by: Jean-Francois Lamy
+%                          lamy@ai.toronto.edu
+%                          lamy@utai.uucp
+%
+% Author: Stephen Page  -- sdpage@prg.oxford.ac.uk
+%                          sdpage%prg.oxford.ac.uk@cs.ucl.ac.uk
+%
+% Release date: 6 July 1986 - September 3, 1986
+%
+% Known bugs:
+%    . It might be nice if spacing before the footnote rule (\footins)
+%      were provided in a tidier way.
+%    . Increasing struts may possibly cause some other obscure part of
+%      formatting to fall over.
+%    . \begin{singlespace}\begin{quote} produces the wrong spacing before
+%      the quote (extra glue is inserted).
+%    . shouldn't @setsize stretch parskip as well?
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%---Set up double spacing
+
+\def\baselinestretch{2}
+
+
+%---New command "\setstretch" (slightly more mnemonic... and easier to type)
+
+\def\setstretch#1{\renewcommand{\baselinestretch}{#1}}
+
+%---Stretch the baseline BEFORE calculating the strut size. This improves
+%   spacing below tabular environments etc., probably...
+%   Comments are welcomed.
+
+\def\@setsize#1#2#3#4{\@nomath#1%
+   \let\@currsize#1\baselineskip
+   #2\baselineskip\baselinestretch\baselineskip
+   \parskip\baselinestretch\parskip
+   \setbox\strutbox\hbox{\vrule height.7\baselineskip
+      depth.3\baselineskip width\z@}%
+   \normalbaselineskip\baselineskip#3#4}
+
+
+%---Increase the space between last line of text and footnote rule.
+%   This is a very untidy way to do it!
+
+\skip\footins 20pt plus4pt minus4pt
+
+
+%---Reset baselinestretch within footnotes and floats. Originally stolen
+%   from Stanford thesis style.
+
+\def\@xfloat#1[#2]{\ifhmode \@bsphack\@floatpenalty -\@Mii\else
+   \@floatpenalty-\@Miii\fi\def\@captype{#1}\ifinner
+      \@parmoderr\@floatpenalty\z@
+    \else\@next\@currbox\@freelist{\@tempcnta\csname ftype@#1\endcsname
+       \multiply\@tempcnta\@xxxii\advance\@tempcnta\sixt@@n
+       \@tfor \@tempa :=#2\do
+                        {\if\@tempa h\advance\@tempcnta \@ne\fi
+                         \if\@tempa t\advance\@tempcnta \tw@\fi
+                         \if\@tempa b\advance\@tempcnta 4\relax\fi
+                         \if\@tempa p\advance\@tempcnta 8\relax\fi
+         }\global\count\@currbox\@tempcnta}\@fltovf\fi
+    \global\setbox\@currbox\vbox\bgroup 
+    \def\baselinestretch{1}\small\normalsize
+    \boxmaxdepth\z@
+    \hsize\columnwidth \@parboxrestore}
+\long\def\@footnotetext#1{\insert\footins{\def\baselinestretch{1}\footnotesize
+    \interlinepenalty\interfootnotelinepenalty 
+    \splittopskip\footnotesep
+    \splitmaxdepth \dp\strutbox \floatingpenalty \@MM
+    \hsize\columnwidth \@parboxrestore
+   \edef\@currentlabel{\csname p@footnote\endcsname\@thefnmark}\@makefntext
+    {\rule{\z@}{\footnotesep}\ignorespaces
+      #1\strut}}}
+
+% Stolen from MIT.
+%
+% A single spaced quote (say) is done by surrounding singlespace with quote.
+%
+\def\singlespace{%
+\vskip\parskip%
+\vskip\baselineskip%
+\def\baselinestretch{1}%
+\ifx\@currsize\normalsize\@normalsize\else\@currsize\fi%
+\vskip-\parskip%
+\vskip-\baselineskip%
+}
+
+\def\endsinglespace{\par}
+
+%  spacing, doublespace and onehalfspace all are meant to INCREASE the
+%  spacing (i.e. calling onehalfspace from within doublespace will not
+%  produce a graceful transition between spacings)
+%
+\def\spacing#1{\par%
+ \def\baselinestretch{#1}%
+ \ifx\@currsize\normalsize\@normalsize\else\@currsize\fi}
+
+\def\endspacing{\par%
+ \vskip \parskip%
+ \vskip \baselineskip%
+ \endgroup%
+ \vskip -\parskip%
+ \vskip -\baselineskip%
+ \begingroup}
+
+\def\onehalfspace{\spacing{1.5}}
+\let\endonehalfspace=\endspacing
+
+\def\doublespace{\spacing{2}}
+\let\doublespace=\endspacing
+
+% Fix up spacing before and after displayed math
+% (arraystretch seems to do a fine job for inside LaTeX displayed math,
+% since array and eqnarray seem to be affected as expected)
+% Changing \baselinestretch and doing a font change also works if done here,
+% but then you have to change @setsize to remove the call to @nomath)
+%
+\everydisplay{
+   \abovedisplayskip \baselinestretch\abovedisplayskip%
+   \belowdisplayskip \abovedisplayskip%
+   \abovedisplayshortskip \baselinestretch\abovedisplayshortskip%
+   \belowdisplayshortskip  \baselinestretch\belowdisplayshortskip}

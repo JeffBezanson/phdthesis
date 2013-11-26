@@ -1,0 +1,19 @@
+The "algorithms" bundle provides two environments, "algorithmic" and
+"algorithm", which are designed to be used together but may be used
+separately.
+
+The "algorithmic" environment provides an environment for describing
+algorithms and the "algorithm" environment provides a "float" wrapper
+for algorithms (implemented using "algorithmic" or some other method at
+the author's option).
+
+The reason that two environments are provided is to allow the author
+maximum flexibility.
+
+The algorithms bundle is (currently) licensed under the Lesser GPL
+license, which is a Free Software license. It may, in the future, be
+released under the standard LaTeX license (the Latex Project Public
+License).
+
+
+ -- Rogério Brito <rbrito@users.berlios.de>  Fri,  2 Jun 2006 21:54:10 -0300

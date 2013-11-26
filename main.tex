@@ -1,0 +1,67 @@
+% -*- Mode:TeX -*-
+
+%% The documentclass options along with the pagestyle can be used to generate
+%% a technical report, a draft copy, or a regular thesis.  You may need to
+%% re-specify the pagestyle after you \include  cover.tex.  For more
+%% information, see the first few lines of mitthesis.cls. 
+
+\documentclass[12pt]{mitthesis}
+\usepackage{lgrind}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+\usepackage{stmaryrd}
+\usepackage{amsmath}
+\usepackage{amsopn}
+\usepackage[nottoc]{tocbibind}
+\pagestyle{plain}
+
+\DeclareMathOperator{\find}{find}
+\DeclareMathOperator{\conform}{conform}
+\DeclareMathOperator{\subtype}{subtype}
+\DeclareMathOperator{\typeof}{typeof}
+\DeclareMathOperator{\eval}{eval}
+\DeclareMathOperator{\interpret}{interpret}
+\DeclareMathOperator{\incomplete}{incomplete}
+%\DeclareMathOperator{\choose}{choose}
+\DeclareMathOperator{\length}{length}
+\DeclareMathOperator{\recall}{recall}
+%\DeclareMathOperator{\empty}{empty}
+\DeclareMathOperator{\tail}{tail}
+\DeclareMathOperator{\Frame}{Frame}
+\DeclareMathOperator{\extend}{extend}
+\DeclareMathOperator{\super}{super}
+\DeclareMathOperator{\p}{p}
+\DeclareMathOperator{\last}{last}
+\DeclareMathOperator{\typename}{typename}
+\DeclareMathOperator{\intersect}{intersect}
+\DeclareMathOperator{\formals}{formals}
+\DeclareMathOperator{\superdecl}{super\_decl}
+
+%% This bit allows you to either specify only the files which you wish to
+%% process, or `all' to process all files which you \include.
+%% Krishna Sethuraman (1990).
+
+%\typein [\files]{Enter file names to process, (chap1,chap2 ...), or `all' to
+%process all files:}
+%\def\all{all}
+%\ifx\files\all \typeout{Including all files.} \else \typeout{Including only \files.} \includeonly{\files} \fi
+
+\begin{document}
+
+\include{cover}
+\pagestyle{plain}
+\include{contents}
+\include{chap1}
+\include{chap2}
+\include{chap3}
+\include{chap4}
+\include{chap5}
+\include{chap6}
+\include{chap7}
+\begin{singlespace}
+\include{biblio}
+\end{singlespace}
+%\appendix
+%\include{appa}
+%\include{appb}
+\end{document}

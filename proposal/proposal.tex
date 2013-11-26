@@ -1,0 +1,161 @@
+\documentclass[12pt]{article}
+\usepackage{ifthen,fullpage}
+\pagestyle{empty}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Fill in the following information and compile to create your very
+% own EECS thesis proposal.  Thesis not included.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\def\author{} 
+\def\addressone{} 
+\def\addresstwo{}
+
+\def\supervisor{}
+\def\readerone{}
+\def\readertwo{}
+
+\def\title{}
+\def\expectedcompletetiondate{}
+\def\briefproblemstatement{
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Macros and whatnot to generate all the forms. 
+% Macros written by David Liben-Nowell; last modified 7 February 2005.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1em}
+\def\signatureline{\rule{2.5in}{0.25pt}}
+
+\def\mitheader#1{
+\begin{center}
+  \textsc{massachusetts institute of technology}\\
+  Department of Electrical Engineering and Computer Science\\
+  Cambridge, Massachusetts~~02139\\[2ex]
+  
+  \textbf{#1}
+\end{center}
+}
+
+\def\tofromheader#1{
+
+\begin{tabular}{ll}
+To:  & Department Graduate Committee \\
+From: & #1 \\
+\end{tabular}
+
+}
+
+\def\thesisinformationblock#1#2{
+
+The program outlined in the proposal
+
+\begin{tabular}{ll}
+Title:   & \title \\
+Author:  & \author \\
+Date:    & \today 
+\ifthenelse{\equal{#2}{1}}
+{\\
+Supervisor: & \supervisor \\
+Other Reader: & #1 
+}{}
+\end{tabular}
+
+is adequate for a Doctoral thesis.  
+}
+
+\def\signatureblock{
+
+\bigskip
+
+\hfill\begin{tabular}{ll}
+  Signed:& \signatureline \\[2.5ex]
+  Title: & \signatureline \\[2.5ex]
+  Date:  & \signatureline \\
+\end{tabular}
+
+\bigskip
+
+Comments:
+
+}
+
+
+
+\def\readeragreementform#1#2{
+\mitheader{Doctoral Thesis Reader Agreement}
+\tofromheader{#1, Thesis Reader}
+\thesisinformationblock{#2}{1}
+I am willing to aid in guiding the
+research and in evaluating the thesis report as a reader.
+\signatureblock
+\newpage
+}
+
+\def\supervisoragreementform{
+\mitheader{Doctoral Thesis Supervision Agreement}
+\tofromheader{\supervisor, Thesis Supervisor}
+\thesisinformationblock{---}{0}
+I believe that appropriate readers for this thesis would be:
+
+\begin{tabular}{ll}
+Reader 1: & \readerone\\
+Reader 2: & \readertwo\\
+\end{tabular}
+
+Facilities and Support for the research outlined in the proposal are
+available.  I am willing to supervise the research and evaluate the
+thesis report.
+\signatureblock
+\newpage }
+
+
+\def\thesisproposalform{
+\begin{center}
+Massachusetts Institute of Technology
+
+Department of Electrical Engineering and Computer Science
+
+\bigskip
+
+Proposal for Thesis Research in Partial Fulfillment
+
+of the Requirements for the Degree of 
+
+Doctor of Philosophy
+\end{center}
+
+\bigskip
+
+Title:  \title
+
+Submitted by: \hfill
+\begin{tabular}[t]{p{0.3\textwidth}p{0.4\textwidth}}
+\author & \signatureline \\
+\addressone & (Signature of author) \\
+\addresstwo \\
+\end{tabular}
+
+Date of submission:  \today
+
+Expected Date of Completion:  \expectedcompletetiondate
+
+Laboratory where thesis will be done: CSAIL
+
+Brief Statement of the Problem:
+
+\briefproblemstatement 
+
+ \newpage }
+
+\begin{document}
+
+\thesisproposalform
+\supervisoragreementform
+\readeragreementform{\readerone}{\readertwo}
+\readeragreementform{\readertwo}{\readerone}
+
+\end{document}
