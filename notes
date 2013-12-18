@@ -1,0 +1,54 @@
+common themes:
+
+goal:
+
+common framework powerful enough to encompass both TC and general-purpose
+programming
+"finding the right abstraction level": prescribing just enough, but not
+so much that programmers feel limited
+
+there is such a thing as "more" abstraction, but what matters is the
+"right" abstraction.
+
+the right abstraction is one where you can specify everything that's
+important to you, but don't have to specify anything else.
+
+the right abstraction does not constrain you from doing
+mathematically valid things.
+
+the right abstraction empowers the user
+
+it's easy to have misconceptions about what the right level is.
+it would be easy for a computer scientist to conclude, for example,
+that scientific users just needed BLAS, or the most popular 200
+matlab functions.
+
+computer scientists are good at adding more abstraction, but the
+difference here is we try to make sure the more powerful abstractions
+can actually do what people want, given the existing popular systems.
+
+
+
+mechanism:
+
+TC is very light on theory and could benefit from more theory
+certain aspects of this theory can be used to redesign TC languages in
+a better way, as opposed to the ad-hoc things that have come before
+
+
+review chapter:
+
+all the things that have been tried, what we have learned, and out of
+that we identify a convex set of the good stuff
+
+the point is not to prove "our way is fastest" of all possible ways
+our thesis statement is not an empirical finding
+
+often too much empiricism in computer systems is not useful;
+there is measurement bias. this goes back to presumptions about what
+the user wants.
+
+counterexample: lots of compiler papers published about how to
+optimize matlab programs. a fine thing to do, but i want to try
+a different approach. our approach to the problem is highly
+under-explored.

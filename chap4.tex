@@ -17,6 +17,9 @@ is of course improved in C++). In Python, a special arrangement is made for
 providing double-dispatch for arithmetic in a language that is idiomatically
 single-dispatch.
 
+Ex: Kahan's point that you don't want to multiply real*complex by
+promoting the real to a complex. Yet with built-in promotion schemes
+you might be stuck with this.
 
 
 \section{Arrays}

@@ -32,6 +32,15 @@ been seriously under-explored.
 
 \section{Domain Theory}
 
+In the 1960s Dana Scott asked how to assign meanings to programs,
+which otherwise just appear to be lists of symbols.
+For example, given a program computing the factorial function, we
+want a process by which we can assign the meaning ``factorial'' to it.
+
+This is about modeling the behavior of a program without running it.
+
+
+
 The idea of analyzing computer programs began in earnest in the 1960s with
 Dana Scott's invention of domain theory. A ``domain'' in this theory is a
 partial order of sets of values that a program might manipulate. 
@@ -43,6 +52,7 @@ way to think about the meaning of a program without running the program.
 Even the ``result'' of a non-terminating program has a representation ---
 the bottom element. Other elements of the partial order might refer to
 intermediate results.
+
 
 Domain theory gave rise to the study of denotational semantics and the
 design of type systems. However, the original theory is quite general

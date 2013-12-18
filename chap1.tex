@@ -21,6 +21,44 @@ designing a new language like R or MATLAB. Designing your own language
 seems like a drastic thing to do, and yet it is unusually common in
 technical computing (see gang of 40).
 
+Unlike in other specialized domains (e.g. CAD software), these users
+are primarily interested in writing programs.
+
+People start out needing a few specialized routines, then eventually
+need ``glue'' of some kind, and eventually need a full language.
+The glue is an afterthought.
+
+Computational scientists often observe that they spend an amazingly
+small percentage of their time on the core computations that
+interest them, and lots of time on glue, verifying results,
+parsing and printing data, etc. This speaks to the need for
+general purpose languages.
+
+People are afraid to reinvent --- SVD etc. are considered black
+boxes not to be touched.
+
+Julia is not a faster matlab; for example a matlab with better
+loop optimizations or the like. Such a thing is fine to have,
+but we would argue it is not what people really need.
+Instead we propose powerful general-purpose abstractions that
+provide what is needed for technical computing as a special case.
+It is a technical computing language because it does *not*
+special case technical computing.
+
+
+At a very low level, the kinds of behaviors technical users expect
+from their languages do not match computer scientists' preconceptions
+of how languages should work.
+
+You should be able to define the meanings you want, not have them
+imposed on you.
+
+
+\section{Why a new language?}
+
+You cannot implement MATLAB arrays in C++ with the same level of
+convenience.
+
 %%
 
 Our goal is to declaratively specify the behaviors of abstractions
@@ -76,3 +114,5 @@ Prediction: the next ARPACK like thing will have one tenth the number
 of lines and have many more innovations and contributors (BLAS and
 lapack already have 4x redundancy thanks to single, double, complex,
 double complex repetition of routines)
+
+\section{Contributions of this thesis}
