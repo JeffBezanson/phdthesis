@@ -1,1 +1,78 @@
 \chapter{Introduction}
+
+The first high-level language, FORTRAN, was for scientific computing.
+
+- why a new language
+- what does or should a language consist of?
+- what can be done for this problem at the language level of abstraction?
+  - a design like NumPy argues the answer is ``nothing''
+
+Today, object-oriented languages are used for scientific computing
+(particularly C++, Java, and Python). However in our opinion this
+application area has not fully explored the possibilities of OOP. In
+particular, generic functions have been one of the least popular
+OO concepts and yet, we will argue, are the most relevant to scientific
+computing.
+
+It is clear that scientific and technical users have their own particular
+needs. So far there have been two paths available for fulfilling these
+needs: using a mainstream general-purpose language like C++ or Java, or
+designing a new language like R or MATLAB. Designing your own language
+seems like a drastic thing to do, and yet it is unusually common in
+technical computing (see gang of 40).
+
+%%
+
+Our goal is to declaratively specify the behaviors of abstractions
+important to scientific computing, in a way that can be executed
+efficiently and is arguably easy to write.
+
+By ``declaratively'', we mean in a manner that a compiler can
+realistically understand. All the behaviors we are interested in
+could of course be implemented with, say, imperative code, and indeed
+this is what has been done before, either inside a compiler, or inside
+an interpreter, or in a library for a sufficiently flexible language.
+These approaches have serious drawbacks. Implementing behaviors
+inside a compiler is effective for generating efficient code, but
+does not provide a way for users to easily implement their *own*
+behaviors. Imperative code inside an interpreter or library, on the other hand,
+does not provide a clear path to efficient execution. In theory, a
+partial evaluator could solve this problem, and this approach has been
+tried (REF). After adding minor annotations to a program, partial evaluation
+can work well. However, the biggest downside might be opacity: it is
+difficult to tell users how to write their code for the partial
+evaluator to be effective. We wish to try a different approach, that
+(1) permits a simpler performance model, and (2) stands a decent chance
+of being exploited *by accident* (i.e. users will tend to follow the performance
+model without much effort).
+
+
+Our method for doing this is generic functions with rich signatures
+(method specializers). Generic functions are rather well studied in the
+OOP literature (REF), but we feel that the kinds of method specializers
+that have been designed before are simply not powerful enough.
+Furthermore, if they are made powerful enough, surprising consequences
+ensue.
+
+
+
+\section{How have times changed?}
+
+Use more memory, different point now in the resource/cost space
+
+In line with the new big data world of today?
+
+Julia is the language where people can and hopefully will collaborate
+to make better programs (different from 1980).
+
+Language has to not just know matrices, but also must be a web server
+and everything in between. (MATLAB knew it was also FFT and graphical,
+but the line was drawn)
+
+Want to get past only the experts knowing how to use arpack, lapack,
+etc.
+
+Prediction: the next ARPACK like thing will have one tenth the number
+of lines and have many more innovations and contributors (BLAS and
+lapack already have 4x redundancy thanks to single, double, complex,
+double complex repetition of routines)

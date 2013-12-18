@@ -1,0 +1,27 @@
+\chapter{The Julia Approach}
+
+This chapter will illustrate how we implement key features of technical computing
+systems using our methodology.
+
+
+\section{Numbers}
+
+Despite their apparent simplicity, numbers in fact tend to be among the most
+complex features of a language. Numeric types usually need to be a special
+case: in a typical language with built-in numeric types, describing their
+behavior is beyond the expressive power of the language itself. For example,
+in C arithmetic operators like \texttt{+} accept multiple types of arguments
+(ints and floats), but no user-defined C function can do this (this situation
+is of course improved in C++). In Python, a special arrangement is made for
+\texttt{+} to call either an \texttt{\_\_add\_\_} or \texttt{\_\_radd\_\_} method, effectively
+providing double-dispatch for arithmetic in a language that is idiomatically
+single-dispatch.
+
+
+
+\section{Arrays}
+
+
+
+\section{Units}
+

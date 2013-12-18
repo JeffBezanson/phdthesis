@@ -1,0 +1,106 @@
+\chapter{Implementation}
+
+
+\section{Classification of languages}
+
+It is helpful to begin with a rather coarse classification of programming
+languages, according to how expressive their type systems are, and whether
+their type systems are dynamic or static:
+\\
+\begin{tabular}{|c||c|c|}
+\hline 
+ & More types & Fewer types\tabularnewline
+\hline 
+\hline 
+Dynamic & Dylan, Julia & Scheme, Python, MATLAB\tabularnewline
+\hline 
+Static & ML, Haskell, Scala & C\tabularnewline
+\hline 
+\end{tabular}
+\\
+
+The lower right corner tend to contain older languages. The upper right corner
+contains many popular ``dynamic'' languages. The lower left corner contains
+many modern languages resulting from research on static type systems.
+We are most interested in the upper left corner, which is notable for being
+rather sparsely populated. It has been generally believed that dynamic
+languages do not ``need'' types, or that there is no point in talking about
+types if they are not going to be checked at compile time. These views have
+some merit, but as a result the top-left corner of this design space has
+been seriously under-explored.
+
+
+\section{Domain Theory}
+
+The idea of analyzing computer programs began in earnest in the 1960s with
+Dana Scott's invention of domain theory. A ``domain'' in this theory is a
+partial order of sets of values that a program might manipulate. 
+Domain theory models computation as follows: a program starts with no
+information, the lowest point in the partial order (``bottom'').
+Computation steps accumulate information, gradually moving higher through
+the order. The advantage of this model, in essence, is that it provides a
+way to think about the meaning of a program without running the program.
+Even the ``result'' of a non-terminating program has a representation ---
+the bottom element. Other elements of the partial order might refer to
+intermediate results.
+
+Domain theory gave rise to the study of denotational semantics and the
+design of type systems. However, the original theory is quite general
+and invites us to invent any domains we wish for any sort of language.
+For example, given a program that outputs an integer, we might decide
+that we only care whether this integer is even or odd. Then our posets
+are the even and odd integers, and we will classify operations in the
+program according to whether they are evenness-preserving and so on.
+It should be clear that this sort of analysis, while clearly related
+to type systems, is fairly different from what most programmers
+think of as type checking.
+
+
+
+
+\section{Dynamic type inference}
+
+This is exciting because the type system can do useful computational work for you,
+instead of only checking the work done by the rest of the program.
+
+Joins of quantified types
+
+``Diagonal dispatch''
+
+(T,T) (Int, Real)
+
+\textbackslash{}(Int,Int)/
+
+Avoid hard coding logic into the compiler.
+
+
+Exposing to the user what is part of the language anyway and not just
+hiding it in the compiler.
+
+Data flow analysis has to actually work
+
+Taking things out of the language that break dataflow analysis
+
+Local reasoning
+
+You are imposing a type system anyway, even implicitly perhaps, so
+might as well make that from the get-go.
+
+
+\section{Objections to dynamic typing and counterarguments}
+
+
+it may be that the ``power'' of a language is equal to the complexity
+of the criteria used by the language's run-time dispatch mechanisms.
+
+pre-OO: pointer indirection
+OO: single dispatch, class hierarchies
+
+Haskell: without typeclasses, a beautiful language, but one that nobody
+would use.
+
+I claim that compile-time abstractions do not count. The problem is that
+at some point you have to *actually run the program*. Specifying the
+behavior of a program is hard; this is where we need help from the
+language.
+
