@@ -13,22 +13,63 @@ cmp, lexcmp, vs isless, <
 
 \section{Numbers}
 
-- Numbers are an abstraction 
+We might prefer ``number'' to be a single,
+concrete concept, but the history of mathematics has seen the concept
+extended many times, from integers to rationals to reals, and then to complex,
+quaternion, and more. These constructions tend to follow a pattern: a new set
+of numbers is constructed around a subset isomorphic to an existing set of
+numbers. For example, the reals are isomorphic to the complex numbers with
+zero imaginary part.
 
-Despite their apparent simplicity, numbers in fact tend to be among the most
+Human beings happen to be good at equating and moving between isomorphic sets,
+so it is easy to imagine that the reals and complexes with zero imaginary
+part are one and the same. But a computer forces us to be specific, and admit
+that a real number is not complex, and a complex number is not real. And yet
+the close relationship between them is too compelling not to model in a
+computer somehow. Here we have a numerical analog to the famous ``circle and
+ellipse'' problem in object-oriented programming: the set of circles is
+isomorphic to the set of ellipses with equal axes, yet neither ``is a''
+relationship in a class hierarchy seems fully correct. An ellipse is not
+a circle, and in general a circle cannot serve as an ellipse (for example,
+the set of circles is not closed under the same operations that the set of
+ellipses is, so a program written for ellipses might not work on circles).
+This problem implies that a single built-in type hierarchy is not
+sufficient: we want to model custom *kinds* of relationships between
+types (e.g. ``can be embedded in'' in addition to ``is a'').
+
+Two further problems should also be kept in mind. First, the natural isomorphisms
+between sets of numbers might not be isomorphisms on a real computer. For example,
+due to the behavior of floating-point arithmetic, an operation on complex numbers
+with zero imaginary part might not give an answer equal to the same operation on
+real numbers. Second, the contexts that demand use of one type of number or
+another are often not easily described by type systems. The classic example is
+square root (\texttt{sqrt}), whose result is complex for negative arguments.
+Including a number's sign in its type is a possibility, but this quickly gets
+out of hand --- should a type system attempt to prove a matrix symmetric before
+we compute its eigenvalues? While we cannot offer a once-and-for-all solution
+to these problems, we will show how the flexibility of our proposed mechanism
+is useful for addressing them.
+
+
+\subsection{Implementing type embeddings}
+
+
+
+\subsection{Current approaches}
+
+Numbers tend to be among the most
 complex features of a language. Numeric types usually need to be a special
 case: in a typical language with built-in numeric types, describing their
 behavior is beyond the expressive power of the language itself. For example,
 in C arithmetic operators like \texttt{+} accept multiple types of arguments
 (ints and floats), but no user-defined C function can do this (this situation
 is of course improved in C++). In Python, a special arrangement is made for
-\texttt{+} to call either an \texttt{\_\_add\_\_} or \texttt{\_\_radd\_\_} method, effectively
-providing double-dispatch for arithmetic in a language that is idiomatically
-single-dispatch.
+\texttt{+} to call either an \texttt{\_\_add\_\_} or \texttt{\_\_radd\_\_} method,
+effectively providing double-dispatch for arithmetic in a language that is
+idiomatically single-dispatch.
 
-Ex: Kahan's point that you don't want to multiply real*complex by
-promoting the real to a complex. Yet with built-in promotion schemes
-you might be stuck with this.
+
+
 
 
 \section{Arrays}
