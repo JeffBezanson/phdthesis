@@ -1,8 +1,57 @@
 \chapter{Introduction}
 
-The first high-level language, FORTRAN, was for scientific computing.
+people had pretty good ideas of certain things they wanted
+and they had piles of existing software
+the recognized something they could use, e.g. python on C, and just ran
+with it. it was never designed
 
-- why a new language
+
+1. technical computing
+
+- the power of abstraction
+- why they never asked
+  . the current VHLLs must have gotten something right, but it doesn't have
+    to be done the exact way they do it
+  . SC vs. CS
+  . ¶ about T.C. not being about just arrays, but flexibility
+
+- the remedy (``contributions of this thesis''), the breakthrough
+
+problem of finding connections between array programming and OOP.
+array programming is a powerful paradigm for describing computational
+kernels operating over potentially large amounts of data.
+
+
+2. analysis of abstraction
+
+- current abstractions that work well
+  . matrices
+  . blockbuster library calls (fft, lapack, blas)
+  . composability of calls via key built-in types
+  . dynamic typing
+
+- pushing it further -- what doesn't work well
+  . bad abstractions => productivity problems
+  . compile-time overloading, weak overloading, single dispatch,
+    everything-is-a-dictionary, etc.
+
+- performance through abstraction
+
+there are 2 ways to design a language: (1) provide simple efficient abstractions
+and build out of that, or (2) provide bigger abstractions more directly useful
+to a domain expert. (2) often appears to work well, but in fact only approach
+(1) is truly viable.
+
+3. julia (technical, innovations)
+
+- language design space
+- the many multiple dispatches
+- case studies, examples
+
+
+4. julia (social/vision)
+
+
 - what does or should a language consist of?
 - what can be done for this problem at the language level of abstraction?
   - a design like NumPy argues the answer is ``nothing''
@@ -14,8 +63,6 @@ particular, generic functions have been one of the least popular
 OO concepts and yet, we will argue, are the most relevant to scientific
 computing.
 
-
-What is common between CS and SC? 
 
 What do we mean by a \emph{language} for scientific computing?
 The prevailing
@@ -55,7 +102,7 @@ general purpose languages.
 People are afraid to reinvent --- SVD etc. are considered black
 boxes not to be touched.
 
-Julia is not a faster matlab; for example a matlab with better
+We don't just need a faster matlab; for example a matlab with better
 loop optimizations or the like. Such a thing is fine to have,
 but we would argue it is not what people really need.
 Instead we propose powerful general-purpose abstractions that

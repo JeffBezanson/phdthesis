@@ -30,6 +30,38 @@ some merit, but as a result the top-left corner of this design space has
 been seriously under-explored.
 
 
+\section{Multiple dispatch}
+
+CHART of different multiple dispatches. classify them
+
+Why ``just overloading'' is not enough. You intercept every operation and
+rewrite it, kind of an escape hatch for a language you don't like. If
+somebody else also tries to do this, there won't necessarily be any
+coherence.
+
+
+A helpful way to classify languages with some kind of generic programming
+support is to look at which language constructs are generic. For example,
+in C++ the syntax \texttt{object.method(x)} is generic: a programmer can
+get it to do different things by supplying different values for
+\texttt{object}. The C++ syntax \texttt{f(a,b)} or \texttt{a+b} is
+usually not generic, but can be overloaded by supplying definitions for
+different argument types. However, this overloading only uses compile-time
+types (no run-time information), and so is essentially a form of renaming ---
+it can be implemented by renaming each definition with a unique name, and
+replacing overloaded calls with an appropriate name based on compile-time
+types. This is a much weaker form of generic programming, since different
+behaviors cannot be obtained by passing different values at run time.
+
+For this reason, C++ programs are not fully generic: it is difficult to
+substitute new behaviors for every part of a program. Some languages
+take generic programming much further. For example, in MATLAB, \emph{every}
+function is effectively generic, and can be overloaded by new classes.
+This enables a programmer to ``intercept'' every function call (and therefore,
+essentially everything a program does)
+
+
+
 \section{Domain Theory}
 
 In the 1960s Dana Scott asked how to assign meanings to programs,
