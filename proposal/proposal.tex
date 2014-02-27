@@ -1,5 +1,5 @@
 \documentclass[12pt]{article}
-\usepackage{ifthen,fullpage}
+\usepackage{fullpage}
 \pagestyle{empty}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -7,17 +7,26 @@
 % own EECS thesis proposal.  Thesis not included.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\def\author{} 
-\def\addressone{} 
+\def\author{Jeffrey Werner Bezanson}
+\def\addressone{}
 \def\addresstwo{}
 
-\def\supervisor{}
-\def\readerone{}
-\def\readertwo{}
+\def\supervisor{Alan Edelman}
 
-\def\title{}
-\def\expectedcompletetiondate{}
+\def\title{Abstraction in Technical Computing}
+\def\expectedcompletetiondate{May 2, 2014}
 \def\briefproblemstatement{
+
+Domain-specific array-based programming languages are highly popular for
+scientific and general technical computing. Despite the development of
+increasingly powerful general-purpose languages, achieving the
+combination of flexibility, convenience, and performance needed for
+technical computing has remained elusive, and so the domain-specific languages
+remain popular. In this thesis I propose a novel design 
+
+
+
+
 }
 
 
@@ -49,68 +58,6 @@ From: & #1 \\
 
 }
 
-\def\thesisinformationblock#1#2{
-
-The program outlined in the proposal
-
-\begin{tabular}{ll}
-Title:   & \title \\
-Author:  & \author \\
-Date:    & \today 
-\ifthenelse{\equal{#2}{1}}
-{\\
-Supervisor: & \supervisor \\
-Other Reader: & #1 
-}{}
-\end{tabular}
-
-is adequate for a Doctoral thesis.  
-}
-
-\def\signatureblock{
-
-\bigskip
-
-\hfill\begin{tabular}{ll}
-  Signed:& \signatureline \\[2.5ex]
-  Title: & \signatureline \\[2.5ex]
-  Date:  & \signatureline \\
-\end{tabular}
-
-\bigskip
-
-Comments:
-
-}
-
-
-
-\def\readeragreementform#1#2{
-\mitheader{Doctoral Thesis Reader Agreement}
-\tofromheader{#1, Thesis Reader}
-\thesisinformationblock{#2}{1}
-I am willing to aid in guiding the
-research and in evaluating the thesis report as a reader.
-\signatureblock
-\newpage
-}
-
-\def\supervisoragreementform{
-\mitheader{Doctoral Thesis Supervision Agreement}
-\tofromheader{\supervisor, Thesis Supervisor}
-\thesisinformationblock{---}{0}
-I believe that appropriate readers for this thesis would be:
-
-\begin{tabular}{ll}
-Reader 1: & \readerone\\
-Reader 2: & \readertwo\\
-\end{tabular}
-
-Facilities and Support for the research outlined in the proposal are
-available.  I am willing to supervise the research and evaluate the
-thesis report.
-\signatureblock
-\newpage }
 
 
 \def\thesisproposalform{
@@ -154,8 +101,5 @@ Brief Statement of the Problem:
 \begin{document}
 
 \thesisproposalform
-\supervisoragreementform
-\readeragreementform{\readerone}{\readertwo}
-\readeragreementform{\readertwo}{\readerone}
 
 \end{document}

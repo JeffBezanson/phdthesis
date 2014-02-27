@@ -70,9 +70,76 @@ idiomatically single-dispatch.
 
 
 
-
-
 \section{Arrays}
+
+One-dimensional arrays are a simple and essential data structure found in
+most programming languages. The multi-dimensional arrays required in
+scientific computing, however, are a different beast entirely. Allowing
+any number of dimensions entails a significant increase in complexity. Why?
+The essential reason is that core properties of the data structure no
+longer fit in a constant amount of space. The space needed to store the
+sizes of the dimensions (the array shape) is proportional to the number
+of dimensions. This does not seem so bad, but becomes a large problem
+due to three additional facts. First, code that operates on the dimension
+sizes needs to be highly efficient. Typically the overhead of a loop is
+unacceptable, and such code needs to be fully unrolled. Second, in some
+code the number of dimensions is a \emph{dynamic} property --- it is
+only known at run time. Third, programs may wish to treat arrays with
+different numbers of dimensions very differently. A vector (1d) might
+have rather different behaviors than a matrix (2d). This kind of
+behavior makes the number of dimensions a crucial part of program
+semantics, preventing it from remaining a compiler implementation detail.
+
+These facts pull in opposite directions. The first fact asks for static
+analysis. The second fact asks for run-time flexibility. The third fact asks
+for dimensionality to be part of the type system, but partly determined
+at run time (for example, via virtual method dispatch). Current approaches
+choose a compromise. In some systems, the number of dimensions has a strict
+limit (e.g. 3 or 4), so that separate classes for each case may be written
+out in full. Other systems choose flexibility, and just accept that most
+or all operations will be dynamically dispatched. Other systems might
+provide flexibility only at compile time, for example a template library
+where the number of dimensions must be statically known.
+
+Whatever decision is made, rules must be defined for how various operators
+act on dimensions. For now we will focus on indexing, since selecting
+parts of arrays has particularly rich behavior with respect to
+dimensionality. For example, if a single row or column of a matrix is
+selected, does the result have one or two dimensions? Array implementations
+prefer to invoke general rules to answer such questions. Such a rule might
+say ``dimensions indexed with scalars are dropped'', or ``trailing
+dimensions of size one are dropped''.
+
+How are such rules implemented? For a
+language with built-in multidimensional arrays, the compiler will
+analyze indexing expressions and determine an answer using hard-coded
+logic. However, this approach is not satisfying: we would rather
+implement the behavior in libraries, so that different kinds of arrays
+may be defined, or so that rules of similar complexity may be
+defined for other kinds of objects. But these kinds of rules are
+unusually difficult to implement in libraries. If a library writes out
+its indexing logic using imperative code, the host language compiler
+is not likely to be able to analyze it. Using compile-time abstracton
+(templates) would provide better performance, but such libraries tend
+to be difficult to write (and read), and the full complement of
+indexing behavior expected by technical users strains the capabilities
+of such systems.
+
+Our dispatch mechanism permits a novel solution.
+
+\begin{verbatim}
+# drop all scalars
+index_shape() = ()
+index_shape(i::Real, I...) = index_shape(I...)
+index_shape(i, I...) = tuple(length(i), index_shape(I...)...)
+\end{verbatim}
+
+
+\begin{verbatim}
+# drop trailing scalars
+index_shape(i::Real...) = ()
+index_shape(i, I...) = tuple(length(i), index_shape(I...)...)
+\end{verbatim}
 
 
 
