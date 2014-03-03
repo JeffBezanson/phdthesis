@@ -90,7 +90,7 @@ have rather different behaviors than a matrix (2d). This kind of
 behavior makes the number of dimensions a crucial part of program
 semantics, preventing it from remaining a compiler implementation detail.
 
-These facts pull in opposite directions. The first fact asks for static
+These facts pull in different directions. The first fact asks for static
 analysis. The second fact asks for run-time flexibility. The third fact asks
 for dimensionality to be part of the type system, but partly determined
 at run time (for example, via virtual method dispatch). Current approaches
@@ -108,7 +108,8 @@ dimensionality. For example, if a single row or column of a matrix is
 selected, does the result have one or two dimensions? Array implementations
 prefer to invoke general rules to answer such questions. Such a rule might
 say ``dimensions indexed with scalars are dropped'', or ``trailing
-dimensions of size one are dropped''.
+dimensions of size one are dropped'', or ``the rank of the result
+is the sum of the ranks of the indexes'' (as in APL).
 
 How are such rules implemented? For a
 language with built-in multidimensional arrays, the compiler will
@@ -125,20 +126,83 @@ to be difficult to write (and read), and the full complement of
 indexing behavior expected by technical users strains the capabilities
 of such systems.
 
-Our dispatch mechanism permits a novel solution.
+Our dispatch mechanism permits a novel solution. If a multiple dispatch
+system supports variadic functions and argument ``splicing'' (the ability
+to pass a structure of $n$ values as $n$ separate arguments to a function),
+then indexing behavior can be defined as method signatures.
+
+Below we define a function \texttt{index\_shape} that computes the
+shape of a result array given a series of index arguments. There are
+three versions, each implementing a different rule that users in
+different domains might want:
 
 \begin{verbatim}
-# drop all scalars
+# drop dimensions indexed with scalars
 index_shape() = ()
 index_shape(i::Real, I...) = index_shape(I...)
 index_shape(i, I...) = tuple(length(i), index_shape(I...)...)
 \end{verbatim}
 
-
 \begin{verbatim}
-# drop trailing scalars
+# drop trailing dimensions indexed with scalars
 index_shape(i::Real...) = ()
 index_shape(i, I...) = tuple(length(i), index_shape(I...)...)
+\end{verbatim}
+
+\begin{verbatim}
+# rank summing (APL)
+index_shape() = ()
+index_shape(i, I...) = tuple(size(i)..., index_shape(I...)...)
+\end{verbatim}
+
+Inferring the length of the result of \texttt{index\_shape} is sufficient
+to infer the rank of the result array.
+
+These definitions are concise, easy to write, and possible for a
+compiler to understand fully using straightforward techniques.
+
+Here is a sample derivation for the call \texttt{index\_shape(1:m,1,1:n)}
+(the argument type tuple is \texttt{(Range1,Int,Range1)}), using the first
+definition above (drop scalars):
+
+\begin{verbatim}
+index_shape(1:n, 1, 1:m) => tuple(length(::Range1)::Int, index_shape((::Int, ::Range1)...)...)
+
+index_shape((::Int, ::Range1)...) => index_shape(::Int, ::Range1)
+
+index_shape(::Int, ::Range1) => index_shape((::Range1,)...)
+
+index_shape((::Range1,)...) => index_shape(::Range1)
+
+index_shape(::Range1) => tuple(length(::Range1)::Int, index_shape(()...)...)
+
+index_shape(()...) => index_shape()::()
+
+back substitute => tuple(length(::Range1)::Int, index_shape(()...)::()...)::(Int,)
+
+back substitute => tuple(length(::Range1)::Int, ::(Int,)...)
+
+tuple(::Int, ::(Int,)...) => tuple(::Int, ::Int)
+
+::(Int, Int)
+
+\end{verbatim}
+
+The result type is determined using only dataflow type inference, plus a
+rule for splicing an immediate container (the type of \texttt{f((a,b)...)} is
+the type of \texttt{f(a,b)}). Argument list destructuring takes place inside
+the type intersection operator used to combine argument types with method
+signatures.
+
+This approach does not depend on any heuristics. Each call to \texttt{index\_shape}
+simply requires one recursive invocation of type inference. This process reaches
+the base case \texttt{()} for these definitions, since each recursive call
+handles a shorter argument list (for less-well-behaved definitions, we might
+end up invoking a widening operator instead).
+
+
+\begin{verbatim}
+diverge() = randbool() ? () : tuple(1, diverge()...)
 \end{verbatim}
 
 
