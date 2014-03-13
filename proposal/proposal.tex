@@ -17,15 +17,64 @@
 \def\expectedcompletetiondate{May 2, 2014}
 \def\briefproblemstatement{
 
-Domain-specific array-based programming languages are highly popular for
-scientific and general technical computing. Despite the development of
-increasingly powerful general-purpose languages, achieving the
-combination of flexibility, convenience, and performance needed for
-technical computing has remained elusive, and so the domain-specific languages
-remain popular. In this thesis I propose a novel design 
+Array-based programming environments are popular for scientific and
+technical computing.
+These systems consist of built-in function libraries paired with high-level
+languages for interaction.
+It is widely believed that scripting in these languages is necessarily slow,
+and that only heroic feats of engineering can at best partially ameliorate this
+problem.
+
+In this thesis I argue that what is really needed is a more coherent
+structure for this functionality. For this role I propose an abstraction
+based on an extended version of generic functions. The novelty of this
+mechanism is that it is both flexible enough to describe the wide
+variety of behaviors users need in practice, while also providing
+enough information to a compiler to yield good performance.
 
 
+% Technical computing is characterized by great diversity and
+% a rapid pace of change.
 
+% we don't know what people will want in the future, but
+% a good way to try to provide for it is to at least be able
+% to describe and implement what we want now. most systems
+% can't even do this.
+
+%Due to the great diversity and pace of change in technical applications,
+%users would like to be able to extend and modify such systems.
+%However, most of the functionality of these systems is ``built in'',
+%% (rigidly defined?)
+%and difficult to extend in a way that retains good performance.
+
+
+%- adding a coherent structure to all the functionality, not just
+%  an interface on top
+%- develop a new methodology for creating one of these environments,
+%  which extends to using it.
+
+
+% must say something about: the key challenge is to provide the full
+% rich behaviors that users expect.
+
+
+%adding a coherent structure
+%expressing everything with a uniform multimethod paradigm
+%imagining multimethods as a solution to this, it also has to be
+%extended
+%if we extended multimethods in certain ways, they could solve this
+
+%in order to motivate it you have to talk about technical computing,
+%since that use case demands it.
+
+%we want to implement technical computing within a uniform abstract
+%framework. we invented a mechanism for doing that. 
+
+%rather than taking multimethods as a fancy feature, we use it as the
+%structural foundation of the system.
+
+%expressive method signatures are simultaneously useful for the behavior
+%they specify, and for the information they provide the compiler.
 
 }
 

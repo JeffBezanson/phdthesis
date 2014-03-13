@@ -155,6 +155,30 @@ support them.
 dictionaries for everything (python, js) is the wrong default. almost every
 type somebody wants has a fixed number of fields with fixed types.
 
+Python is often described as a good glue language. This
+means it is effectively used as an interface standard, a kind of
+extended C ABI that makes it easier for libraries to interoperate,
+and easier for users to access those libraries. Something as straightforward
+as providing a standard N-dimensional numeric array class (NumPy),
+which does not exist at the level of C, goes a long way.
+
+However, we wish to point out that in this picture, Python is not
+doing as much work as it might first appear. Python does not make
+it easier to implement the functionality inside NumPy, or other
+``under the hood'' scientific libraries. In many cases it creates
+more work, through the need to write wrappers and interfaces
+for native code.
+
+
+Merely being ``dynamic'' (e.g. Python) should not be considered
+the gold standard of flexibility. Although these systems permit
+tricks that can solve otherwise difficult programming problems,
+this is not always the kind of flexibility that is needed.
+When faced with the need to describe many functions with elaborate
+behavior and many cases, one does not primarily need permissiveness,
+but rather powerful and descriptive organizing principles.
+
+
 
 How does Julia break through the 4x-slower-than-C performance barrier?
 

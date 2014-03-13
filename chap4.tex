@@ -54,6 +54,9 @@ is useful for addressing them.
 \subsection{Implementing type embeddings}
 
 
+% ex: generic sum function accumulating result in at least
+% double precision. just using +::T->T->T doesn't work.
+
 
 \subsection{Current approaches}
 
@@ -101,6 +104,10 @@ or all operations will be dynamically dispatched. Other systems might
 provide flexibility only at compile time, for example a template library
 where the number of dimensions must be statically known.
 
+%% TODO: insert example of limited power of C++ array libraries
+
+%% TODO: examples of systems limited to n==3
+
 Whatever decision is made, rules must be defined for how various operators
 act on dimensions. For now we will focus on indexing, since selecting
 parts of arrays has particularly rich behavior with respect to
@@ -110,6 +117,12 @@ prefer to invoke general rules to answer such questions. Such a rule might
 say ``dimensions indexed with scalars are dropped'', or ``trailing
 dimensions of size one are dropped'', or ``the rank of the result
 is the sum of the ranks of the indexes'' (as in APL).
+
+%%%
+Our goal here is a bit unusual: we are not concerned with which rules
+might work best, but merely with how they can be specified, so that
+domain experts can experiment.
+%%%
 
 How are such rules implemented? For a
 language with built-in multidimensional arrays, the compiler will
@@ -132,7 +145,7 @@ to pass a structure of $n$ values as $n$ separate arguments to a function),
 then indexing behavior can be defined as method signatures.
 
 Below we define a function \texttt{index\_shape} that computes the
-shape of a result array given a series of index arguments. There are
+shape of a result array given a series of index arguments. We show
 three versions, each implementing a different rule that users in
 different domains might want:
 
@@ -163,7 +176,7 @@ compiler to understand fully using straightforward techniques.
 
 Here is a sample derivation for the call \texttt{index\_shape(1:m,1,1:n)}
 (the argument type tuple is \texttt{(Range1,Int,Range1)}), using the first
-definition above (drop scalars):
+definition above (dropping scalar-indexed dimensions):
 
 \begin{verbatim}
 index_shape(1:n, 1, 1:m) => tuple(length(::Range1)::Int, index_shape((::Int, ::Range1)...)...)
