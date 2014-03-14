@@ -25,6 +25,15 @@ an ``object system'' in this context is often considered a separate
 part of the language, to be used only when arrays no longer
 suffice.
 
+technical computing systems have an unusually large amount of
+``failure of abstraction'' --- manual duplication of facts
+all over the system. imagine changing from column-major to
+row-major.
+
+it may be true, as a practical matter, that we as a species need to agree on
+one set of rules and stick to it. however this shouldn't be forced by
+technical limitations.
+
 
 2. analysis of abstraction
 
@@ -161,6 +170,9 @@ that have been designed before are simply not powerful enough.
 Furthermore, if they are made powerful enough, surprising consequences
 ensue.
 
+
+We don't want to focus on compiler implementation tricks. We want a
+design such that fancy compiler and implementation tricks are not necessary.
 
 
 \section{How have times changed?}

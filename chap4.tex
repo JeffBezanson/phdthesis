@@ -83,16 +83,21 @@ The essential reason is that core properties of the data structure no
 longer fit in a constant amount of space. The space needed to store the
 sizes of the dimensions (the array shape) is proportional to the number
 of dimensions. This does not seem so bad, but becomes a large problem
-due to three additional facts. First, code that operates on the dimension
+due to three additional facts.
+
+% TODO: break up using enumerate
+First, code that operates on the dimension
 sizes needs to be highly efficient. Typically the overhead of a loop is
 unacceptable, and such code needs to be fully unrolled. Second, in some
 code the number of dimensions is a \emph{dynamic} property --- it is
 only known at run time. Third, programs may wish to treat arrays with
 different numbers of dimensions very differently. A vector (1d) might
-have rather different behaviors than a matrix (2d). This kind of
+have rather different behaviors than a matrix (2d) (for example, to
+compute a norm). This kind of
 behavior makes the number of dimensions a crucial part of program
 semantics, preventing it from remaining a compiler implementation detail.
 
+% TODO: break up using enumerate
 These facts pull in different directions. The first fact asks for static
 analysis. The second fact asks for run-time flexibility. The third fact asks
 for dimensionality to be part of the type system, but partly determined
@@ -122,12 +127,27 @@ is the sum of the ranks of the indexes'' (as in APL).
 Our goal here is a bit unusual: we are not concerned with which rules
 might work best, but merely with how they can be specified, so that
 domain experts can experiment.
+
+In fact different domains want different things. E.g. in images, each
+dimension might be quite different, e.g. time vs. space vs. color,
+so you don't want to drop or rearrange dimensions very often.
 %%%
+
+Here are our ground rules:
+
+\begin{enumerate}
+\item You can't manually implement the behavior inside the compiler
+\item The compiler must be able to reasonably understand the program
+\item The code must be reasonably easy to write
+\end{enumerate}
+
 
 How are such rules implemented? For a
 language with built-in multidimensional arrays, the compiler will
 analyze indexing expressions and determine an answer using hard-coded
-logic. However, this approach is not satisfying: we would rather
+logic.
+% TODO: grab example from one of these compilers
+However, this approach is not satisfying: we would rather
 implement the behavior in libraries, so that different kinds of arrays
 may be defined, or so that rules of similar complexity may be
 defined for other kinds of objects. But these kinds of rules are
@@ -139,15 +159,26 @@ to be difficult to write (and read), and the full complement of
 indexing behavior expected by technical users strains the capabilities
 of such systems.
 
+% TODO: insert actual example of numpy
+
 Our dispatch mechanism permits a novel solution. If a multiple dispatch
 system supports variadic functions and argument ``splicing'' (the ability
 to pass a structure of $n$ values as $n$ separate arguments to a function),
 then indexing behavior can be defined as method signatures.
 
+This solution is still a compromise among the factors outlined above,
+but it is a new compromise that provides a net-better solution.
+% TODO more
+
 Below we define a function \texttt{index\_shape} that computes the
 shape of a result array given a series of index arguments. We show
 three versions, each implementing a different rule that users in
 different domains might want:
+
+% TODO: point out array = (shape, data), so those are the two parts
+% we need to handle. In julia the ``data'' part is not a first class
+% object; it is not directly exposed to the user, but this is more
+% of an implementation detail.
 
 \begin{verbatim}
 # drop dimensions indexed with scalars
@@ -173,6 +204,9 @@ to infer the rank of the result array.
 
 These definitions are concise, easy to write, and possible for a
 compiler to understand fully using straightforward techniques.
+
+% TODO: point out how this combines the ``object part'' and the
+% ``array part'' into a coherent whole.
 
 Here is a sample derivation for the call \texttt{index\_shape(1:m,1,1:n)}
 (the argument type tuple is \texttt{(Range1,Int,Range1)}), using the first

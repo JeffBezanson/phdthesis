@@ -42,6 +42,17 @@ one of the main reasons \emph{object-oriented} programming is popular: it
 provides a way to automatically select different behaviors according to
 some structured criteria.
 
+%Somewhat unfortunately, the term \emph{object-oriented} has many
+%connotations, and the \emph{object-oriented} methodology tries to address
+%multiple software engineering problems --- for example modularity,
+%encapsulation, implementation hiding, and code reuse. These issues are
+%important, but it may be because of them that over time too little
+%emphasis has been placed on expressive power.
+
+We use the non-standard term ``criteria'' deliberately, in order
+to clarify our point of view, which is independent of any particular
+object system.
+
 The sophistication of the available ``selection criteria'' account for a
 large part of the perceived ``power'' or leverage provided by a language.
 In fact it is possible to illustrate a hierarchy of such mechanisms.
@@ -64,6 +75,13 @@ while running
 end
 \end{verbatim}
 
+We can see how this would get tedious as we add more kinds of animals
+and more behaviors. Another problem is that the animal behavior is
+implemented directly inside the control loop, so it is hard to see
+what parts are simulation control logic and what parts are animal
+behavior. Adding a simple object system leads to a nicer implementation
+\footnote{A perennial problem with simple examples is that better
+implementations often make the code longer.}:
 
 \begin{verbatim}
 class Rabbit
@@ -88,6 +106,16 @@ while running
 end
 \end{verbatim}
 
+Here all of the simulation's animal behavior has been essentially
+compressed into a single program point: \texttt{a.encounter(b)}
+leads to all of the behavior by selecting an implementation based
+on the first argument, \texttt{a}. This kind of criterion is
+essentially indexed lookup; we can imagine that \texttt{a} is
+simply an integer index into a table of operations.
+
+The next enhancement to ``selection criteria'' adds a hierarchy
+of behaviors, to provide further opportunities to avoid
+repetition:
 
 \begin{verbatim}
 abstract class Animal
@@ -118,6 +146,39 @@ while running
 end
 \end{verbatim}
 
+We are still essentially doing table lookup, but the tables have
+more structure: every \texttt{Animal} has the \texttt{nearby}
+method, and can inherit a general-purpose implementation.
+
+This brings us roughly to the level of most popular object-oriented
+languages. But in this example still more can be done. Notice that
+in the first step to objects we replaced one level of \texttt{if}
+statements with method lookup. However, inside of these methods
+a structured set of \texttt{if} statements remains. We can
+replace these by adding another level of dispatch.
+
+\begin{verbatim}
+class Rabbit <: Animal
+    method encounter(b: Wolf) = run()
+    method encounter(b: Rabbit) = mate(b)
+end
+
+class Wolf <: Animal
+    method encounter(b: Rabbit) = eat(b)
+    method encounter(b: Wolf) = follow(b)
+end
+\end{verbatim}
+
+We now have a \emph{double dispatch} system, where a method call
+uses two lookups, first on the first argument and then on the
+second argument.
+
+This syntax might be considered a bit nicer, but the design
+clearly begs a question: why is $n=2$ special? It isn't, and we
+could clearly consider even more method arguments as part of
+dispatch. But at that point, why is the first argument special?
+Why separate methods in a special way based on the first argument?
+It seems arbitrary, and indeed we can remove the special treatment:
 
 \begin{verbatim}
 abstract class Animal
@@ -143,21 +204,30 @@ while running
 end
 \end{verbatim}
 
+Here we made two major changes: the methods have been moved ``outside''
+of any classes, and all arguments are listed explicitly. This change
+has fairly significant implications. Since methods no longer need to be
+``inside'' classes, there is no syntactic limit to where definitions
+may appear. Now it is easier to add new methods after a class has
+been defined. Methods also now naturally operate on combinations of
+objects, not single objects.
+
+The shift to thinking about combinations of objects is fairly
+revolutionary. Many interesting properties only apply to combinations
+of objects, and not individuals. We are also now free to think of
+more exotic kinds of combinations.
+
+We can define a method on \emph{any number} of objects:
 
 \begin{verbatim}
-
-encounter{T<:Animal}(a: T, b: T) = mate(a, b)
-encounter(a: Wolf, b: Wolf) = follow(a, b)
 encounter(ws: Wolf...) = pack(ws)
-
 \end{verbatim}
 
-%Somewhat unfortunately, the term \emph{object-oriented} has many
-%connotations, and the \emph{object-oriented} methodology tries to address
-%multiple software engineering problems --- for example modularity,
-%encapsulation, implementation hiding, and code reuse. These issues are
-%important, but it may be because of them that over time too little
-%emphasis has been placed on expressive power.
+
+
+\begin{verbatim}
+encounter{T<:Animal}(a: T, b: T) = mate(a, b)
+\end{verbatim}
 
 
 \section{Multiple dispatch}
