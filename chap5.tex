@@ -29,6 +29,136 @@ types if they are not going to be checked at compile time. These views have
 some merit, but as a result the top-left corner of this design space has
 been seriously under-explored.
 
+% para: here we will discuss why it might be worth exploring
+
+\subsection{Dynamic dispatch is key}
+
+It would be unpleasant if every piece of every program we wrote were forced
+to do only one specific task. Every time we wanted to do something slightly
+different, we'd have to write a different program. But if a language
+allows the same program element to do different things at different times,
+we can write whole classes of programs at once. This kind of capability is
+one of the main reasons \emph{object-oriented} programming is popular: it
+provides a way to automatically select different behaviors according to
+some structured criteria.
+
+The sophistication of the available ``selection criteria'' account for a
+large part of the perceived ``power'' or leverage provided by a language.
+In fact it is possible to illustrate a hierarchy of such mechanisms.
+As an example, consider a simple simulation, and how it can be written
+under a series of increasingly powerful paradigms. First, written-out
+imperative code:
+
+\begin{verbatim}
+while running
+    for a in animals
+        b = nearby_animal(a)
+        if a isa Rabbit
+            if b isa Wolf then run(a)
+            if b isa Rabbit then mate(a,b)
+        else if a isa Wolf
+            if b isa Rabbit then eat(a,b)
+            if b isa Wolf then follow(a,b)
+        end
+    end
+end
+\end{verbatim}
+
+
+\begin{verbatim}
+class Rabbit
+    method encounter(b)
+        if b isa Wolf then run()
+        if b isa Rabbit then mate(b)
+    end
+end
+
+class Wolf
+    method encounter(b)
+        if b isa Rabbit then eat(b)
+        if b isa Wolf then follow(b)
+    end
+end
+
+while running
+    for a in animals
+        b = nearby_animal(a)
+        a.encounter(b)
+    end
+end
+\end{verbatim}
+
+
+\begin{verbatim}
+abstract class Animal
+    method nearby()
+        # search within some radius
+    end
+end
+
+class Rabbit <: Animal
+    method encounter(b: Animal)
+        if b isa Wolf then run()
+        if b isa Rabbit then mate(b)
+    end
+end
+
+class Wolf <: Animal
+    method encounter(b: Animal)
+        if b isa Rabbit then eat(b)
+        if b isa Wolf then follow(b)
+    end
+end
+
+while running
+    for a in animals
+        b = a.nearby()
+        a.encounter(b)
+    end
+end
+\end{verbatim}
+
+
+\begin{verbatim}
+abstract class Animal
+end
+
+class Rabbit <: Animal
+end
+
+class Wolf <: Animal
+end
+
+nearby(a: Animal) = # search
+encounter(a: Rabbit, b: Wolf) = run(a)
+encounter(a: Rabbit, b: Rabbit) = mate(a,b)
+encounter(a: Wolf, b: Rabbit) = eat(a, b)
+encounter(a: Wolf, b: Wolf) = follow(a, b)
+
+while running
+    for a in animals
+        b = nearby(a)
+        encounter(a, b)
+    end
+end
+\end{verbatim}
+
+
+\begin{verbatim}
+
+encounter{T<:Animal}(a: T, b: T) = mate(a, b)
+encounter(a: Wolf, b: Wolf) = follow(a, b)
+encounter(ws: Wolf...) = pack(ws)
+
+\end{verbatim}
+
+%Somewhat unfortunately, the term \emph{object-oriented} has many
+%connotations, and the \emph{object-oriented} methodology tries to address
+%multiple software engineering problems --- for example modularity,
+%encapsulation, implementation hiding, and code reuse. These issues are
+%important, but it may be because of them that over time too little
+%emphasis has been placed on expressive power.
+
 
 \section{Multiple dispatch}
 
