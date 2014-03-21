@@ -57,6 +57,78 @@ is useful for addressing them.
 % ex: generic sum function accumulating result in at least
 % double precision. just using +::T->T->T doesn't work.
 
+\subsection{Applications}
+
+\emph{Ranges} illustrate an interesting application of type promotion.
+A range data type, notated \texttt{a:s:b}, represents a sequence of values
+starting at \texttt{a} and ending at \texttt{b}, with a distance of \texttt{s}
+between elements (internally, this notation is translated to
+\texttt{colon(a, s, b)}). Ranges seem simple enough, but a reliable,
+efficient, and highly generic implementation is difficult to achieve.
+We propose the following requirements:
+
+\begin{itemize}
+\item The start and stop values can be passed as different types, but internally
+  should be of the same type.
+\item Ranges should work with ordinal types, not just numbers (examples include
+  characters, pointers, and calendar dates).
+\item If any of the arguments is a floating-point number, a special
+  \texttt{FloatRange} type designed to cope well with roundoff is returned.
+\end{itemize}
+
+In the case of ordinal types, the step value is naturally of a different type
+than the elements of the range. For example, one may add 1 to a character to
+get the ``next'' encoded character, but it does not make sense to add two
+characters.
+
+It turns out that the desired behavior can be achieved with six definitions:
+
+First, given three floats of the same type we can construct a \texttt{FloatRange}
+right away:
+
+\begin{verbatim}
+colon{T<:FloatingPoint}(start::T, step::T, stop::T) = FloatRange{T}(start, step, stop)
+\end{verbatim}
+
+Next, if \texttt{a} and \texttt{b} are of the same type and there are no floats,
+we can construct a general range:
+
+\begin{verbatim}
+colon{T}(start::T, step, stop::T) = StepRange(start, step, stop)
+\end{verbatim}
+
+Now there is a problem to fix: if the first and last arguments are of some
+non-floating-point numeric type, but the step is floating point, we want to
+promote all arguments to a common floating point type. We must also do this
+if the first and last arguments are floats, but the step is some other kind
+of number:
+
+\begin{verbatim}
+colon{T<:Real}(a::T, s::FloatingPoint, b::T) = colon(promote(a,s,b)...)
+
+colon{T<:FloatingPoint}(a::T, s::Real, b::T) = colon(promote(a,s,b)...)
+\end{verbatim}
+
+These two definitions are correct, but ambiguous: if the step is a float
+of a different type than \texttt{a} and \texttt{b} both definitions are
+equally applicable. We can add the following disambiguating definition:
+
+\begin{verbatim}
+colon{T<:FloatingPoint}(a::T, s::FloatingPoint, b::T) = colon(promote(a,s,b)...)
+\end{verbatim}
+
+All of these five definitions require \texttt{a} and \texttt{b} to be of the
+same type. If they are not, we must promote just those two arguments, and leave
+the step alone in case we are dealing with ordinal types:
+
+\begin{verbatim}
+colon{A,B}(a::A, s, b::B) = colon(convert(promote_type(A,B),a), s, convert(promote_type(A,B),b))
+\end{verbatim}
+
+This example shows that it is not always sufficient to have a built-in set of
+``promoting operators''. Library functions like this \texttt{colon} need more
+control.
+
 
 \subsection{Current approaches}
 

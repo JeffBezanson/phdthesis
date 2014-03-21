@@ -261,8 +261,27 @@ This enables a programmer to ``intercept'' every function call (and therefore,
 essentially everything a program does)
 
 
+\subsection{Symbolic programming}
 
-\section{Domain Theory}
+Systems based on symbolic rewrite rules arguably occupy a further tier of
+dispatch sophistication. In these systems, you can dispatch on essentially
+anything, including arbitrary values and structures. These systems are
+typically powerful enough to concisely define the kinds of behaviors we
+are interested in.
+
+However, symbolic programming lacks data abstraction: the concrete
+representations of values are exposed to the dispatch system
+(e.g. there is no difference between being a list and being something
+represented as a list).
+
+Patterns are very powerful, but the tradeoff is that there is not
+necessarily a useful relationship between what your program does and
+what a static analysis (based on a finite-height partial order over
+patterns) can discover. Maybe julia could be considered a sweet spot
+somewhere in between.
+
+
+\section{Domain theory}
 
 In the 1960s Dana Scott asked how to assign meanings to programs,
 which otherwise just appear to be lists of symbols.
@@ -346,3 +365,10 @@ at some point you have to *actually run the program*. Specifying the
 behavior of a program is hard; this is where we need help from the
 language.
 
+
+Scripting languages are often defended using the observation that most
+code is not performance-critical. However, this fact does not mean that
+it's ok for a language design to ignore performance, nor does it mean
+that performance should be the default priority of every line of code.
+Rather it means that the default should be convenience and safety, with
+a path to performance easily in reach for when it's needed.
