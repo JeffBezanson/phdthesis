@@ -154,4 +154,50 @@ Brief Statement of the Problem:
 
 \thesisproposalform
 
+\newpage
+
+\section{Introduction}
+
+A current popular approach is to start with an existing high-level language
+that has a degree of acceptance and popularity. From there, a wide variety
+of techniques can be deployed to improve performance. Many of these ask for
+no source modification: static analysis, JIT compilation, tracing, or
+moving more functionality into low-level libraries. Some techniques involve
+slight source modifications: optional type annotations, decorators that
+invoke code transformations, or alternate ``dialects'' such as Cython.
+
+These techniques all have value. For most applications they are a boon.
+In the case of JavaScript, for example, they have transformed the web
+dramatically. However, technical computing is a bit different, and for
+this application area two significant problems remain:
+
+\begin{enumerate}
+\item The performance ceiling. Speculative optimizations require
+run-time checks, making it difficult to fully match the performance of
+statically-compiled languages (C, C++, Fortran).
+
+\item Flexibility. The most important operations in technical computing
+have a particularly uncooperative combination of characteristics:
+they are highly polymorphic, the fine details of their behavior are
+crucial to performance, and their binding time requirements
+vary by application.
+\end{enumerate}
+
+These three characteristics are best explained through quick examples:
+
+\begin{enumerate}
+\item Polymorphism: array indexing accepts any number of arguments, each of
+which may be of several different types.
+
+\item Crucial details: the rank of an array must be statically known to fully
+unroll index computations.
+
+\item Binding time: in some applications array ranks are only known at run
+time.
 \end{document}
+
+Many other instances of these problems exist. In general, technical
+computing is so diverse and exploratory that it is common for a language's
+binding time decisions or type domains not to correspond to those
+relevant to a particular technical application.
+
