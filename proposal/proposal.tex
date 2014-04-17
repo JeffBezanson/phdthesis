@@ -158,13 +158,20 @@ Brief Statement of the Problem:
 
 \section{Introduction}
 
+Technical computing is an especially rich application area for programming
+languages to address. The observation that a language ``is likely to be used to
+solve problems which its designer did not envision'' \cite{Liskov:1974pb}
+applies doubly: the programmers are domain experts, and are likely to be
+doing original research.
+
 A current popular approach is to start with an existing high-level language
 that has a degree of acceptance and popularity. From there, a wide variety
 of techniques can be deployed to improve performance. Many of these ask for
 no source modification: static analysis, JIT compilation, tracing, or
 moving more functionality into low-level libraries. Some techniques involve
 slight source modifications: optional type annotations, decorators that
-invoke code transformations, or alternate ``dialects'' such as Cython.
+invoke code transformations, or alternate ``dialects'' such as Cython
+\cite{Behnel:2011}.
 
 These techniques all have value. For most applications they are a boon.
 In the case of JavaScript, for example, they have transformed the web
@@ -194,10 +201,16 @@ unroll index computations.
 
 \item Binding time: in some applications array ranks are only known at run
 time.
-\end{document}
+\end{enumerate}
 
 Many other instances of these problems exist. In general, technical
 computing is so diverse and exploratory that it is common for a language's
 binding time decisions or type domains not to correspond to those
 relevant to a particular technical application.
 
+\newpage
+
+\bibliographystyle{plain}
+\bibliography{proposal}
+
+\end{document}
