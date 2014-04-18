@@ -1,6 +1,6 @@
 \documentclass[12pt]{article}
 \usepackage{fullpage}
-\pagestyle{empty}
+\pagestyle{plain}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Fill in the following information and compile to create your very
@@ -8,13 +8,13 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \def\author{Jeffrey Werner Bezanson}
-\def\addressone{}
-\def\addresstwo{}
+\def\addressone{25 Walbridge St. \#15}
+\def\addresstwo{Allston, MA 02134}
 
 \def\supervisor{Alan Edelman}
 
 \def\title{Abstraction in Technical Computing}
-\def\expectedcompletetiondate{May 2, 2014}
+\def\expectedcompletetiondate{January 9, 2015}
 \def\briefproblemstatement{
 
 Array-based programming environments are popular for scientific and
@@ -162,51 +162,205 @@ Technical computing is an especially rich application area for programming
 languages to address. The observation that a language ``is likely to be used to
 solve problems which its designer did not envision'' \cite{Liskov:1974pb}
 applies doubly: the programmers are domain experts, and are likely to be
-doing original research.
+doing original research. This kind of programming is also data- and
+compute-intensive, leading to conflicting requirements of performance and
+flexibility. This thesis will discuss the reasons behind this conflict and
+the existing solutions, and propose a new solution.
 
-A current popular approach is to start with an existing high-level language
-that has a degree of acceptance and popularity. From there, a wide variety
-of techniques can be deployed to improve performance. Many of these ask for
-no source modification: static analysis, JIT compilation, tracing, or
-moving more functionality into low-level libraries. Some techniques involve
+The leading approach to the performance-flexibility compromise today is
+essentially polyglot programming: using multiple languages together to
+combine their strengths. Due to the unusual requirements of technical
+computing, it is surprisingly common for one of the languages to be
+designed by domain experts who concluded that no general-purpose
+languages were suitable for their problems. Examples include R \cite{Rlang}
+for statistics, MATLAB\textregistered, Octave \cite{octave},
+and SciLab \cite{scilab} for engineering and linear algebra, APL \cite{APL}
+and ZPL \cite{ZPL} for array operations, Torch7 \cite{collobert2011torch7}
+for machine learning, Lush \cite{bottou2002lush} for
+signal and image processing, and quite a few others. This diversity is
+not necessarily a bad thing, but it is telling us something. While we
+should not pretend to be able to capture all the features and advantages
+of these systems in a single new system, patterns do emerge in the
+general characteristics designers want from these systems. This thesis
+will attempt to isolate these characteristics and address them
+with a new design.
+
+It is possible to take the view that a new language is not really needed.
+Another promising approach, for example, is to deploy a variety of
+techniques to improve the performance of existing popular high-level
+languages. Many of these techniques require
+no source modification: static analysis, JIT compilation, tracing \cite{tracingjit},
+or moving more functionality into low-level libraries. Some techniques involve
 slight source modifications: optional type annotations, decorators that
 invoke code transformations, or alternate ``dialects'' such as Cython
 \cite{Behnel:2011}.
 
-These techniques all have value. For most applications they are a boon.
+These techniques are of great value. For most applications they are a boon.
 In the case of JavaScript, for example, they have transformed the web
 dramatically. However, technical computing is a bit different, and for
-this application area two significant problems remain:
+this area significant problems remain in both performance and flexibility.
+JIT compilers tend to suffer from a ``performance ceiling'': speculative
+optimizations require run-time checks, making it difficult to fully match
+the performance of statically-compiled languages (C, C++, Fortran).
+At the same time, technical libraries often embody highly complex behaviors
+that a compiler nonetheless needs to understand to obtain good
+performance. In many cases it may not be realistic to infer these behaviors
+from imperative code.
 
-\begin{enumerate}
-\item The performance ceiling. Speculative optimizations require
-run-time checks, making it difficult to fully match the performance of
-statically-compiled languages (C, C++, Fortran).
+Our solution is to develop a language and library-writing style based on
+heavy use of multiple dispatch. Multiple dispatch (or multi-methods, or
+generic functions) is a particularly powerful form of object-oriented
+programming that has been extensively studied in the past.
+Most language designers and programmers seem to have concluded that
+multiple dispatch is not really essential, and the feature is not often used
+\cite{multipledispatch}. However, we have come to believe that
+technical computing is its killer application.
 
-\item Flexibility. The most important operations in technical computing
-have a particularly uncooperative combination of characteristics:
-they are highly polymorphic, the fine details of their behavior are
-crucial to performance, and their binding time requirements
-vary by application.
-\end{enumerate}
+Multiple dispatch appears at first to be about operator overloading:
+defining the behavior of functions on various user-defined types.
+We will show that it can do much more, given a few enhancements inspired
+by dataflow type inference. This form of type inference is typically
+applied to languages post-hoc, in attempts to add some static analysis
+to languages not designed for it. Instead, our method signatures are
+designed to exploit dataflow type inference, permitting definitions
+that are easy to write, provide expressive power, and lead to
+good performance. The result is a new tradeoff between performance
+and flexiblity for technical computing.
 
-These three characteristics are best explained through quick examples:
 
-\begin{enumerate}
-\item Polymorphism: array indexing accepts any number of arguments, each of
-which may be of several different types.
 
-\item Crucial details: the rank of an array must be statically known to fully
-unroll index computations.
+%% \item Flexibility. The most important operations in technical computing
+%% have a particularly uncooperative combination of characteristics:
+%% they are highly polymorphic, the fine details of their behavior are
+%% crucial to performance, and their binding time requirements
+%% vary by application.
+%% \end{enumerate}
 
-\item Binding time: in some applications array ranks are only known at run
-time.
-\end{enumerate}
+%% These three characteristics are best explained through brief examples:
 
-Many other instances of these problems exist. In general, technical
-computing is so diverse and exploratory that it is common for a language's
-binding time decisions or type domains not to correspond to those
-relevant to a particular technical application.
+%% \begin{enumerate}
+%% \item Polymorphism: array indexing accepts any number of arguments, each of
+%% which may be of several different types.
+
+%% \item Crucial details: the rank of an array must be statically known to fully
+%% unroll index computations.
+
+%% \item Binding time: in some applications array ranks are only known at run
+%% time.
+%% \end{enumerate}
+
+%% Many other instances of these problems exist. In general, technical
+%% computing is so diverse and exploratory that it is common for a language's
+%% binding time decisions or type domains not to correspond to those
+%% relevant to a particular technical application.
+
+
+%% \subsection{Contributions}
+
+%% - discusses a theory of what T.C. is, why its users do what they do
+
+%% - suggests T.C. as the killer app for multiple dispatch
+
+%% - demonstrates how to use it to implement library features previously
+%% considered very advanced or out of reach
+
+
+
+\section{Preliminary evaluation}
+
+\begin{figure}
+\label{dispatchratios}
+\begin{center}
+\begin{tabular}{|l|r|r|r|}\hline
+Language & DR & CR & DoS \\
+\hline \hline
+Gwydion    & 1.74 & 18.27 & 2.14 \\
+\hline
+OpenDylan  & 2.51 & 43.84 & 1.23 \\
+\hline
+CMUCL      & 2.03 &  6.34 & 1.17 \\
+\hline
+SBCL       & 2.37 & 26.57 & 1.11 \\
+\hline
+McCLIM     & 2.32 & 15.43 & 1.17 \\
+\hline
+Vortex     & 2.33 & 63.30 & 1.06 \\
+\hline
+Whirlwind  & 2.07 & 31.65 & 0.71 \\
+\hline
+NiceC      & 1.36 &  3.46 & 0.33 \\
+\hline
+LocStack   & 1.50 &  8.92 & 1.02 \\
+\hline
+Julia      & 5.86 & 51.44 & 1.54 \\
+\hline
+Julia Operators & 28.13 & 78.06 & 2.01 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{
+Comparison of Julia (1208 functions exported from the \texttt{Base} library)
+to other languages with multiple dispatch \cite{multipledispatch}.
+The ``Julia Operators'' row describes 47 functions with special syntax
+(binary operators, indexing, and concatenation).
+%Numbers for other systems are copied from \cite{multipledispatch}; we did
+%not repeat their experiments.
+}
+\end{figure}
+
+Together with the Julia open source community, we have developed a sizeable
+library of technical computing functionality using our methodology. Some
+simple statistics about the resulting definitions (Figure~\ref{dispatchratios})
+reveal that something is indeed different here: multiple dispatch is
+utilized much more fully in this domain. Community participation is
+important here, since it means that the code has many contributors, and
+is considered reasonable and idiomatic by a significant sample of users
+and developers.
+
+
+
+\section{Related Work}
+
+Type inference: \cite{kaplanullman, MLtypeinf, TICL,
+pticl, nimble, taggingopt, typeinfjavascript}
+
+Dataflow analysis: \cite{graphfree, abstractinterp, widening}
+
+JIT compilation, dynamic language optimizations: \cite{futamura, pypyjit,
+selflang, tracingjit, tracingjit2, druby,
+profileguided, rubydust, lispcrit}
+
+Optional and gradual typing: \cite{typedscheme, dylantypes, dyntype,
+gradualobjects}
+
+Multiple dispatch: \cite{closoverview, closspec, cecil, dieselspec, dylanlang}
+
+Compiling technical computing languages: \cite{telescoping, telescopingvectorization,
+slicehoisting, falcon, Rose:1999tt, Li:2013mf, matlabspecializer, majic}
+
+
+\section{Schedule}
+
+
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Date} & \textbf{Task} \\
+\hline \hline
+4/11/2014 &  Paper submission (ACM SIGPLAN ARRAY '14) on aspects of the work \\
+\hline
+4/18/2014 & Thesis proposal submission \\
+\hline
+5/31/2014 & Outline and preliminary writing \\
+\hline
+
+8/1/2014 & Identify case studies \\
+
+\hline
+12/9/2014 & Complete rough draft \\
+\hline
+1/9/2015 & Final draft \\
+\hline
+\end{tabular}
 
 \newpage
 

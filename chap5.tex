@@ -42,6 +42,12 @@ one of the main reasons \emph{object-oriented} programming is popular: it
 provides a way to automatically select different behaviors according to
 some structured criteria.
 
+In class-based OO there is essentially \emph{no way} to create an operation
+that dispatches on existing types (the expression problem). This clearly
+does not match technical computing, where most programs deal with the same
+few types (e.g. number, array), and might sensibly want to write new operations
+that dispatch on them.
+
 %Somewhat unfortunately, the term \emph{object-oriented} has many
 %connotations, and the \emph{object-oriented} methodology tries to address
 %multiple software engineering problems --- for example modularity,
