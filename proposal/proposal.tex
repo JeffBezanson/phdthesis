@@ -186,7 +186,7 @@ will attempt to isolate these characteristics and address them
 with a new design.
 
 It is possible to take the view that a new language is not really needed.
-Another promising approach, for example, is to deploy a variety of
+Another promising approach, for example, is to deploy
 techniques to improve the performance of existing popular high-level
 languages. Many of these techniques require
 no source modification: static analysis, JIT compilation, tracing \cite{tracingjit},
@@ -272,7 +272,7 @@ and flexiblity for technical computing.
 \label{dispatchratios}
 \begin{center}
 \begin{tabular}{|l|r|r|r|}\hline
-Language & DR & CR & DoS \\
+\textbf{Language} & \textbf{DR} & \textbf{CR} & \textbf{DoS} \\
 \hline \hline
 Gwydion    & 1.74 & 18.27 & 2.14 \\
 \hline
@@ -300,11 +300,10 @@ Julia Operators & 28.13 & 78.06 & 2.01 \\
 \end{center}
 \caption{
 Comparison of Julia (1208 functions exported from the \texttt{Base} library)
-to other languages with multiple dispatch \cite{multipledispatch}.
+to other languages with multiple dispatch, based on dispatch ratio (DR),
+choice ratio (CR), and degree of specialization (DoS) \cite{multipledispatch}.
 The ``Julia Operators'' row describes 47 functions with special syntax
 (binary operators, indexing, and concatenation).
-%Numbers for other systems are copied from \cite{multipledispatch}; we did
-%not repeat their experiments.
 }
 \end{figure}
 
@@ -313,7 +312,7 @@ library of technical computing functionality using our methodology. Some
 simple statistics about the resulting definitions (Figure~\ref{dispatchratios})
 reveal that something is indeed different here: multiple dispatch is
 utilized much more fully in this domain. Community participation is
-important here, since it means that the code has many contributors, and
+important, since it means that the code has many contributors, and
 is considered reasonable and idiomatic by a significant sample of users
 and developers.
 
@@ -339,28 +338,33 @@ Compiling technical computing languages: \cite{telescoping, telescopingvectoriza
 slicehoisting, falcon, Rose:1999tt, Li:2013mf, matlabspecializer, majic}
 
 
-\section{Schedule}
+\section{Schedule and Resources}
 
-
-\begin{tabular}{|l|l|}
+\begin{tabular}{|l|p{11cm}|}
 \hline
 \textbf{Date} & \textbf{Task} \\
 \hline \hline
-4/11/2014 &  Paper submission (ACM SIGPLAN ARRAY '14) on aspects of the work \\
+4/11/2014 & Paper submission (ACM SIGPLAN ARRAY '14) on aspects of the work \\
 \hline
 4/18/2014 & Thesis proposal submission \\
 \hline
-5/31/2014 & Outline and preliminary writing \\
+May 2014 & Outline and preliminary writing \\
 \hline
-
-8/1/2014 & Identify case studies \\
-
+June-July 2014 & Research and writing on historical background, analysis of use
+cases \\
 \hline
-12/9/2014 & Complete rough draft \\
+August 2014 & Identify case studies \\
+\hline
+September-October 2014 & Writing \\
+\hline
+11/9/2014 & Complete rough draft \\
 \hline
 1/9/2015 & Final draft \\
 \hline
 \end{tabular}
+
+The only resources required for this work are access to a few computer systems,
+and freely available software and web-based tools.
 
 \newpage
 
