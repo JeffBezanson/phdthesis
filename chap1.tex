@@ -32,7 +32,6 @@ technical computing (see gang of 40).
 
 
 
-
 why integrate code specialization and code selection?
 
 - specialization requires selection anyway
@@ -71,6 +70,8 @@ the key ingredients:
       \hline
       eliminating tags                     &  self-describing data, acceptance of tags \\
       \hline
+      data hiding                          &  explicit memory layout \\
+      \hline
     \end{tabular}
   \end{center}
   \caption{
@@ -78,6 +79,16 @@ the key ingredients:
     implementation compared to those of the technical computing domain.
   }
 \end{figure}
+
+Figure~\ref{PLpriorities} compares the general design priorities of mainstream programming
+languages to those of technical computing languages. The priorities in each row are not
+necessarily opposites or even mutually exclusive, but rather are a matter of emphasis.
+For example, it is certainly possible to have both parametric and ad-hoc polymorphism within
+the same language, but syntax, recommended idioms, and the design of the standard library will
+tend to emphasize one or the other.
+
+It is striking how different these priorities are. We believe these technical factors have
+contributed significantly to the persistence of specialized environments in this area.
 
 
 On "built-in", why built-in is bad. Built-in-ness often conflates two
@@ -90,3 +101,13 @@ aspects:
 interesting item, since the other can be addressed e.g. just by including
 a library in the standard software distribution. Many technical computing
 languages have done a large amount of (2) while justifying it with point (1).
+
+\section{Contributions}
+
+``One of the most fruitful techniques of language analysis is explication through
+elimination. The basic idea is that one explains a linguistic feature by showing
+how one could do without it.'' \cite{morris}
+
+A main contribution of this thesis is the application of this approach to features
+of technical computing environments that have not been subject to such analysis
+before.
