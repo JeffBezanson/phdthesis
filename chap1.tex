@@ -1,80 +1,12 @@
 \chapter{Introduction}
 
-people had pretty good ideas of certain things they wanted
-and they had piles of existing software
-the recognized something they could use, e.g. python on C, and just ran
-with it. it was never designed
+Much of the history of programming languages has been about increasing abstraction
+and generalization. Today we take it for granted that a single suitably powerful
+language could be used for nearly any development task, were it not for pragmatic
+factors beyond our control. Over time, many special-purpose languages (e.g. for
+text processing) have been subsumed by these more powerful and general languages.
 
 
-1. technical computing
-
-- the power of abstraction
-- why they never asked
-  . the current VHLLs must have gotten something right, but it doesn't have
-    to be done the exact way they do it
-  . SC vs. CS
-  . ¶ about T.C. not being about just arrays, but flexibility
-
-- the remedy (``contributions of this thesis''), the breakthrough
-
-problem of finding connections between array programming and OOP.
-array programming is a powerful paradigm for describing computational
-kernels operating over potentially large amounts of data.
-
-an ``object system'' in this context is often considered a separate
-part of the language, to be used only when arrays no longer
-suffice.
-
-technical computing systems have an unusually large amount of
-``failure of abstraction'' --- manual duplication of facts
-all over the system. imagine changing from column-major to
-row-major.
-
-it may be true, as a practical matter, that we as a species need to agree on
-one set of rules and stick to it. however this shouldn't be forced by
-technical limitations.
-
-
-2. analysis of abstraction
-
-- current abstractions that work well
-  . matrices
-  . blockbuster library calls (fft, lapack, blas)
-  . composability of calls via key built-in types
-  . dynamic typing
-
-- pushing it further -- what doesn't work well
-  . bad abstractions => productivity problems
-  . compile-time overloading, weak overloading, single dispatch,
-    everything-is-a-dictionary, etc.
-
-- performance through abstraction
-
-there are 2 ways to design a language: (1) provide simple efficient abstractions
-and build out of that, or (2) provide bigger abstractions more directly useful
-to a domain expert. (2) often appears to work well, but in fact only approach
-(1) is truly viable.
-
-3. julia (technical, innovations)
-
-- language design space
-- the many multiple dispatches
-- case studies, examples
-
-
-4. julia (social/vision)
-
-
-- what does or should a language consist of?
-- what can be done for this problem at the language level of abstraction?
-  - a design like NumPy argues the answer is ``nothing''
-
-Today, object-oriented languages are used for scientific computing
-(particularly C++, Java, and Python). However in our opinion this
-application area has not fully explored the possibilities of OOP. In
-particular, generic functions have been one of the least popular
-OO concepts and yet, we will argue, are the most relevant to scientific
-computing.
 
 
 What do we mean by a \emph{language} for scientific computing?
@@ -90,8 +22,6 @@ functional and performance requirements can become difficult to meet.
 
 
 
-
-
 It is clear that scientific and technical users have their own particular
 needs. So far there have been two paths available for fulfilling these
 needs: using a mainstream general-purpose language like C++ or Java, or
@@ -99,101 +29,64 @@ designing a new language like R or MATLAB. Designing your own language
 seems like a drastic thing to do, and yet it is unusually common in
 technical computing (see gang of 40).
 
-Unlike in other specialized domains (e.g. CAD software), these users
-are primarily interested in writing programs.
-
-People start out needing a few specialized routines, then eventually
-need ``glue'' of some kind, and eventually need a full language.
-The glue is an afterthought.
-
-Computational scientists often observe that they spend an amazingly
-small percentage of their time on the core computations that
-interest them, and lots of time on glue, verifying results,
-parsing and printing data, etc. This speaks to the need for
-general purpose languages.
-
-People are afraid to reinvent --- SVD etc. are considered black
-boxes not to be touched.
-
-We don't just need a faster matlab; for example a matlab with better
-loop optimizations or the like. Such a thing is fine to have,
-but we would argue it is not what people really need.
-Instead we propose powerful general-purpose abstractions that
-provide what is needed for technical computing as a special case.
-It is a technical computing language because it does *not*
-special case technical computing.
 
 
-At a very low level, the kinds of behaviors technical users expect
-from their languages do not match computer scientists' preconceptions
-of how languages should work.
-
-You should be able to define the meanings you want, not have them
-imposed on you.
 
 
-\section{Why a new language?}
+why integrate code specialization and code selection?
 
-You cannot implement MATLAB arrays in C++ with the same level of
-convenience.
+- specialization requires selection anyway
+- simpler system
+- can sometimes collapse 2 layers of dispatch into 1
+- can replace library code with a code generator without either changing
+  client code *or* any extra overhead
 
-%%
+the key ingredients:
 
-Our goal is to declaratively specify the behaviors of abstractions
-important to scientific computing, in a way that can be executed
-efficiently and is arguably easy to write.
+\begin{enumerate}
+\item Self-describing data model aware of memory layout
+\item Type tags with nested structure
+\item A fully-connected type tree
+\item Dynamic multiple dispatch over all types % including parameters and varargs
+\item Dataflow type inference
+\item Automatic code specialization
+\end{enumerate}
 
-By ``declaratively'', we mean in a manner that a compiler can
-realistically understand. All the behaviors we are interested in
-could of course be implemented with, say, imperative code, and indeed
-this is what has been done before, either inside a compiler, or inside
-an interpreter, or in a library for a sufficiently flexible language.
-These approaches have serious drawbacks. Implementing behaviors
-inside a compiler is effective for generating efficient code, but
-does not provide a way for users to easily implement their *own*
-behaviors. Imperative code inside an interpreter or library, on the other hand,
-does not provide a clear path to efficient execution. In theory, a
-partial evaluator could solve this problem, and this approach has been
-tried (REF). After adding minor annotations to a program, partial evaluation
-can work well. However, the biggest downside might be opacity: it is
-difficult to tell users how to write their code for the partial
-evaluator to be effective. We wish to try a different approach, that
-(1) permits a simpler performance model, and (2) stands a decent chance
-of being exploited *by accident* (i.e. users will tend to follow the performance
-model without much effort).
+\begin{figure}
+  \label{PLpriorities}
+  \begin{center}
+    \begin{tabular}{|l|l|}\hline
+      \textbf{Mainstream PL} & \textbf{Technical computing} \\
+      \hline \hline
+      classes, single dispatch             &  complex operators \\
+      \hline
+      separate compilation                 &  performance, inlining \\
+      \hline
+      parametric polymorphism              &  ad-hoc polymorphism, extensibility \\
+      % - concrete reuse of generated code
+      \hline
+      static checking                      &  experimental computing \\
+      \hline
+      modularity, encapsulation            &  large vocabularies \\
+      \hline
+      eliminating tags                     &  self-describing data, acceptance of tags \\
+      \hline
+    \end{tabular}
+  \end{center}
+  \caption{
+    Priorities of mainstream object-oriented and functional programming language research and
+    implementation compared to those of the technical computing domain.
+  }
+\end{figure}
 
 
-Our method for doing this is generic functions with rich signatures
-(method specializers). Generic functions are rather well studied in the
-OOP literature (REF), but we feel that the kinds of method specializers
-that have been designed before are simply not powerful enough.
-Furthermore, if they are made powerful enough, surprising consequences
-ensue.
+On "built-in", why built-in is bad. Built-in-ness often conflates two
+aspects:
 
+1 - A feature being readily available and agreed-on by all language users
+2 - A feature tightly coupled to the rest of the system
 
-We don't want to focus on compiler implementation tricks. We want a
-design such that fancy compiler and implementation tricks are not necessary.
-
-
-\section{How have times changed?}
-
-Use more memory, different point now in the resource/cost space
-
-In line with the new big data world of today?
-
-Julia is the language where people can and hopefully will collaborate
-to make better programs (different from 1980).
-
-Language has to not just know matrices, but also must be a web server
-and everything in between. (MATLAB knew it was also FFT and graphical,
-but the line was drawn)
-
-Want to get past only the experts knowing how to use arpack, lapack,
-etc.
-
-Prediction: the next ARPACK like thing will have one tenth the number
-of lines and have many more innovations and contributors (BLAS and
-lapack already have 4x redundancy thanks to single, double, complex,
-double complex repetition of routines)
-
-\section{Contributions of this thesis}
+(2) implies (1), but not the other way around. (2) is the only technically
+interesting item, since the other can be addressed e.g. just by including
+a library in the standard software distribution. Many technical computing
+languages have done a large amount of (2) while justifying it with point (1).
