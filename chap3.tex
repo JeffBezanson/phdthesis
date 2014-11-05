@@ -1,4 +1,4 @@
-\chapter{Motivation}
+\chapter{Problems in technical computing}
 
 At a high level, the experiences and thoughts that give rise to our
 design decisions.
@@ -51,7 +51,7 @@ happy with the result (though not with the process).
 so julia is an all-levels language
 
 
-\section{why dynamic typing is popular in technical computing}
+\section{Why dynamic typing?}
 
 Mathematical abstractions often frustrate our attempts to represent them
 on a computer. For example, mathematicians can move instinctively between
@@ -60,6 +60,8 @@ languages would prefer to represent scalars and matrices quite differently.
 A system might be able to convert automatically from one to the other, but
 it cannot always know which one we *meant*.
 
+
+\subsection{Operational reasoning}
 
 people tend to think about programs operationally, i.e. what it *does* when
 it runs. for example writing
@@ -78,12 +80,16 @@ accept parameters, so function calling ought to be sufficient to express
 any desired parameterization.
 
 
+\subsection{I/O}
+
 inevitably there is a need to refer to a datatype at run time. the best
 example is file I/O, where you might want to say "read 500 double-precision
 numbers from file X". in static languages the syntax and identifiers used
 to specify such run-time types must be different from those used to specify
 static types. in C you see defined constants such as \texttt{DATATYPE\_DOUBLE}.
 
+
+\subsection{Flat metadata hierarchy}
 
 static types are approximations of dynamic types, so languages with static
 types inevitably assign two types to a location (both a static type and a
@@ -94,6 +100,8 @@ can be omitted, as in a type-inferred language, the situation is even worse
 since the static type of a value might not be apparent.
 
 
+\subsection{Mismatches with mathematical abstractions}
+
 programs, in general, deal with values of widely varying disjoint types:
 functions, numbers, lists, network sockets, etc. type systems
 are good at sorting out values of these different types. however, in
@@ -101,7 +109,6 @@ mathematical code most values are numbers. numerical properties (such as
 positive, negative, even, odd, greater than 1, etc.) are what matter,
 and these are highly dynamic. the lattices involved are generally not of
 finite height.
-
 
 different number representations exist only for efficiency, and are often
 incidental to the meaning of a piece of code. for example people want
@@ -129,7 +136,7 @@ be of disjoint types in most programming languages.
 
 
 
-\section{Current dynamic languages have bad tradeoffs}
+\section{Bad tradeoffs in current designs}
 
 
 - Ducking the issue of typing altogether - why this isn't possible IRL
@@ -188,7 +195,22 @@ unconditionally
 
 
 
-\section{What needs to be built in?}
+\subsection{What needs to be built in?}
+
+On "built-in", why built-in is bad. Built-in-ness often conflates two
+aspects:
+
+\begin{enumerate}
+\item A feature being readily available and agreed-on by all language users
+\item A feature tightly coupled to the rest of the system
+\end{enumerate}
+
+(2) implies (1), but not the other way around. (2) is the only technically
+interesting item, since the other can be addressed e.g. just by including
+a library in the standard software distribution. Many technical computing
+languages have done a large amount of (2) while justifying it with point (1).
+
+
 
 While a large part of our motivation is to move more decisions and functionality
 into libraries, it is equally important to identify what *must* be part of a

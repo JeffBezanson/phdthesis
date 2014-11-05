@@ -2,11 +2,9 @@
 
 Much of the history of programming languages has been about increasing abstraction
 and generalization. Today we take it for granted that a single suitably powerful
-language could be used for nearly any development task, were it not for pragmatic
-factors beyond our control. Over time, many special-purpose languages (e.g. for
-text processing) have been subsumed by these more powerful and general languages.
-
-
+language could be used for nearly any programming task, were it not for pragmatic
+factors beyond our control. Over time, many special-purpose languages
+have been subsumed by these more powerful and general languages.
 
 
 What do we mean by a \emph{language} for scientific computing?
@@ -21,7 +19,6 @@ Without it, certain programs may be easy to write today, but changing
 functional and performance requirements can become difficult to meet.
 
 
-
 It is clear that scientific and technical users have their own particular
 needs. So far there have been two paths available for fulfilling these
 needs: using a mainstream general-purpose language like C++ or Java, or
@@ -30,26 +27,7 @@ seems like a drastic thing to do, and yet it is unusually common in
 technical computing (see gang of 40).
 
 
-
-
-why integrate code specialization and code selection?
-
-- specialization requires selection anyway
-- simpler system
-- can sometimes collapse 2 layers of dispatch into 1
-- can replace library code with a code generator without either changing
-  client code *or* any extra overhead
-
-the key ingredients:
-
-\begin{enumerate}
-\item Self-describing data model aware of memory layout
-\item Type tags with nested structure
-\item A fully-connected type tree
-\item Dynamic multiple dispatch over all types % including parameters and varargs
-\item Dataflow type inference
-\item Automatic code specialization
-\end{enumerate}
+\section{What is technical computing?}
 
 \begin{figure}
   \label{PLpriorities}
@@ -91,16 +69,50 @@ It is striking how different these priorities are. We believe these technical fa
 contributed significantly to the persistence of specialized environments in this area.
 
 
-On "built-in", why built-in is bad. Built-in-ness often conflates two
-aspects:
+\section{Proposed solution}
 
-1 - A feature being readily available and agreed-on by all language users
-2 - A feature tightly coupled to the rest of the system
+problem of finding connections between array programming and OOP.
+array programming is a powerful paradigm for describing computational
+kernels operating over potentially large amounts of data.
 
-(2) implies (1), but not the other way around. (2) is the only technically
-interesting item, since the other can be addressed e.g. just by including
-a library in the standard software distribution. Many technical computing
-languages have done a large amount of (2) while justifying it with point (1).
+an ``object system'' in this context is often considered a separate
+part of the language, to be used only when arrays no longer
+suffice.
+
+technical computing systems have an unusually large amount of
+``failure of abstraction'' --- manual duplication of facts
+all over the system. imagine changing from column-major to
+row-major.
+
+it may be true, as a practical matter, that we as a species need to agree on
+one set of rules and stick to it. however this shouldn't be forced by
+technical limitations.
+
+
+
+solution: integrate code specialization and code selection
+
+why integrate code specialization and code selection?
+
+- specialization requires selection anyway
+- simpler system
+- can sometimes collapse 2 layers of dispatch into 1
+- can replace library code with a code generator without either changing
+  client code *or* any extra overhead
+
+the key ingredients:
+
+\begin{singlespace}
+\begin{enumerate}
+\item Self-describing data model aware of memory layout
+\item Type tags with nested structure
+\item A fully-connected type tree
+\item Dynamic multiple dispatch over all types % including parameters and varargs
+\item Dataflow type inference
+\item Automatic code specialization
+\end{enumerate}
+\end{singlespace}
+
 
 \section{Contributions}
 

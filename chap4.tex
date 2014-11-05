@@ -1,6 +1,24 @@
-\chapter{The Julia Approach}
+\chapter{The Julia approach}
 
-This chapter will illustrate how we implement key features of technical computing
+\section{Language description}
+
+\subsection{Type system}
+
+\subsection{Data model}
+
+\subsection{Dispatch mechanism}
+
+\section{Performance model}
+
+\subsection{Type inference}
+
+\subsection{Specialization}
+
+\section{Explication through elimination}
+
+\subsection{Conversion and other basic operations}
+
+This section will illustrate how we implement key features of technical computing
 systems using our methodology.
 
 - The abstractions of equality and comparison. Different equivalence classes between
@@ -11,7 +29,7 @@ is/===, isequal and ==
 
 cmp, lexcmp, vs isless, <
 
-\section{Numbers}
+\subsection{Numeric types and embeddings}
 
 We might prefer ``number'' to be a single,
 concrete concept, but the history of mathematics has seen the concept
@@ -51,13 +69,13 @@ to these problems, we will show how the flexibility of our proposed mechanism
 is useful for addressing them.
 
 
-\subsection{Implementing type embeddings}
+%\subsection{Implementing type embeddings}
 
 
 % ex: generic sum function accumulating result in at least
 % double precision. just using +::T->T->T doesn't work.
 
-\subsection{Applications}
+\subsubsection{Applications}
 
 \emph{Ranges} illustrate an interesting application of type promotion.
 A range data type, notated \texttt{a:s:b}, represents a sequence of values
@@ -130,7 +148,7 @@ This example shows that it is not always sufficient to have a built-in set of
 control.
 
 
-\subsection{Current approaches}
+\subsubsection{Current approaches}
 
 Numbers tend to be among the most
 complex features of a language. Numeric types usually need to be a special
@@ -145,7 +163,7 @@ idiomatically single-dispatch.
 
 
 
-\section{Arrays}
+\subsection{Multidimensional array indexing}
 
 One-dimensional arrays are a simple and essential data structure found in
 most programming languages. The multi-dimensional arrays required in
@@ -324,7 +342,7 @@ end up invoking a widening operator instead).
 diverge() = randbool() ? () : tuple(1, diverge()...)
 \end{verbatim}
 
+\subsection{Array views}
 
-
-\section{Units}
+\subsection{Units}
 
