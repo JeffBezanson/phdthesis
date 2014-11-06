@@ -346,3 +346,10 @@ diverge() = randbool() ? () : tuple(1, diverge()...)
 
 \subsection{Units}
 
+\subsection{Even more elimination?}
+
+Some features of the language could be even further eliminated. For example data
+types could be implemented in terms of lambda abstractions. But certain patterns
+are so useful that they might as well be provided in a standard form. It also
+probably makes the compiler much more efficient not to need to pass around and
+repeatedly analyze full representations of the meanings of such ubiquitous constructs.

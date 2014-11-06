@@ -94,11 +94,23 @@ solution: integrate code specialization and code selection
 
 why integrate code specialization and code selection?
 
-- specialization requires selection anyway
-- simpler system
-- can sometimes collapse 2 layers of dispatch into 1
-- can replace library code with a code generator without either changing
+\begin{itemize}
+\item specialization requires selection anyway
+\item simpler system
+\item can sometimes collapse 2 layers of dispatch into 1
+\item can replace library code with a code generator without either changing
   client code *or* any extra overhead
+\end{itemize}
+
+it's been observed that extensive code specialization is a key feature of
+technical computing. ``what to specialize on'' has been an open problem.
+our types are a possible solution to this for two reasons:
+
+1. you can tune the amount of information they contain
+2. everybody agrees to use them, which helps ensure that specializing on
+the types will actually do something useful.
+
+
 
 the key ingredients:
 
@@ -112,6 +124,10 @@ the key ingredients:
 \item Automatic code specialization
 \end{enumerate}
 \end{singlespace}
+
+
+challenges of this approach
+(why has this not been done before?)
 
 
 \section{Contributions}
