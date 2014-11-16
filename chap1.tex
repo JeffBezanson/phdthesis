@@ -5,7 +5,14 @@ and generalization. Today we take it for granted that a single suitably powerful
 language could be used for nearly any programming task, were it not for pragmatic
 factors beyond our control. Over time, many special-purpose languages
 have been subsumed by these more powerful and general languages.
+The field of technical computing --- programming for applied math and the
+sciences --- is something of a holdout from this trend, with its own
+purpose-built languages still dominating.
+There are probably many reasons for this, including historical, social and
+technical.
 
+In this work we will focus on the technical reasons for this, and the
+problems that the current state of affairs causes.
 
 What do we mean by a \emph{language} for scientific computing?
 The prevailing
@@ -18,7 +25,6 @@ is needed to maximize composability and reusability in scientific code.
 Without it, certain programs may be easy to write today, but changing
 functional and performance requirements can become difficult to meet.
 
-
 It is clear that scientific and technical users have their own particular
 needs. So far there have been two paths available for fulfilling these
 needs: using a mainstream general-purpose language like C++ or Java, or
@@ -27,7 +33,7 @@ seems like a drastic thing to do, and yet it is unusually common in
 technical computing (see gang of 40).
 
 
-\section{What is technical computing?}
+\section{The technical computing problem}
 
 \begin{figure}
   \label{PLpriorities}
@@ -71,28 +77,27 @@ contributed significantly to the persistence of specialized environments in this
 
 \section{Proposed solution}
 
-problem of finding connections between array programming and OOP.
-array programming is a powerful paradigm for describing computational
-kernels operating over potentially large amounts of data.
+%problem of finding connections between array programming and OOP.
+%array programming is a powerful paradigm for describing computational
+%kernels operating over potentially large amounts of data.
 
-an ``object system'' in this context is often considered a separate
-part of the language, to be used only when arrays no longer
-suffice.
+%an ``object system'' in this context is often considered a separate
+%part of the language, to be used only when arrays no longer
+%suffice.
 
-technical computing systems have an unusually large amount of
-``failure of abstraction'' --- manual duplication of facts
-all over the system. imagine changing from column-major to
-row-major.
+%technical computing systems have an unusually large amount of
+%``failure of abstraction'' --- manual duplication of facts
+%all over the system. imagine changing from column-major to
+%row-major.
 
-it may be true, as a practical matter, that we as a species need to agree on
-one set of rules and stick to it. however this shouldn't be forced by
-technical limitations.
+%it may be true, as a practical matter, that we as a species need to agree on
+%one set of rules and stick to it. however this shouldn't be forced by
+%technical limitations.
 
 
+Solution: integrate code specialization and code selection
 
-solution: integrate code specialization and code selection
-
-why integrate code specialization and code selection?
+Why integrate code specialization and code selection?
 
 \begin{itemize}
 \item specialization requires selection anyway
@@ -102,17 +107,18 @@ why integrate code specialization and code selection?
   client code *or* any extra overhead
 \end{itemize}
 
-it's been observed that extensive code specialization is a key feature of
+Extensive code specialization is a key feature of
 technical computing. ``what to specialize on'' has been an open problem.
 our types are a possible solution to this for two reasons:
 
-1. you can tune the amount of information they contain
-2. everybody agrees to use them, which helps ensure that specializing on
-the types will actually do something useful.
+\begin{enumerate}
+\item you can tune the amount of information they contain
+\item everybody agrees to use them, which helps ensure that specializing on
+  the types will actually do something useful.
+\end{enumerate}
 
 
-
-the key ingredients:
+The key ingredients:
 
 \begin{singlespace}
 \begin{enumerate}
@@ -125,9 +131,12 @@ the key ingredients:
 \end{enumerate}
 \end{singlespace}
 
+This list of features may appear somewhat ad-hoc. However, they turn out to be
+remarkably strongly coupled, and deeply constrained by our ultimate goal.
+Each of these features has appeared in some form before, but never in a way
+that fully solves the problems described here.
 
-challenges of this approach
-(why has this not been done before?)
+Challenges of this approach (why has this not been done before?)
 
 
 \section{Contributions}
