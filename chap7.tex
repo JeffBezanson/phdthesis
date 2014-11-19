@@ -11,3 +11,35 @@ be so antiquated by 2019
 by following this kind of approach computer scientists can have it
 both ways, and make new interesting things that are also immediately
 useful.
+
+A generation of dynamic languages have been designed by trying variants of
+the class-based object oriented paradigm. This process has been aided by
+the development of standard techniques (e.g. bytecode VMs) and reusable
+infrastructure such as code generators, garbage collectors, and whole VMs
+like the JVM and CLR.
+
+It is possible to envision a future generation of languages that generalize
+this design to set-theoretic subtyping instead of just classes. This next
+generation will require its own new tools, such as partial evaluators (already
+under development in PyPy and Truffle). One can also imagine these future
+language designers wanting reusable program analyses, and tools for
+developing lattices and their operators.
+
+
+
+It is interesting to observe that the data model of a language like Julia
+consists of two key relations: the subtype relation, which is relatively
+well understood and enjoys useful properties like transitivity, but also
+the typeof relation, which relates individual values to their types
+(i.e. the `typeof` function). The typeof relation appears not to be
+transitive, and also has a degree of arbitrariness: a value is of a type
+merely because it is labeled as such, and because various bits of code
+conspire to ensure that this labeling makes sense according to various
+criteria.
+
+We have speculated about whether future languages will be able to do away
+with this distinction. One approach is \lambda_{aleph}. We have also
+speculated that this could be done using types based on non-well-founded
+set theory, combining the subset-of and element-of relations using
+self-containing sets. We are not yet sure what a practical language based
+on this idea might look like.

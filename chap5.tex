@@ -35,6 +35,27 @@ been seriously under-explored.
 
 \subsection{Parametric vs. ad-hoc polymorphism}
 
+The idea of specialization unites parametric and ad-hoc polymorphism.
+Beginning with a parametrically-polymorphic function, one can imagine
+a compiler specializing it for various cases, i.e. certain concrete argument
+values. These specializations would be stored in a lookup table, for use
+either at compile time or at run time.
+
+Next we can imagine that the compiler might not optimally specialize
+certain definitions, and that the programmer would like to provide
+hints or hand-written implementations to speed up special cases.
+For example, imagine a function that traverses a generic array. A compiler-generated
+specialization might inline a specific array types's indexing operations, but a human
+might further realize that the loop order should be switched for certain
+arrays types based on their storage order.
+
+However, if we are going to let a human specialize a function for performance,
+we might as well allow them to specialize it for some other reason, including
+entirely different behavior. But at this point separate ad-hoc polymorphism
+is no longer necessary; we are using a single overloading feature for
+everything.
+
+
 \subsection{Static checking vs. flexibility}
 
 \subsection{Modularity vs. large vocabularies}
