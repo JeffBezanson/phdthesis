@@ -52,3 +52,43 @@ counterexample: lots of compiler papers published about how to
 optimize matlab programs. a fine thing to do, but i want to try
 a different approach. our approach to the problem is highly
 under-explored.
+
+
+
+3 problems with speeding up existing languages:
+
+- what to specialize on, what to dispatch on?
+  e.g. should something be specialized on a constant integer value or just Int?
+
+- during analysis types just get bigger; no types in contravariant position to
+  narrow them
+
+- ultimately (and somewhat ironically) you end up with different mechanisms
+  for specialization and selection, just like in C++. the compiler might
+  end up using multiple dispatch, but you can't have it. not optimal.
+
+on the other end of the spectrum, you might be using very powerful dispatch
+(e.g. predicate dispatch, pattern matching) that's not very useful to the
+compiler.
+
+what's missing is descriptive information. it might be added later, e.g.
+a system of annotations to augment a partial evaluator. but annotations
+are inert; they don't do anything but improve performance.
+the information is also just nice to have. you can talk about it, refer to it.
+
+maybe measure: % of methods applicable per call site on average, based on
+static information.
+functions:      1/1
+class-based OO: n/n, where n=# subclasses and is fairly small
+overloading:    1/n
+julia:          (small number)/(large number)
+
+solve the equation
+
+dispatch power = program analysis power
+
+the answer is semantic subtyping.
+
+this finds local optima in the design space.
+more powerful dispatch => ok, but compiler can help less
+less "                 => the compiler could help, you're leaving power on the table
