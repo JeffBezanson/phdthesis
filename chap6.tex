@@ -5,8 +5,29 @@
 
 Multiple dispatch on special matrices
 
+29 LAPACK types via composition of 9 types, issue #8240
 
-\section{Grid.jl, computational libraries}
+
+\section{Boundary-element method}
+
+There are lots of general packages for FEM problems, but it is much more
+difficult to create such a package for BEM problems. The method requires
+integrating functions with singularities, many times in the inner loop
+of code that builds the problem matrix. Integrating such functions
+numerically on each iteration is much too slow. As a result, many
+special-purpose implementations have been written by hand for different
+problems.
+
+Some recent work (TODO cite Homer) managed a more general solution,
+using Mathematica to generate C++ code for different cases. This worked
+well, but was difficult to implement and the resulting system is difficult
+to use. We see the familiar pattern of using multiple languages and
+code-generation techniques, with coordination of the overall process done
+either manually or with ad-hoc scripts.
+
+\section{Dates}
+
+compare to python DateTime, compare code length
 
 
 \section{JUMP}
@@ -14,10 +35,14 @@ Multiple dispatch on special matrices
 Metaprogramming tools reused for symbolic algebra
 
 
-\section{ACAS}
+\section{Computational geometry}
+
+robust predicates (dispatch over points, lines) and VoronoiDelaunay.jl
+benchmarked against CGAL
 
 
-\section{Parallel computing, e.g. parallel prefix}
+%\section{ACAS}
 
+%\section{Parallel computing, e.g. parallel prefix}
 
-\section{IJulia}
+%\section{IJulia}

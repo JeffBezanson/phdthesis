@@ -29,6 +29,15 @@ can actually do what people want, given the existing popular systems.
 
 
 
+
+theme: code generation
+
+show
+  - you need some ability to prove things about types, not just JIT with speculative opts
+  - our design makes it easier to get performance, for both the user and language
+    implementer
+
+
 mechanism:
 
 TC is very light on theory and could benefit from more theory

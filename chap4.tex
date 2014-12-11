@@ -68,6 +68,34 @@ we compute its eigenvalues? While we cannot offer a once-and-for-all solution
 to these problems, we will show how the flexibility of our proposed mechanism
 is useful for addressing them.
 
+\subsection{Diversity of number and number-like types in practice}
+
+Originally, our reasons for implementing all numeric types at the library
+level were not entirely practical. We had a principled opposition to
+including such definitions in a compiler, and guessed that being able to
+define numeric types would help ensure the language was ``powerful enough''.
+However, defining numeric and number-like types and their interactions turns
+out to be surprisingly useful. Once such types become easy to obtain,
+people find more and more uses for them.
+
+Ordinal types: Pointer, Char
+
+Integer types: Int8, Int16, Int32, Int64, Int128, UInt8, UInt16, UInt32, UInt64, UInt128, BigInt
+
+Floating point types: Float16, Float32, Float64, BigFloat
+(Float128, double-double)
+
+Fixed point: Fixed32{b}, Ufixed8, Ufixed16
+
+Extensions: Complex, Quaternion, Interval, DualNumber
+
+Number-like: Date, TimePeriod, DatePeriod, Color, (Units), DNA nucleotide type (bioseq.jl)
+  ^
+  different cardinal and ordinal behavior
+
+musical notes
+
+
 
 %\subsection{Implementing type embeddings}
 
