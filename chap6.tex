@@ -23,7 +23,18 @@ using Mathematica to generate C++ code for different cases. This worked
 well, but was difficult to implement and the resulting system is difficult
 to use. We see the familiar pattern of using multiple languages and
 code-generation techniques, with coordination of the overall process done
-either manually or with ad-hoc scripts.
+either manually or with ad-hoc scripts. To polish the implementation for
+use as a practical library, a likely next step would be to add a Python
+interface, adding yet another layer of complexity.
+
+
+Features of julia this demonstrates:
+
+- functions that need to dispatch on more than one argument
+- staged methods providing a natural way to integrate code generation
+- doing specialization through the object system, leading to a ``flat'' system
+
+The code can be structured as a simple function library.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

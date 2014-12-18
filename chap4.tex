@@ -48,6 +48,7 @@ a partial order $\leq$:
   T \leq S &\Leftrightarrow \llbracket T \rrbracket \subseteq \llbracket S \rrbracket
 \end{align*}
 
+\noindent
 where $\mathcal{D}$ represents the domain of all values.
 
 Next we add data objects with structured tags.
@@ -70,7 +71,7 @@ generic (parametric) types, invariant type parameters, and no concrete inheritan
 We prefer parametric \emph{invariance} for reasons that have been addressed in the
 literature (TODO cite e.g. ``Subtypes vs. Where Clauses: Constraining Parametric Polymorphism'').
 Invariance preserves the property that the only subtypes of a concrete type are \texttt{Bottom}
-and itself. We also find that most uses of covariance and contravariance are more flexibly
+and itself. We also find that most uses of covariance are more flexibly
 handled by union type connectives, which will be introduced below.
 
 Next we add conventional product (tuple) types, which are used to represent the
@@ -86,11 +87,15 @@ elements:
   %\llbracket \texttt{Tuple\{}\cdots\texttt{\}} \rrbracket \cup \llbracket \texttt{Tuple\{}\cdots,P_n\texttt{\}} \rrbracket \cup \llbracket \texttt{Tuple\{}\cdots,P_n,P_n\texttt{...\}} \rrbracket \\
 \end{align*}
 
+\noindent
 $P_n^i$ represents $i$ repetitions of the final element $P_n$ of the type expression.
 
-Multiple dispatch has been formulated as dispatch on tuple types before (TODO cite).
 The abstract tuple types ending in \texttt{...} correspond to variadic methods, which
 provide convenient interfaces for tasks like concatenating any number of arrays.
+Multiple dispatch has been formulated as dispatch on tuple types before (TODO cite).
+This formulation has the advantage that \emph{any} type that is a subtype of a
+tuple type can be used to express the signature of a method. It also makes the system
+simpler, since subtype queries can be used to ask questions about methods.
 
 The types introduced so far would be perfectly sufficient for many programs, and are
 roughly equal in power to several multiple dispatch systems that have been designed
@@ -124,9 +129,10 @@ When used with type inference, such types can grow without bound, possibly leadi
 to slow or even non-terminating compilation. Their occurrence also typically
 corresponds to cases that would fail most static type checkers. Yet from the
 perspectives of both data-flow analysis and method specialization, they are
-perfectly natural and even essential.
+perfectly natural and even essential (TODO cite analyses that have used union
+types).
 
-The next major problem we need to solve arises from combining data-flow analysis
+The next problem we need to solve arises from combining data-flow analysis
 and parametric invariance. When a type constructor \texttt{C} is applied to a type
 $S$ that is known only approximately at compile time, the type \texttt{C\{}$S$\texttt{\}}
 does not correctly represent the result if \texttt{C} is invariant. The correct
@@ -142,21 +148,83 @@ range:
   \llbracket \texttt{UnionAll }L\texttt{<:T<:}U\ A \rrbracket = \bigcup_{L \leq T \leq U} \llbracket A[T/\texttt{T}] \rrbracket
 \]
 
+% TODO: The inclusion of lower bounds probably makes subtyping undecidable,
+% since it can encode contravariance. Needs to be removed.
 
-$T=S \longleftrightarrow (T\leq S) \wedge (S\leq T)$.
+This is essentially equivalent to an existential type \cite{boundedquant};
+for each concrete subtype of it there exists a corresponding $T$.
+We prefer the union interpretation because we are describing sets of values;
+the notion of ``there exists'' can be semantically misleading since it sounds like
+only a single $T$ value might be involved.
+
+%Conjecture: these types are intuitive to dispatch on because they correspond
+%to program behavior in the same way that dataflow analysis approximates program
+%behavior.
+
+% $T=S \longleftrightarrow (T\leq S) \wedge (S\leq T)$.
+
+\subsubsection{Examples}
+
+\texttt{UnionAll} types are quite expressive. In combination with nominal
+types they can describe groups of containers such as
+\texttt{UnionAll T<:Number Array\{Array\{T\}\}} (all arrays of arrays of
+some kind of number) or
+\texttt{Array\{UnionAll T<:Number Array\{T\}\}} (an array of arrays of
+potentially different types of number).
+
+In combination with tuple types, \texttt{UnionAll} types provide powerful
+method dispatch specifications. For example
+\texttt{UnionAll T Tuple\{Array\{T\},Int,T\}} matches three arguments:
+an array, an integer, and a value that is an instance of the array's
+element type. This is a natural signature for a method that assigns a
+value to a given index within an array.
+
+
+\subsubsection{Type constructors}
+
+It is important for any proposed high-level technical computing language to be
+simple and approachable, since otherwise the value over established
+powerful-but-complex languages like C++ is less clear.
+In particular, type parameters raise usability concerns.
+Needing to write parameters along with every type is verbose, and requires users
+to know more about the type system and to know more details of particular
+types (how many parameters they have and what each one means).
+Furthermore, in many contexts type parameters are not directly relevant.
+For example, a large amount of code operates on \texttt{Array}s of any
+element type, and in these cases it should be possible to ignore type parameters.
+
+Consider \texttt{Array\{T\}}, the type of arrays with element type \texttt{T}.
+In most languages with parametric types, the identifier \texttt{Array} would
+refer to a type constructor, i.e. a type of a different \emph{kind} than
+ordinary types like \texttt{Int} or \texttt{Array\{Int\}}.
+Instead, we find it intuitive and appealing for \texttt{Array} to refer to
+any kind of array, so that a declaration such as \texttt{x::Array} simply
+asserts \texttt{x} to be some kind of array. In other words,
+
+\[
+\texttt{Array} = \texttt{UnionAll T Array$^\prime$\{T\}}
+\]
+
+\noindent
+where \texttt{Array$^\prime$} refers to a hidden, internal type constructor.
+The \texttt{\{ \}} syntax can then be used to instantiate a \texttt{UnionAll}
+type at a particular parameter value.
+
+\subsubsection{Type system variants}
 
 features that are fairly straightforward to add:
 
 - structurally-subtyped records
 - mu-recursive types (regular trees)
 - regular types (allowing ... in more places)
-- arrow types
 
 features that are difficult to add, or possibly break decidability:
 
+- arrow types
 - negations
 - intersections, multiple inheritance
 - universal quantifiers
+- lower bounds in quantifiers
 - arbitrary predicates, theory of natural numbers, etc.
 
 \subsection{Data model}
