@@ -67,6 +67,22 @@ operations.
 
 \subsection{Modularity vs. large vocabularies}
 
+In the context of software engineering, modularity is a primary concern.
+To build large systems, separate components must be isolated to some
+degree.
+Reasons for this include simple concerns like avoiding name conflicts,
+and a desire to separate interface from implementation to allow
+a component to change without affecting the rest of the system.
+
+Modularity is sometimes taken to an extreme, and one will see
+fully qualified names like \texttt{org.jboss.annotation.ejb.cache.simple.CacheConfig}
+(selected from the JBOSS Java APIs).
+
+Technical computing languages have often avoided and discouraged such
+designs. For example MATLAB for most of its history supported only a single
+namespace, which comes pre-populated with thousands of functions.
+
+
 \subsection{Eliminating vs. embracing tagged data}
 
 \subsection{Data hiding vs. explicit memory layout}
@@ -287,7 +303,6 @@ rewrite it, kind of an escape hatch for a language you don't like. If
 somebody else also tries to do this, there won't necessarily be any
 coherence.
 
-
 A helpful way to classify languages with some kind of generic programming
 support is to look at which language constructs are generic. For example,
 in C++ the syntax \texttt{object.method(x)} is generic: a programmer can
@@ -307,6 +322,62 @@ take generic programming much further. For example, in MATLAB, \emph{every}
 function is effectively generic, and can be overloaded by new classes.
 This enables a programmer to ``intercept'' every function call (and therefore,
 essentially everything a program does)
+
+foo
+
+\subsection{Example: lattices}
+
+A \emph{lattice} is an algebraic structure where some pairs of elements
+satisfy a reflexive, antisymmetric, and transitive relation $\leq$.
+For purposes of this example, we will consider lattices that have
+a greatest, or \emph{top}, element ($\top$), and a least, or \emph{bottom}
+element ($\bot$). When working with lattices one often wants to compute
+a least upper bound, or \emph{join} ($\sqcup$), or a greatest lower bound,
+or \emph{meet} ($\sqcap$).
+
+Several interesting concerns arise when modeling lattices in a programming
+language. First, the structure is very general, and so admits implementations
+for many different kinds of elements. We will want to write code using
+the operators $\leq$, $\sqcup$, and $\sqcap$, and have it apply to any kind
+of lattice. Therefore some kind of overloading or object-oriented programming
+is desirable. Second, some properties apply to all lattices, and we would
+like to avoid implementing them repeatedly.
+
+This example will illustrate possible benefits of multiple dispatch and
+dynamic typing. The benefits are not absolute, but notational and semantic:
+they involve code size and clarity, and the extent to which the entities
+provided by the language match a mental model of the domain.
+
+Using ``duck typing'', the problem of modeling an abstraction like lattices
+disappears almost entirely. One may simply define methods for
+$\leq$, $\sqcup$, and $\sqcap$ at any time, for any type, and that type will
+function as a lattice.
+
+\begin{singlespace}
+\begin{lstlisting}[style=customjulia]
+abstract LatticeElement
+
+<=(x::LatticeElement, y::LatticeElement) = x===y
+==(x::LatticeElement, y::LatticeElement) = x<=y && y<=x
+< (x::LatticeElement, y::LatticeElement) = x<=y && !(y<=x)
+
+immutable TopElement <: LatticeElement; end
+immutable BotElement <: LatticeElement; end
+
+const ~$\top$~ = TopElement()
+const ~$\bot$~ = BotElement()
+
+<=(::BotElement, ::TopElement) = true
+<=(::BotElement, ::LatticeElement) = true
+<=(::LatticeElement, ::TopElement) = true
+
+~$\sqcup$~(x::LatticeElement, y::LatticeElement) =  # join
+    (x <= y ? y : y <= x ? x : ~$\top$~)
+
+~$\sqcap$~(x::LatticeElement, y::LatticeElement) =  # meet
+    (x <= y ? x : y <= x ? y : ~$\bot$~)
+\end{lstlisting}
+\end{singlespace}
 
 
 \subsection{Symbolic programming}

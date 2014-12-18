@@ -3,6 +3,8 @@
 *.fls
 *.log
 *.toc
+*.blg
+*.bbl
 main.dvi
 outline.dvi
 outline.pdf

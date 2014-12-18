@@ -6,12 +6,14 @@
 %% information, see the first few lines of mitthesis.cls. 
 
 \documentclass[12pt]{mitthesis}
-\usepackage{lgrind}
-\usepackage{algorithmic}
-\usepackage{algorithm}
+%\usepackage{lgrind}
+%\usepackage{algorithmic}
+%\usepackage{algorithm}
 \usepackage{stmaryrd}
 \usepackage{amsmath}
 \usepackage{amsopn}
+\usepackage{listings}
+\usepackage{url}
 \usepackage[nottoc]{tocbibind}
 \pagestyle{plain}
 
@@ -36,6 +38,11 @@
 \DeclareMathOperator{\intersect}{intersect}
 \DeclareMathOperator{\formals}{formals}
 \DeclareMathOperator{\superdecl}{super\_decl}
+
+\lstdefinestyle{customjulia}{
+  basicstyle=\small\ttfamily,
+  escapeinside={~}{~},
+}
 
 %% This bit allows you to either specify only the files which you wish to
 %% process, or `all' to process all files which you \include.
@@ -62,7 +69,7 @@
 \include{chap7}
 \newpage
 \begin{singlespace}
-\bibliographystyle{plain}
+\bibliographystyle{acm}
 \bibliography{main}
 \end{singlespace}
 %\appendix
