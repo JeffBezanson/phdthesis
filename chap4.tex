@@ -69,7 +69,7 @@ cannot have direct instances.
 These types closely resemble the classes of an object-oriented language with
 generic (parametric) types, invariant type parameters, and no concrete inheritance.
 We prefer parametric \emph{invariance} for reasons that have been addressed in the
-literature (TODO cite e.g. ``Subtypes vs. Where Clauses: Constraining Parametric Polymorphism'').
+literature \cite{Day:1995:SVC:217838.217852}.
 Invariance preserves the property that the only subtypes of a concrete type are \texttt{Bottom}
 and itself. We also find that most uses of covariance are more flexibly
 handled by union type connectives, which will be introduced below.
@@ -92,7 +92,7 @@ $P_n^i$ represents $i$ repetitions of the final element $P_n$ of the type expres
 
 The abstract tuple types ending in \texttt{...} correspond to variadic methods, which
 provide convenient interfaces for tasks like concatenating any number of arrays.
-Multiple dispatch has been formulated as dispatch on tuple types before (TODO cite).
+Multiple dispatch has been formulated as dispatch on tuple types before \cite{Leavens1998}.
 This formulation has the advantage that \emph{any} type that is a subtype of a
 tuple type can be used to express the signature of a method. It also makes the system
 simpler, since subtype queries can be used to ask questions about methods.
@@ -129,8 +129,8 @@ When used with type inference, such types can grow without bound, possibly leadi
 to slow or even non-terminating compilation. Their occurrence also typically
 corresponds to cases that would fail most static type checkers. Yet from the
 perspectives of both data-flow analysis and method specialization, they are
-perfectly natural and even essential (TODO cite analyses that have used union
-types).
+perfectly natural and even essential \cite{Igarashi} \cite{Smith:2008:JTI:1449764.1449804}
+(TODO cite analyses that have used union types).
 
 The next problem we need to solve arises from combining data-flow analysis
 and parametric invariance. When a type constructor \texttt{C} is applied to a type
@@ -151,8 +151,9 @@ range:
 % TODO: The inclusion of lower bounds probably makes subtyping undecidable,
 % since it can encode contravariance. Needs to be removed.
 
-This is essentially equivalent to an existential type \cite{boundedquant};
+This is equivalent to an existential type \cite{boundedquant};
 for each concrete subtype of it there exists a corresponding $T$.
+Anecdotally, programmers have often found existential types confussing.
 We prefer the union interpretation because we are describing sets of values;
 the notion of ``there exists'' can be semantically misleading since it sounds like
 only a single $T$ value might be involved.
@@ -210,22 +211,51 @@ where \texttt{Array$^\prime$} refers to a hidden, internal type constructor.
 The \texttt{\{ \}} syntax can then be used to instantiate a \texttt{UnionAll}
 type at a particular parameter value.
 
+\subsubsection{Subtyping}
+
+Describe algorithm.
+
+Very likely $\Pi_2^{\textrm{P}}$-hard.
+Checking a subtype relation with unions requires checking that for all choices
+on the left, there exists a choice on the right that makes the relation hold.
+This matches the quantifier structure of 2-TQBF problems of the form
+$\forall x_i . \exists y_i . F$ where $F$ is a logical formula. If the formula
+is rewritten in conjunctive normal form, it corresponds to subtype checking
+between two tuple types, where the relation must hold for each pair of
+corresponding types. Now use a type \texttt{N\{}$x$\texttt{\}} to
+represent $\neg x$. The clause $(x_i \vee y_i)$ can be translated to
+$x_i$\texttt{ <: Union\{N\{}$y_i$\texttt{\}, True\}} (where the $x_i$ and
+$y_i$ are type variables bound by \texttt{UnionAll} on the left and right,
+respectively).
+
+
 \subsubsection{Type system variants}
 
 features that are fairly straightforward to add:
 
-- structurally-subtyped records
-- mu-recursive types (regular trees)
-- regular types (allowing ... in more places)
+\vspace{-2ex}
+\begin{singlespace}
+\begin{itemize}
+\item structurally-subtyped records
+\item mu-recursive types (regular trees)
+\item regular types (allowing ... in more places)
+\end{itemize}
+\end{singlespace}
 
+\noindent
 features that are difficult to add, or possibly break decidability:
 
-- arrow types
-- negations
-- intersections, multiple inheritance
-- universal quantifiers
-- lower bounds in quantifiers
-- arbitrary predicates, theory of natural numbers, etc.
+\vspace{-2ex}
+\begin{singlespace}
+\begin{itemize}
+\item arrow types
+\item negations
+\item intersections, multiple inheritance
+\item universal quantifiers
+\item lower bounds in quantifiers
+\item arbitrary predicates, theory of natural numbers, etc.
+\end{itemize}
+\end{singlespace}
 
 \subsection{Data model}
 

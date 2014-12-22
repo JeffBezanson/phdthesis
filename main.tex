@@ -6,6 +6,7 @@
 %% information, see the first few lines of mitthesis.cls. 
 
 \documentclass[12pt]{mitthesis}
+\usepackage[top=1in, bottom=1.5in, left=1in, right=1in]{geometry}
 %\usepackage{lgrind}
 %\usepackage{algorithmic}
 %\usepackage{algorithm}
@@ -15,6 +16,8 @@
 \usepackage{listings}
 \usepackage{url}
 \usepackage[nottoc]{tocbibind}
+\usepackage{appendix}
+\usepackage{multicol}
 \pagestyle{plain}
 
 \DeclareMathOperator{\find}{find}
@@ -67,6 +70,9 @@
 \include{chap4}
 \include{chap6}
 \include{chap7}
+\begin{appendices}
+  \include{appa}
+\end{appendices}
 \newpage
 \begin{singlespace}
 \bibliographystyle{acm}

@@ -87,7 +87,20 @@ namespace, which comes pre-populated with thousands of functions.
 
 \subsection{Data hiding vs. explicit memory layout}
 
-% para: here we will discuss why it might be worth exploring
+Examples of CSC and CSR sparse representation.
+In one sense this is a perfect example of an interface with multiple implementations,
+and therefore a good use case for object-oriented programming.
+However in the technical computing world, \emph{hiding} this difference in
+representation is not usually considered desirable.
+Clearly a sparse matrix class cannot contain all functions of matrices that users
+might want to compute.
+Yet when new functions are added, the programmer needs and wants to exploit
+representation details (CSC or CSR) for performance.
+The performance differences involved here are quite significant (TODO cite).
+
+The loss of encapsulation due to multi-methods weighed in \cite{binarymethods}
+is less of a problem for technical computing, and in some cases even
+advantageous.
 
 \subsection{Dynamic dispatch is key}
 
@@ -327,6 +340,12 @@ foo
 
 \subsection{Example: lattices}
 
+This example will illustrate possible benefits of multiple dispatch and
+dynamic typing for mathematical computing.
+The benefits are not absolute, but notational and semantic:
+they involve code size and clarity, and the extent to which the entities
+provided by the language match a mental model of the domain.
+
 A \emph{lattice} is an algebraic structure where some pairs of elements
 satisfy a reflexive, antisymmetric, and transitive relation $\leq$.
 For purposes of this example, we will consider lattices that have
@@ -337,22 +356,21 @@ or \emph{meet} ($\sqcap$).
 
 Several interesting concerns arise when modeling lattices in a programming
 language. First, the structure is very general, and so admits implementations
-for many different kinds of elements. We will want to write code using
+for many different kinds of elements. We want to write code using
 the operators $\leq$, $\sqcup$, and $\sqcap$, and have it apply to any kind
 of lattice. Therefore some kind of overloading or object-oriented programming
 is desirable. Second, some properties apply to all lattices, and we would
 like to avoid implementing them repeatedly.
 
-This example will illustrate possible benefits of multiple dispatch and
-dynamic typing. The benefits are not absolute, but notational and semantic:
-they involve code size and clarity, and the extent to which the entities
-provided by the language match a mental model of the domain.
-
 Using ``duck typing'', the problem of modeling an abstraction like lattices
 disappears almost entirely. One may simply define methods for
 $\leq$, $\sqcup$, and $\sqcap$ at any time, for any type, and that type will
-function as a lattice.
+function as a lattice. That is certainly convenient, but it also fails to
+provide any reusable functionality for those defining lattices.
 
+\begin{figure}
+  \label{julialattices}
+  \begin{center}
 \begin{singlespace}
 \begin{lstlisting}[style=customjulia]
 abstract LatticeElement
@@ -378,9 +396,17 @@ const ~$\bot$~ = BotElement()
     (x <= y ? x : y <= x ? y : ~$\bot$~)
 \end{lstlisting}
 \end{singlespace}
+  \end{center}
+\end{figure}
+
+Figure~\ref{julialattices} shows a small Julia library for lattices.
+It defines an abstract class \texttt{LatticeElement} that may be subclassed
+by objects that will be used primarily as elements of some lattice.
+The library also provides standard
+\texttt{LatticeElement} provides some useful default method definitions.
 
 
-\subsection{Symbolic programming}
+\subsection{Symbolic programming and predicate dispatch}
 
 Systems based on symbolic rewrite rules arguably occupy a further tier of
 dispatch sophistication. In these systems, you can dispatch on essentially

@@ -77,6 +77,95 @@ contributed significantly to the persistence of specialized environments in this
 
 \section{Proposed solution}
 
+It is clear that any future scientific computing language will need to be able to
+match the performance of C, C++, and Fortran. To do that, it is almost certain
+that speculative optimizations such as tracing (TODO cite) will not be sufficient ---
+the language will need to be able to \emph{prove} facts about types, or at least
+let the user request specific types. It is also clear that such a language must
+strive for maximum convenience, or else the split between performance languages
+and productivity languages will persist.
+
+It is fair to say that two approaches to this problem are being tried: one is
+to design better statically-typed languages, and the other is to apply
+program analysis techniques to dynamically-typed languages.
+Static type systems seem to be getting close to achieving the desired level
+of flexibility (as in Fortress \cite{fortresspec}, for instance), but it
+is still too early to call a winner between these two approaches
+(if, indeed, there even needs to be a winner).
+
+Our contribution derives from observations of the second approach.
+Efforts to analyze and optimize dynamically-typed programs generally make two
+assumptions: (1) we should work on analyzing \emph{existing} popular
+languages, and (2) users of these languages don't want to use types.
+The first assumption makes practical sense.
+Convenience is hard to quantify, so using existing languages that have already
+been deemed convenient by popular opinion puts us on solid footing.
+This thesis describes a new language, so we simply take the negation of the
+first assumption as a premise.
+Our work addresses the second assumption more directly.
+Specifically, we point out that types do not have to be used for
+static checking, and that using them for \emph{code selection} and
+\emph{code specialization} is particularly useful in technical computing.
+This perspective has not been explored thoroughly in the past.
+
+
+
+what to dispatch on? dispatch power has been extended in many ways, but
+there is no real limit to what somebody might want to dispatch on.
+so what to do?
+some sets of values are more robust under computation than others
+(closure properties).
+identify those sets using dataflow concerns.
+
+say we have a method defined for integers, and also for the special cases
+``2'' and ``odd integers''. a realistic implementation
+will group all of these under ``integer'', and ideally generate a couple
+branches to handle the other cases. we argue the concept of ``integer''
+here is a more robust set, and so a more fundamental language concept.
+
+
+somewhat counter-intuitively, dynamic dispatch can be good for performance
+since it permits invoking the most specialized possible method.
+static overloading can lead to calling a sub-optimal case when multiple
+overloads exist for the sake of performance.
+
+
+(one way to describe it: you can start with the notation you want, or with the
+notation that people are using already, and come up with better ways to
+*explain* it.
+in other words, design a robust framework that assigns a satisfactory meaning
+to each thing we'd like to write.
+the amazing thing about programming languages it that a better
+explanation can directly lead to better performance!)
+
+
+
+- mention dual traps of wasted power and divergence
+
+
+- vs predicate dispatch: we extend dispatch power in a different direction,
+guided by semantic subtyping. goal is maximum power that still yields high
+likelihood of resolving many calls to a single implementation.
+
+a multimethod system designed for type inference and specialization.
+
+past (static) type systems for dispatch were designed to ensure the absence of
+no-method errors and ambiguities (completeness and uniqueness). our goal
+is instead to statically resolve methods. this is inherently heuristic and
+best-effort. since static types shouldn't affect program behavior, we
+conclude that the dispatch must be dynamic, which is happily the same
+conclusion you would reach if you simply wanted dynamic typing.
+
+
+it is quite possible that some static type system will work well for this
+however we defer this question.
+
+interesting variants:
+- require static single method matches
+- reject programs with no-method errors
+- reject programs that yield Unions
+
+
 %problem of finding connections between array programming and OOP.
 %array programming is a powerful paradigm for describing computational
 %kernels operating over potentially large amounts of data.

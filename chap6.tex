@@ -132,6 +132,24 @@ robust predicates (dispatch over points, lines) and VoronoiDelaunay.jl
 benchmarked against CGAL
 
 
+\section{Beating the incumbents}
+
+- erfinv and digamma using horner macro
+- randn beating matlab
+
+If nothing else, demonstrates that removing glue code overhead is worthwhile.
+
+
+grisu: 6kLOC to 1kLOC (PR 7291)
+
+
+\section{misc staged functions}
+
+tim holy in issue 8839:
+
+``without staged functions in my initial post in 8235. The take-home message: generating all methods through dimension 8 resulted in more than 5000 separate methods, and required over 4 minutes of parsing \& lowering time (i.e., a 4-minute delay while compiling julia). By comparison, the stagedfunction implementation loads in a snap, and of course can go even beyond 8 dimensions.''
+
+
 %\section{ACAS}
 
 %\section{Parallel computing, e.g. parallel prefix}
