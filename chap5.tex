@@ -1,519 +1,157 @@
-\chapter{Available technology}
-
-
-\section{The language design space}
-
-It is helpful to begin with a rather coarse classification of programming
-languages, according to how expressive their type systems are, and whether
-their type systems are dynamic or static:
-\\
-\begin{tabular}{|c||c|c|}
-\hline 
- & More types & Fewer types\tabularnewline
-\hline 
-\hline 
-Dynamic & Dylan, Julia & Scheme, Python, MATLAB\tabularnewline
-\hline 
-Static & ML, Haskell, Scala & C\tabularnewline
-\hline 
-\end{tabular}
-\\
-
-The lower right corner tend to contain older languages. The upper right corner
-contains many popular ``dynamic'' languages. The lower left corner contains
-many modern languages resulting from research on static type systems.
-We are most interested in the upper left corner, which is notable for being
-rather sparsely populated. It has been generally believed that dynamic
-languages do not ``need'' types, or that there is no point in talking about
-types if they are not going to be checked at compile time. These views have
-some merit, but as a result the top-left corner of this design space has
-been seriously under-explored.
-
-\subsection{Classes vs. functions}
-
-\subsection{Separate compilation vs. performance}
-
-\subsection{Parametric vs. ad-hoc polymorphism}
-
-The idea of specialization unites parametric and ad-hoc polymorphism.
-Beginning with a parametrically-polymorphic function, one can imagine
-a compiler specializing it for various cases, i.e. certain concrete argument
-values. These specializations would be stored in a lookup table, for use
-either at compile time or at run time.
-
-Next we can imagine that the compiler might not optimally specialize
-certain definitions, and that the programmer would like to provide
-hints or hand-written implementations to speed up special cases.
-For example, imagine a function that traverses a generic array. A compiler-generated
-specialization might inline a specific array types's indexing operations, but a human
-might further realize that the loop order should be switched for certain
-arrays types based on their storage order.
-
-However, if we are going to let a human specialize a function for performance,
-we might as well allow them to specialize it for some other reason, including
-entirely different behavior. But at this point separate ad-hoc polymorphism
-is no longer necessary; we are using a single overloading feature for
-everything.
-
-
-Parametric polymorphism describes code that works for any object precisely
-because it does not do anything meaningful to the object, for example the
-identity function. In contrast, programming with tagged data (e.g.
-symbolic expression systems, XML) permits code to work for any object
-because every object has the same structure, allowing meaningful
-operations.
-
-\subsection{Static checking vs. flexibility}
-
-\subsection{Modularity vs. large vocabularies}
-
-In the context of software engineering, modularity is a primary concern.
-To build large systems, separate components must be isolated to some
-degree.
-Reasons for this include simple concerns like avoiding name conflicts,
-and a desire to separate interface from implementation to allow
-a component to change without affecting the rest of the system.
-
-Modularity is sometimes taken to an extreme, and one will see
-fully qualified names like \texttt{org.jboss.annotation.ejb.cache.simple.CacheConfig}
-(selected from the JBOSS Java APIs).
-
-Technical computing languages have often avoided and discouraged such
-designs. For example MATLAB for most of its history supported only a single
-namespace, which comes pre-populated with thousands of functions.
-
-
-\subsection{Eliminating vs. embracing tagged data}
-
-\subsection{Data hiding vs. explicit memory layout}
-
-Examples of CSC and CSR sparse representation.
-In one sense this is a perfect example of an interface with multiple implementations,
-and therefore a good use case for object-oriented programming.
-However in the technical computing world, \emph{hiding} this difference in
-representation is not usually considered desirable.
-Clearly a sparse matrix class cannot contain all functions of matrices that users
-might want to compute.
-Yet when new functions are added, the programmer needs and wants to exploit
-representation details (CSC or CSR) for performance.
-The performance differences involved here are quite significant (TODO cite).
-
-The loss of encapsulation due to multi-methods weighed in \cite{binarymethods}
-is less of a problem for technical computing, and in some cases even
-advantageous.
-
-\subsection{Dynamic dispatch is key}
-
-It would be unpleasant if every piece of every program we wrote were forced
-to do only one specific task. Every time we wanted to do something slightly
-different, we'd have to write a different program. But if a language
-allows the same program element to do different things at different times,
-we can write whole classes of programs at once. This kind of capability is
-one of the main reasons \emph{object-oriented} programming is popular: it
-provides a way to automatically select different behaviors according to
-some structured criteria.
-
-In class-based OO there is essentially \emph{no way} to create an operation
-that dispatches on existing types (the expression problem). This clearly
-does not match technical computing, where most programs deal with the same
-few types (e.g. number, array), and might sensibly want to write new operations
-that dispatch on them.
-
-%Somewhat unfortunately, the term \emph{object-oriented} has many
-%connotations, and the \emph{object-oriented} methodology tries to address
-%multiple software engineering problems --- for example modularity,
-%encapsulation, implementation hiding, and code reuse. These issues are
-%important, but it may be because of them that over time too little
-%emphasis has been placed on expressive power.
-
-We use the non-standard term ``criteria'' deliberately, in order
-to clarify our point of view, which is independent of any particular
-object system.
-
-The sophistication of the available ``selection criteria'' account for a
-large part of the perceived ``power'' or leverage provided by a language.
-In fact it is possible to illustrate a hierarchy of such mechanisms.
-As an example, consider a simple simulation, and how it can be written
-under a series of increasingly powerful paradigms. First, written-out
-imperative code:
-
-\begin{verbatim}
-while running
-    for a in animals
-        b = nearby_animal(a)
-        if a isa Rabbit
-            if b isa Wolf then run(a)
-            if b isa Rabbit then mate(a,b)
-        else if a isa Wolf
-            if b isa Rabbit then eat(a,b)
-            if b isa Wolf then follow(a,b)
-        end
-    end
-end
-\end{verbatim}
-
-We can see how this would get tedious as we add more kinds of animals
-and more behaviors. Another problem is that the animal behavior is
-implemented directly inside the control loop, so it is hard to see
-what parts are simulation control logic and what parts are animal
-behavior. Adding a simple object system leads to a nicer implementation
-\footnote{A perennial problem with simple examples is that better
-implementations often make the code longer.}:
-
-\begin{verbatim}
-class Rabbit
-    method encounter(b)
-        if b isa Wolf then run()
-        if b isa Rabbit then mate(b)
-    end
-end
-
-class Wolf
-    method encounter(b)
-        if b isa Rabbit then eat(b)
-        if b isa Wolf then follow(b)
-    end
-end
-
-while running
-    for a in animals
-        b = nearby_animal(a)
-        a.encounter(b)
-    end
-end
-\end{verbatim}
-
-Here all of the simulation's animal behavior has been essentially
-compressed into a single program point: \texttt{a.encounter(b)}
-leads to all of the behavior by selecting an implementation based
-on the first argument, \texttt{a}. This kind of criterion is
-essentially indexed lookup; we can imagine that \texttt{a} is
-simply an integer index into a table of operations.
-
-The next enhancement to ``selection criteria'' adds a hierarchy
-of behaviors, to provide further opportunities to avoid
-repetition:
-
-\begin{verbatim}
-abstract class Animal
-    method nearby()
-        # search within some radius
-    end
-end
-
-class Rabbit <: Animal
-    method encounter(b: Animal)
-        if b isa Wolf then run()
-        if b isa Rabbit then mate(b)
-    end
-end
-
-class Wolf <: Animal
-    method encounter(b: Animal)
-        if b isa Rabbit then eat(b)
-        if b isa Wolf then follow(b)
-    end
-end
-
-while running
-    for a in animals
-        b = a.nearby()
-        a.encounter(b)
-    end
-end
-\end{verbatim}
-
-We are still essentially doing table lookup, but the tables have
-more structure: every \texttt{Animal} has the \texttt{nearby}
-method, and can inherit a general-purpose implementation.
-
-This brings us roughly to the level of most popular object-oriented
-languages. But in this example still more can be done. Notice that
-in the first step to objects we replaced one level of \texttt{if}
-statements with method lookup. However, inside of these methods
-a structured set of \texttt{if} statements remains. We can
-replace these by adding another level of dispatch.
-
-\begin{verbatim}
-class Rabbit <: Animal
-    method encounter(b: Wolf) = run()
-    method encounter(b: Rabbit) = mate(b)
-end
-
-class Wolf <: Animal
-    method encounter(b: Rabbit) = eat(b)
-    method encounter(b: Wolf) = follow(b)
-end
-\end{verbatim}
-
-We now have a \emph{double dispatch} system, where a method call
-uses two lookups, first on the first argument and then on the
-second argument.
-
-This syntax might be considered a bit nicer, but the design
-clearly begs a question: why is $n=2$ special? It isn't, and we
-could clearly consider even more method arguments as part of
-dispatch. But at that point, why is the first argument special?
-Why separate methods in a special way based on the first argument?
-It seems arbitrary, and indeed we can remove the special treatment:
-
-\begin{verbatim}
-abstract class Animal
-end
-
-class Rabbit <: Animal
-end
-
-class Wolf <: Animal
-end
-
-nearby(a: Animal) = # search
-encounter(a: Rabbit, b: Wolf) = run(a)
-encounter(a: Rabbit, b: Rabbit) = mate(a,b)
-encounter(a: Wolf, b: Rabbit) = eat(a, b)
-encounter(a: Wolf, b: Wolf) = follow(a, b)
-
-while running
-    for a in animals
-        b = nearby(a)
-        encounter(a, b)
-    end
-end
-\end{verbatim}
-
-Here we made two major changes: the methods have been moved ``outside''
-of any classes, and all arguments are listed explicitly. This change
-has fairly significant implications. Since methods no longer need to be
-``inside'' classes, there is no syntactic limit to where definitions
-may appear. Now it is easier to add new methods after a class has
-been defined. Methods also now naturally operate on combinations of
-objects, not single objects.
-
-The shift to thinking about combinations of objects is fairly
-revolutionary. Many interesting properties only apply to combinations
-of objects, and not individuals. We are also now free to think of
-more exotic kinds of combinations.
-
-We can define a method on \emph{any number} of objects:
-
-\begin{verbatim}
-encounter(ws: Wolf...) = pack(ws)
-\end{verbatim}
-
-
-
-\begin{verbatim}
-encounter{T<:Animal}(a: T, b: T) = mate(a, b)
-\end{verbatim}
-
-
-\section{Multiple dispatch}
-
-CHART of different multiple dispatches. classify them
-
-Why ``just overloading'' is not enough. You intercept every operation and
-rewrite it, kind of an escape hatch for a language you don't like. If
-somebody else also tries to do this, there won't necessarily be any
-coherence.
-
-A helpful way to classify languages with some kind of generic programming
-support is to look at which language constructs are generic. For example,
-in C++ the syntax \texttt{object.method(x)} is generic: a programmer can
-get it to do different things by supplying different values for
-\texttt{object}. The C++ syntax \texttt{f(a,b)} or \texttt{a+b} is
-usually not generic, but can be overloaded by supplying definitions for
-different argument types. However, this overloading only uses compile-time
-types (no run-time information), and so is essentially a form of renaming ---
-it can be implemented by renaming each definition with a unique name, and
-replacing overloaded calls with an appropriate name based on compile-time
-types. This is a much weaker form of generic programming, since different
-behaviors cannot be obtained by passing different values at run time.
-
-For this reason, C++ programs are not fully generic: it is difficult to
-substitute new behaviors for every part of a program. Some languages
-take generic programming much further. For example, in MATLAB, \emph{every}
-function is effectively generic, and can be overloaded by new classes.
-This enables a programmer to ``intercept'' every function call (and therefore,
-essentially everything a program does)
-
-foo
-
-\subsection{Example: lattices}
-
-This example will illustrate possible benefits of multiple dispatch and
-dynamic typing for mathematical computing.
-The benefits are not absolute, but notational and semantic:
-they involve code size and clarity, and the extent to which the entities
-provided by the language match a mental model of the domain.
-
-A \emph{lattice} is an algebraic structure where some pairs of elements
-satisfy a reflexive, antisymmetric, and transitive relation $\leq$.
-For purposes of this example, we will consider lattices that have
-a greatest, or \emph{top}, element ($\top$), and a least, or \emph{bottom}
-element ($\bot$). When working with lattices one often wants to compute
-a least upper bound, or \emph{join} ($\sqcup$), or a greatest lower bound,
-or \emph{meet} ($\sqcap$).
-
-Several interesting concerns arise when modeling lattices in a programming
-language. First, the structure is very general, and so admits implementations
-for many different kinds of elements. We want to write code using
-the operators $\leq$, $\sqcup$, and $\sqcap$, and have it apply to any kind
-of lattice. Therefore some kind of overloading or object-oriented programming
-is desirable. Second, some properties apply to all lattices, and we would
-like to avoid implementing them repeatedly.
-
-Using ``duck typing'', the problem of modeling an abstraction like lattices
-disappears almost entirely. One may simply define methods for
-$\leq$, $\sqcup$, and $\sqcap$ at any time, for any type, and that type will
-function as a lattice. That is certainly convenient, but it also fails to
-provide any reusable functionality for those defining lattices.
-
-\begin{figure}
-  \label{julialattices}
-  \begin{center}
-\begin{singlespace}
-\begin{lstlisting}[style=customjulia]
-abstract LatticeElement
-
-<=(x::LatticeElement, y::LatticeElement) = x===y
-==(x::LatticeElement, y::LatticeElement) = x<=y && y<=x
-< (x::LatticeElement, y::LatticeElement) = x<=y && !(y<=x)
-
-immutable TopElement <: LatticeElement; end
-immutable BotElement <: LatticeElement; end
-
-const ~$\top$~ = TopElement()
-const ~$\bot$~ = BotElement()
-
-<=(::BotElement, ::TopElement) = true
-<=(::BotElement, ::LatticeElement) = true
-<=(::LatticeElement, ::TopElement) = true
-
-~$\sqcup$~(x::LatticeElement, y::LatticeElement) =  # join
-    (x <= y ? y : y <= x ? x : ~$\top$~)
-
-~$\sqcap$~(x::LatticeElement, y::LatticeElement) =  # meet
-    (x <= y ? x : y <= x ? y : ~$\bot$~)
-\end{lstlisting}
-\end{singlespace}
-  \end{center}
-\end{figure}
-
-Figure~\ref{julialattices} shows a small Julia library for lattices.
-It defines an abstract class \texttt{LatticeElement} that may be subclassed
-by objects that will be used primarily as elements of some lattice.
-The library also provides standard
-\texttt{LatticeElement} provides some useful default method definitions.
-
-
-\subsection{Symbolic programming and predicate dispatch}
-
-Systems based on symbolic rewrite rules arguably occupy a further tier of
-dispatch sophistication. In these systems, you can dispatch on essentially
-anything, including arbitrary values and structures. These systems are
-typically powerful enough to concisely define the kinds of behaviors we
-are interested in.
-
-However, symbolic programming lacks data abstraction: the concrete
-representations of values are exposed to the dispatch system
-(e.g. there is no difference between being a list and being something
-represented as a list).
-
-Patterns are very powerful, but the tradeoff is that there is not
-necessarily a useful relationship between what your program does and
-what a static analysis (based on a finite-height partial order over
-patterns) can discover. Maybe julia could be considered a sweet spot
-somewhere in between.
-
-
-\section{Domain theory}
-
-In the 1960s Dana Scott asked how to assign meanings to programs,
-which otherwise just appear to be lists of symbols.
-For example, given a program computing the factorial function, we
-want a process by which we can assign the meaning ``factorial'' to it.
-
-This is about modeling the behavior of a program without running it.
-
-
-
-The idea of analyzing computer programs began in earnest in the 1960s with
-Dana Scott's invention of domain theory. A ``domain'' in this theory is a
-partial order of sets of values that a program might manipulate. 
-Domain theory models computation as follows: a program starts with no
-information, the lowest point in the partial order (``bottom'').
-Computation steps accumulate information, gradually moving higher through
-the order. The advantage of this model, in essence, is that it provides a
-way to think about the meaning of a program without running the program.
-Even the ``result'' of a non-terminating program has a representation ---
-the bottom element. Other elements of the partial order might refer to
-intermediate results.
-
-
-Domain theory gave rise to the study of denotational semantics and the
-design of type systems. However, the original theory is quite general
-and invites us to invent any domains we wish for any sort of language.
-For example, given a program that outputs an integer, we might decide
-that we only care whether this integer is even or odd. Then our posets
-are the even and odd integers, and we will classify operations in the
-program according to whether they are evenness-preserving and so on.
-It should be clear that this sort of analysis, while clearly related
-to type systems, is fairly different from what most programmers
-think of as type checking.
-
-
-
-
-\section{Dynamic type inference}
-
-This is exciting because the type system can do useful computational work for you,
-instead of only checking the work done by the rest of the program.
-
-Joins of quantified types
-
-``Diagonal dispatch''
-
-(T,T) (Int, Real)
-
-\textbackslash{}(Int,Int)/
-
-Avoid hard coding logic into the compiler.
-
-
-Exposing to the user what is part of the language anyway and not just
-hiding it in the compiler.
-
-Data flow analysis has to actually work
-
-Taking things out of the language that break dataflow analysis
-
-Local reasoning
-
-You are imposing a type system anyway, even implicitly perhaps, so
-might as well make that from the get-go.
-
-
-\subsection{Objections to dynamic typing}
-
-
-it may be that the ``power'' of a language is equal to the complexity
-of the criteria used by the language's run-time dispatch mechanisms.
-
-pre-OO: pointer indirection
-OO: single dispatch, class hierarchies
-
-Haskell: without typeclasses, a beautiful language, but one that nobody
-would use.
-
-I claim that compile-time abstractions do not count. The problem is that
-at some point you have to *actually run the program*. Specifying the
-behavior of a program is hard; this is where we need help from the
-language.
-
-
-Scripting languages are often defended using the observation that most
-code is not performance-critical. However, this fact does not mean that
-it's ok for a language design to ignore performance, nor does it mean
-that performance should be the default priority of every line of code.
-Rather it means that the default should be convenience and safety, with
-a path to performance easily in reach for when it's needed.
+\chapter{Case studies}
+
+
+\section{Numerical linear algebra}
+
+Multiple dispatch on special matrices
+
+29 LAPACK types via composition of 9 types, issue 8240
+
+
+\section{Boundary-element method}
+
+There are lots of general packages for FEM problems, but it is much more
+difficult to create such a package for BEM problems. The method requires
+integrating functions with singularities, many times in the inner loop
+of code that builds the problem matrix. Integrating such functions
+numerically on each iteration is much too slow. As a result, many
+special-purpose implementations have been written by hand for different
+problems.
+
+Some recent work (TODO cite Homer) managed a more general solution,
+using Mathematica to generate C++ code for different cases. This worked
+well, but was difficult to implement and the resulting system is difficult
+to use. We see the familiar pattern of using multiple languages and
+code-generation techniques, with coordination of the overall process done
+either manually or with ad-hoc scripts. To polish the implementation for
+use as a practical library, a likely next step would be to add a Python
+interface, adding yet another layer of complexity.
+
+
+Features of julia this demonstrates:
+
+- functions that need to dispatch on more than one argument
+- staged methods providing a natural way to integrate code generation
+- doing specialization through the object system, leading to a ``flat'' system
+
+The code can be structured as a simple function library.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% writeup by SGJ
+
+\section{Galerkin matrix assembly for singular kernels}
+
+A typical problem in computational science is to form a discrete approximation of some infinite-dimensional linear operator $\mathcal{L}$ with some finite set of basis functions $\{ b_m \}$ via a Galerkin approach [refs], which leads to a matrix $L$ with entries $L_{mn} = \langle b_m, \mathcal{L} b_n \rangle = \langle b_m, b_n \rangle_\mathcal{L}$ where $\langle \cdot, \cdot \rangle$ denotes some inner product (e.g. $\langle u, v \rangle = \int u v$ is typical) and  $\langle \cdot, \cdot \rangle_\mathcal{L}$ is the \emph{bilinear form} of the problem.  Computing these matrix elements is known as the matrix \emph{assembly} step, and its performance is a crucial concern for solving partial differential equations (PDEs) and integral equations (IEs).
+
+\subsection{The ``easy'' case: nonsingular assembly}
+
+For example, in the finite-element method (FEM) [refs], the basis functions $b_m$ are typically low-order polynomials defined piecewise over geometric elements (typically triangles or tetrahedra), and $\mathcal{L}$ is typically a differential operator like $-\nabla \cdot c(x) \nabla$ for some coefficients $c(x)$, which leads to a bilinear form  $\langle b_m, b_n \rangle_\mathcal{L} = \int \nabla b_m \cdot c(x) \nabla b_n$ (after integration by parts).   Because the basis functions are localized and $\mathcal{L}$ consists of local operations, the matrix $L$ is sparse and $L_{mn}$ need only be computed for $m$ and $n$ corresponding to neighboring elements. Moreover, these integrals are straightforward to evaluate by standard cubature schemes because the integrands are \emph{nonsingular}: they typically have no divergences or discontinuities. In particular, because the functions $b_m$ and $c$ are usually smooth within a single element, one can use a fixed low-order cubature rule: you evaluate the integrand at a handful of precomputed points within each element, multiply by precomputed weights, and sum to obtain the approximate integral.
+
+Even so, the basis functions and the coefficient function $c(x)$ may need to be evaluated tens of millions of times for even a moderate-size mesh in three dimensions, so production FEM implementations in traditional high-level dynamic languages such as Matlab and Python are forced to offload matrix assembly to external C and C++ code.  For example, the popular FEniCS [ref] and Firedrake [ref] FEM packages for Python both implement domain-specific compilers: a symbolic expression for the bilinear form is combined with fragments of user-specified C++ code to define functions like $c(x)$, compiled to C++ code, and then compiled to object code which is dynamically loaded. In Julia, we believe this could be simplified considerably because functions like $c(x)$ could be defined directly in Julia and code generation/compilation could be performed entirely within Julia without a C++ intermediary.  Indeed, preliminary experiments with pure Julia FEM implementations [ref http://www.codeproject.com/Articles/579983/Finite-Element-programming-in-Julia] have demonstrated performance comparable to sophisticated solutions like FEniCS in Python and FreeFem++ in C++ [ref]
+
+\subsection{Singular assembly for integral operators}
+
+A much more challenging case of Galerkin matrix assembly arises for
+singular \emph{integral} operators $\mathcal{L}$, which act by
+convolving their operand against a singular ``kernel'' function
+$K(x)$: $u = \mathcal{L} v$ means that $u(x) = \int K(x - x') v(x')
+dx'$.  For example, in electrostatics and other Poisson problems, the
+kernel is $K(x) = 1/|x|$ in three dimensions and $\ln |x|$ in two
+dimensions, while in scalar Helmholtz (wave) problems it is
+$e^{ik|x|}/|x|$ in three dimensions and a Hankel function
+$H^{(1)}_0(k|x|)$ in two dimensions.  Formally, Galerkin
+discretizations lead to matrix assembly problems similar to those
+above: $L_{mn} =: \langle b_m, \mathcal{L} b_n \rangle = \int b_m(x)
+K(x - x') b_n(x') dx\,dx'$.  However, there are several important
+differences from FEM:
+
+\begin{itemize}
+
+\item The kernel $K(x)$ nearly always diverges for $|x|=0$, which means that generic cubature schemes are either unacceptably inaccurate (for low-order schemes) or unacceptably costly (for adaptive high-order schemes, which require huge numbers of cubature points around the singularity), or both.
+
+\item Integral operators typically arise for \emph{surface} integral
+  equations (SIEs) [ref], and involve unknowns on a surface.  The
+  analogue of the FEM discretization is then a boundary element method
+  (BEM) [ref], which discretizes a surface into elements
+  (e.g. triangles), with basis functions that are low-order
+  polynomials defiend piecewise in the elements.  However, there are
+  also volume integral equations (VIEs) which have FEM-like volumetric
+  meshes and basis functions.
+
+\item The matrix $L$ is typically dense, since $K$ is long-range.  For
+  large problems, $L$ is often stored and applied implicitly via
+  fast-multipole methods [refs] and similar schemes, but even in this
+  case the diagonal $L_{mm}$ and the entries $L_{mn}$ for adjacent
+  elements must typically be computed explicitly.  (Moreover, these
+  are the integrals in which the $K$ singularity is present.)
+
+\end{itemize}
+
+These difficulties are part of the reason why there is currently \emph{no}
+truly ``generic'' BEM software, analogous to FEniCS for FEM: essentially
+all practical BEM code is written for a specific integral kernel and
+a specific class of basis functions arising in a particular physical problem.
+Changing anything about the kernel or the basis---for example, going
+from two- to three-dimensional problems---is a major undertaking.
+
+We believe that Julia should be an ideal platform on which to attack this
+problem:
+
+\begin{itemize}
+
+\item Multiple dispatch allows the cubature scheme to be selected at compile-time based on the dimensionality, the degree of the singularity, the degree of the polynomial basis, and so on, and allows specialized schemes to be added easily for particular problems with no runtime penalty.
+
+\item Staged functions allow computer-algebra systems to be invoked at
+  compile-time to generate specialized cubature schemes for particular
+  kernels.  New developments in BEM integration schemes [ref Homer] have
+  provided efficient cubature-generation algorithms of this sort, but it
+  has not yet been practical to integrate them with runtime code in
+  a completely automated way.
+
+\end{itemize}
+
+A prototype implementation of this approach follows.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Dates}
+
+compare to python DateTime, compare code length
+
+
+\section{JUMP}
+
+Metaprogramming tools reused for symbolic algebra
+
+
+\section{Computational geometry}
+
+robust predicates (dispatch over points, lines) and VoronoiDelaunay.jl
+benchmarked against CGAL
+
+
+\section{Beating the incumbents}
+
+- erfinv and digamma using horner macro
+- randn beating matlab
+
+If nothing else, demonstrates that removing glue code overhead is worthwhile.
+
+
+grisu: 6kLOC to 1kLOC (PR 7291)
+
+
+\section{misc staged functions}
+
+tim holy in issue 8839:
+
+``without staged functions in my initial post in 8235. The take-home message: generating all methods through dimension 8 resulted in more than 5000 separate methods, and required over 4 minutes of parsing \& lowering time (i.e., a 4-minute delay while compiling julia). By comparison, the stagedfunction implementation loads in a snap, and of course can go even beyond 8 dimensions.''
+
+
+%\section{ACAS}
+
+%\section{Parallel computing, e.g. parallel prefix}
+
+%\section{IJulia}
