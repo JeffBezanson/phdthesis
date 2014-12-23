@@ -79,7 +79,7 @@ contributed significantly to the persistence of specialized environments in this
 
 It is clear that any future scientific computing language will need to be able to
 match the performance of C, C++, and Fortran. To do that, it is almost certain
-that speculative optimizations such as tracing (TODO cite) will not be sufficient ---
+that speculative optimizations such as tracing \cite{tracingjit} will not be sufficient ---
 the language will need to be able to \emph{prove} facts about types, or at least
 let the user request specific types. It is also clear that such a language must
 strive for maximum convenience, or else the split between performance languages
@@ -88,10 +88,10 @@ and productivity languages will persist.
 It is fair to say that two approaches to this problem are being tried: one is
 to design better statically-typed languages, and the other is to apply
 program analysis techniques to dynamically-typed languages.
-Static type systems seem to be getting close to achieving the desired level
-of flexibility (as in Fortress \cite{fortresspec}, for instance), but it
-is still too early to call a winner between these two approaches
-(if, indeed, there even needs to be a winner).
+Static type systems are getting close to achieving the desired level
+of flexibility (as in Fortress \cite{fortresspec} or Polyduce \cite{polyduce1},
+for instance), but it is still too early to call a winner between these two
+approaches (if, indeed, there even needs to be a winner).
 
 Our contribution derives from experience with the second approach.
 Efforts to analyze and optimize dynamically-typed programs generally make two
@@ -107,6 +107,61 @@ Specifically, we point out that types do not have to be used for
 static checking, and that using them for \emph{code selection} and
 \emph{code specialization} is particularly useful in technical computing.
 This perspective has not been explored thoroughly in the past.
+
+When static analyses (often incorporating run-time information) are applied
+to dynamically-typed programs, it is typically possible to recover a
+significant amount of type information (TODO cite). What, then, can one
+do with this information? If the goal is performance, various partial
+evaluations can be done: generating code without type checks, removing
+branches, type-specializing the storage of variables, and compile-time
+method lookup are all valuable and yield large real-world gains.
+
+However, we claim that the amount of information that can be statically inferred
+exceeds most dynamic languages' capacity to exploit it. For example,
+if method calls are dispatched on the first argument, but the types of all
+arguments can be inferred, some power has been ``left on the table'' ---
+we could have had multi-methods for the same cost. In fact, method-at-a-time
+JIT compilers (TODO cite) can specialize method bodies on all arguments,
+and might use multiple dispatch \emph{internally} to select implementations
+at run time (TODO cite a system that did this). This argument does not
+apply equally to statically-typed languages, since they cannot simply
+``switch'' their functions to generic functions without significant
+consequences for type checking.
+
+The ``wasted power'' problem applies to data structures as well.
+For example, static or run time analysis might reveal that a certain array
+can be represented as a native \texttt{Int32} array \cite{Bolz2013}.
+If this information is not reflected in the source language, then
+certain uses like passing data to native code become unnecessarily more
+complicated.
+
+Some levels of performance are difficult to reach with implicitly
+specialized code and data. Given the knowledge that
+an array contains only \texttt{Int32} data, we might want to go
+beyond essential optimizations like storing intermediate values in
+registers, and actually use different algorithms. For example,
+in Miller-Rabin primality testing, checking three ``witness'' values
+suffices for all 32-bit arguments, but up to seven values might be
+needed for 64-bit arguments (TODO cite).
+In cryptographic applications, exploiting this difference in an inner loop
+could bring significant benefits.
+
+In more demanding applications, even selecting an algorithm might not
+be enough, and we might need to automatically \emph{generate} code
+to handle different situations. While these cases are relatively rare
+in most kinds of programming, they are remarkably common in technical
+computing. Code generation, also known as \emph{staged programming},
+raises several complexities:
+
+\vspace{-2ex}
+\begin{singlespace}
+\begin{itemize}
+\item What is the input to the code generator?
+\item When and how is code generation invoked?
+\item How is the generated code incorporated into an application?
+\end{itemize}
+\end{singlespace}
+
 
 
 
