@@ -17,12 +17,11 @@ type TagT <: Ty
 end
 
 type UnionT <: Ty
-  a
-  b
+  a; b
 end
 
 type Var
-  ub
+  lb; ub
 end
 
 type UnionAllT <: Ty
@@ -32,11 +31,11 @@ end
 \end{lstlisting}
 \end{multicols}
 
+\vspace{-3ex}
 \begin{lstlisting}[style=customjulia]
 ## Any, Bottom, and Tuple
 const AnyT = TagT(TypeName(), ());  AnyT.name.super = AnyT
-type BottomTy <: Ty; end
-const BottomT = BottomTy()
+type BottomTy <: Ty; end; const BottomT = BottomTy()
 const TupleName = TypeName(); TupleName.super = AnyT
 
 ## type application
@@ -51,18 +50,17 @@ subst(t::TagT,    env) =
   t===AnyT ? t : TagT(t.name, map(x->subst(x,env), t.params), t.vararg)
 subst(t::UnionT,  env) = UnionT(subst(t.a,env), subst(t.b,env))
 subst(t::Var,     env) = get(env, t, t)
-subst(t::UnionAllT, env) = let newVar = Var(subst(t.var.ub, env))
+function subst(t::UnionAllT, env)
+  newVar = Var(subst(t.var.lb,env), subst(t.var.ub,env))
   UnionAllT(newVar, subst(t.T, extend(env, t.var, newVar)))
 end
 
-rename(t::UnionAllT) = let v = Var(t.var.ub)
+rename(t::UnionAllT) = let v = Var(t.var.lb, t.var.ub)
   UnionAllT(v, inst(t,v))
 end
 
-## subtype implementation
 type Bounds
-  lb           # current lower and upper bounds of a Var
-  ub
+  lb; ub       # current lower and upper bounds of a Var
   depth::Int   # invariant nesting depth of a Var's UnionAll
   right::Bool  # this Var is on the right-hand side of A <: B
 end
@@ -73,17 +71,19 @@ type UnionSearchState
   UnionSearchState() = new(0,0)
 end
 
+type UnionState
+  depth::Int        # number of union decision points we're inside
+  nnew::Int         # # unions found at next nesting depth
+  stack::Vector{UnionSearchState}  # stack of decisions for each depth
+  UnionState() = new(1,0,UnionSearchState[])
+end
+
 type Env
   vars::Dict{Var,Bounds}
   depth::Int
-  Ldepth::Int  # # of union decision points we're inside
-  Lnew::Int    # # unions found at next nesting depth
-  Lunions::Vector{UnionSearchState}
-  Rdepth::Int  # same on right-hand side
-  Rnew::Int
-  Runions::Vector{UnionSearchState}
-  Env() = new(Dict{Var,Bounds}(), 1,
-              1,0,UnionSearchState[], 1,0,UnionSearchState[])
+  Lunions::UnionState
+  Runions::UnionState
+  Env() = new(Dict{Var,Bounds}(), 1, UnionState(), UnionState())
 end
 
 issub(x, y) = forall_exists_issub(x, y, Env(), 0)
@@ -92,16 +92,16 @@ issub(x::Ty, y::Ty, env) = (x === y) || x === BottomT
 
 function forall_exists_issub(x, y, env, nL)
   for forall in 1:(1<<nL)
-    if !isempty(env.Lunions)
-      env.Lunions[end].idxs = forall
+    if !isempty(env.Lunions.stack)
+      env.Lunions.stack[end].idxs = forall
     end
-    
+
     !exists_issub(x, y, env, 0) && return false
-    
-    if env.Lnew > 0
-      push!(env.Lunions, UnionSearchState())
-      sub = forall_exists_issub(x, y, env, env.Lnew)
-      pop!(env.Lunions)
+
+    if env.Lunions.nnew > 0
+      push!(env.Lunions.stack, UnionSearchState())
+      sub = forall_exists_issub(x, y, env, env.Lunions.nnew)
+      pop!(env.Lunions.stack)
       !sub && return false
     end end
   return true
@@ -109,24 +109,24 @@ end
 
 function exists_issub(x, y, env, nR)
   for exists in 1:(1<<nR)
-    if !isempty(env.Runions)
-      env.Runions[end].idxs = exists
+    if !isempty(env.Runions.stack)
+      env.Runions.stack[end].idxs = exists
     end
-    for ru in env.Runions; ru.i = -1; end
-    for lu in env.Lunions; lu.i = -1; end
-    env.Ldepth = env.Rdepth = 1
-    env.Lnew = env.Rnew = 0
-    
+    for ru in env.Runions.stack; ru.i = -1; end
+    for lu in env.Lunions.stack; lu.i = -1; end
+    env.Lunions.depth = env.Runions.depth = 1
+    env.Lunions.nnew = env.Runions.nnew = 0
+
     sub = issub(x, y, env)
-    
-    if env.Lnew > 0
+
+    if env.Lunions.nnew > 0
       return true # return up to forall_exists_issub
     end
-    if env.Rnew > 0
-      push!(env.Runions, UnionSearchState())
-      found = exists_issub(x, y, env, env.Rnew)
-      pop!(env.Runions)
-      if env.Lnew > 0
+    if env.Runions.nnew > 0
+      push!(env.Runions.stack, UnionSearchState())
+      found = exists_issub(x, y, env, env.Runions.nnew)
+      pop!(env.Runions.stack)
+      if env.Lunions.nnew > 0
         return true # return up to forall_exists_issub
       end
     else
@@ -137,42 +137,32 @@ function exists_issub(x, y, env, nR)
   return false
 end
 
-function union_issub(a::UnionT, b::Ty, env)
-  if env.Ldepth > length(env.Lunions)
-    env.Lnew += 1
+function issub_union(t::Ty, u::UnionT, env, R, state::UnionState)
+  if state.depth > length(state.stack)
+    # at a new nesting depth, begin by just counting unions
+    state.nnew += 1
     return true
   end
-  L = env.Lunions[env.Ldepth]; L.i += 1
-  env.Ldepth += 1
-  ans = issub(a.((L.idxs&(1<<L.i)!=0) + 1), b, env)
-  env.Ldepth -= 1
+  ui = state.stack[state.depth]; ui.i += 1
+  state.depth += 1
+  choice = u.((ui.idxs&(1<<ui.i)!=0) + 1)
+  ans = R ? issub(t, choice, env) : issub(choice, t, env)
+  state.depth -= 1
   return ans
 end
 
-function issub_union(a::Ty, b::UnionT, env)
-  if env.Rdepth > length(env.Runions)
-    env.Rnew += 1
-    return true
-  end
-  R = env.Runions[env.Rdepth]; R.i += 1
-  env.Rdepth += 1
-  ans = issub(a, b.((R.idxs&(1<<R.i)!=0) + 1), env)
-  env.Rdepth -= 1
-  return ans
-end
-
-issub(a::UnionT, b::UnionT, env) = a === b || union_issub(a, b, env)
-issub(a::UnionT, b::Ty, env) = union_issub(a, b, env)
-issub(a::Ty, b::UnionT, env) = a === BottomT || issub_union(a, b, env)
+issub(a::UnionT, b::UnionT, env) =
+  issub_union(a, b, env, true, env.Runions)
+issub(a::UnionT, b::Ty, env) =
+  issub_union(b, a, env, false, env.Lunions)
+issub(a::Ty, b::UnionT, env) =
+  a === BottomT || issub_union(a, b, env, true, env.Runions)
 
 function issub(a::TagT, b::TagT, env)
   a === b && return true
   b === AnyT && return true
   a === AnyT && return false
-  if a.name !== b.name
-    a.name === TupleName && return false
-    return issub(super(a), b, env)
-  end
+  a.name !== b.name && return issub(super(a), b, env)
   if a.name === TupleName
     va, vb = a.vararg, b.vararg
     la, lb = length(a.params), length(b.params)
@@ -190,8 +180,7 @@ function issub(a::TagT, b::TagT, env)
       end
       if bi < lb || !vb
         bi += 1
-      end
-    end
+      end end
   else
     env.depth += 1  # crossing invariant constructor, increment depth
     yes = true
@@ -207,76 +196,63 @@ end
 function issub(a::Var, b::Ty, env)
   aa = env.vars[a]
   # Vars are fully checked by the "forward" direction of A<:B in
-  # invariant position. So just return true when checking the "flipped"
-  # direction B<:A.
+  # invariant position.
   aa.right && return true
-  if env.depth != aa.depth
-    # Var <: non-Var can only be true when there are no invariant
-    # constructors between the UnionAll and this occurrence of Var.
-    return false
-  end
-  return issub(aa.ub, b, env)
+  return issub(aa.ub, b, env) && (env.depth == aa.depth ||
+                                  issub(b, aa.lb, env))
 end
 
-function issub(a::Var, b::Var, env)
-  a === b && return true
-  aa = env.vars[a]
-  aa.right && return true
-  bb = env.vars[b]
-  if aa.depth != bb.depth
-    return false
-  end
-  if env.depth > bb.depth
-    # if there are invariant constructors between a UnionAll and
-    # this occurrence of Var, then we have an equality constraint on Var.
-    if isa(bb.ub,Var)
-      # right-side Var cannot equal more than one left-side Var, e.g.
-      # (L,L) <: (T,S) but not (T,S) <: (R,R)
-      bb.lb = a
-      return bb.ub === a
-    end
-    if isa(bb.lb,Var)
-      bb.ub = a
-      return bb.lb === a
-    end
-    if !(issub(bb.lb, aa.lb, env) && issub(aa.ub, bb.ub, env))
-      # make sure equality constraint is within the current bounds of Var
-      return false
-    end
-    bb.lb = bb.ub = a
-  else
-    !issub(aa.ub, bb.ub, env) && return false
-    # track greatest lower bound from covariant position. e.g.
-    # (Int, Real, Integer, Array{?}) <: (T, T, T, Array{T})
-    # is only true if ? >: Real.
-    if issub(bb.lb, aa.ub, env)
-      bb.lb = a
-    end
-  end
-  return true
-end
+lb(x, env) = isa(x,Var) ? lb(env.vars[x].lb, env) : x
+ub(x, env) = isa(x,Var) ? ub(env.vars[x].ub, env) : x
+join(a,b,env) = issub(a,b,env) ? b : issub(b,a,env) ? a : UnionT(a,b)
 
-function issub(a::Ty, b::Var, env)
+function issub(a::Union(Ty,Var), b::Var, env)
   bb = env.vars[b]
   !bb.right && return true
-  if env.depth > bb.depth
-    if isa(bb.ub,Var) || !(issub(bb.lb, a, env) && issub(a, bb.ub, env))
-      return false
-    end
-    bb.lb = bb.ub = a
+  if isa(a,Var)
+    aa = env.vars[a]
+    aa.right && return true
+    # Vars must occur at same depth
+    aa.depth != bb.depth && return false
+    a_lb, a_ub = ub(aa.lb,env), lb(aa.ub,env)
   else
-    !issub(a, bb.ub, env) && return false
-    if issub(bb.lb, a, env)
-      bb.lb = a
-    end
+    a_lb, a_ub = a, a
   end
+  b_lb, b_ub = ub(bb.lb,env), lb(bb.ub,env)
+  # make sure constraint is within the current bounds of Var
+  if !isa(bb.lb,Var) && !isa(bb.ub,Var)
+    !issub(a_ub, b_ub, env) && return false
+    if env.depth > bb.depth
+      !issub(b_lb, a_lb, env) && return false
+    end end
+
+  # check & update bounds for covariant position
+  # for each type a<:b, grow b's lower bound to include a, or set b's
+  # lower bound equal to a typevar if its lower bound is big enough.
+  if isa(a,Var) && (a === bb.lb || issub(b_lb, a_lb, env))
+    bb.lb = a
+  else
+    !issub(a_ub, b_ub, env) && return false
+    bb.lb = join(b_lb, a_ub, env)
+  end
+
+  if env.depth > bb.depth
+    # check & update bounds for invariant position.
+    # this would be the code for contravariant position, but since
+    # we only have invariant, the covariant code above always runs too.
+    if isa(a,Var) && (a === bb.ub || issub(a_ub, b_ub, env))
+      bb.ub = a
+    else
+      # for true contravariance we would need to compute a meet here,
+      # but because of invariance b_ub~$\sqcap$~a_lb = a_lb here always
+      bb.ub = a_lb
+    end end
   return true
 end
 
 function issub_unionall(t::Ty, u::UnionAllT, env, R)
-  (t === u || t === BottomT) && return true
   haskey(env.vars, u.var) && (u = rename(u))
-  env.vars[u.var] = Bounds(BottomT, u.var.ub, env.depth, R)
+  env.vars[u.var] = Bounds(u.var.lb, u.var.ub, env.depth, R)
   ans = R ? issub(t, u.T, env) : issub(u.T, t, env)
   delete!(env.vars, u.var)
   return ans
@@ -285,7 +261,8 @@ end
 issub(a::UnionAllT, b::UnionAllT, env) = issub_unionall(a, b, env, true)
 issub(a::UnionT, b::UnionAllT, env) = issub_unionall(a, b, env, true)
 issub(a::UnionAllT, b::UnionT, env) = issub_unionall(b, a, env, false)
-issub(a::Ty, b::UnionAllT, env) = issub_unionall(a, b, env, true)
+issub(a::Ty, b::UnionAllT, env) =
+  a === BottomT || issub_unionall(a, b, env, true)
 issub(a::UnionAllT, b::Ty, env) = issub_unionall(b, a, env, false)
 
 \end{lstlisting}

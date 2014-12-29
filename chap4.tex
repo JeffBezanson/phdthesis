@@ -1,8 +1,6 @@
 \chapter{The Julia approach}
 
-\section{Language description}
-
-\subsection{Type system}
+\section{Type system}
 
 Our goal is to design a type system useful for describing method applicability,
 and (similarly) for describing classes of values for which to specialize code.
@@ -164,7 +162,7 @@ only a single $T$ value might be involved.
 
 % $T=S \longleftrightarrow (T\leq S) \wedge (S\leq T)$.
 
-\subsubsection{Examples}
+\subsection{Examples}
 
 \texttt{UnionAll} types are quite expressive. In combination with nominal
 types they can describe groups of containers such as
@@ -181,7 +179,7 @@ element type. This is a natural signature for a method that assigns a
 value to a given index within an array.
 
 
-\subsubsection{Type constructors}
+\subsection{Type constructors}
 
 It is important for any proposed high-level technical computing language to be
 simple and approachable, since otherwise the value over established
@@ -211,7 +209,9 @@ where \texttt{Array$^\prime$} refers to a hidden, internal type constructor.
 The \texttt{\{ \}} syntax can then be used to instantiate a \texttt{UnionAll}
 type at a particular parameter value.
 
-\subsubsection{Subtyping}
+\subsection{Associated types and type computation}
+
+\subsection{Subtyping}
 
 Describe algorithm.
 
@@ -229,7 +229,7 @@ $y_i$ are type variables bound by \texttt{UnionAll} on the left and right,
 respectively).
 
 
-\subsubsection{Type system variants}
+\subsection{Type system variants}
 
 features that are fairly straightforward to add:
 
@@ -257,380 +257,12 @@ features that are difficult to add, or possibly break decidability:
 \end{itemize}
 \end{singlespace}
 
-\subsection{Data model}
+\section{Dispatch mechanism}
 
-\subsection{Dispatch mechanism}
+\section{Data model}
 
 \section{Performance model}
 
 \subsection{Type inference}
 
 \subsection{Specialization}
-
-\section{Explication through elimination}
-
-\subsection{Conversion and other basic operations}
-
-This section will illustrate how we implement key features of technical computing
-systems using our methodology.
-
-- The abstractions of equality and comparison. Different equivalence classes between
-
-is/===, isequal and ==
-
-- Numeric vs lexicographic ordering?
-
-cmp, lexcmp, vs isless, <
-
-\subsection{Numeric types and embeddings}
-
-We might prefer ``number'' to be a single,
-concrete concept, but the history of mathematics has seen the concept
-extended many times, from integers to rationals to reals, and then to complex,
-quaternion, and more. These constructions tend to follow a pattern: a new set
-of numbers is constructed around a subset isomorphic to an existing set of
-numbers. For example, the reals are isomorphic to the complex numbers with
-zero imaginary part.
-
-Human beings happen to be good at equating and moving between isomorphic sets,
-so it is easy to imagine that the reals and complexes with zero imaginary
-part are one and the same. But a computer forces us to be specific, and admit
-that a real number is not complex, and a complex number is not real. And yet
-the close relationship between them is too compelling not to model in a
-computer somehow. Here we have a numerical analog to the famous ``circle and
-ellipse'' problem in object-oriented programming: the set of circles is
-isomorphic to the set of ellipses with equal axes, yet neither ``is a''
-relationship in a class hierarchy seems fully correct. An ellipse is not
-a circle, and in general a circle cannot serve as an ellipse (for example,
-the set of circles is not closed under the same operations that the set of
-ellipses is, so a program written for ellipses might not work on circles).
-This problem implies that a single built-in type hierarchy is not
-sufficient: we want to model custom *kinds* of relationships between
-types (e.g. ``can be embedded in'' in addition to ``is a'').
-
-Two further problems should also be kept in mind. First, the natural isomorphisms
-between sets of numbers might not be isomorphisms on a real computer. For example,
-due to the behavior of floating-point arithmetic, an operation on complex numbers
-with zero imaginary part might not give an answer equal to the same operation on
-real numbers. Second, the contexts that demand use of one type of number or
-another are often not easily described by type systems. The classic example is
-square root (\texttt{sqrt}), whose result is complex for negative arguments.
-Including a number's sign in its type is a possibility, but this quickly gets
-out of hand --- should a type system attempt to prove a matrix symmetric before
-we compute its eigenvalues? While we cannot offer a once-and-for-all solution
-to these problems, we will show how the flexibility of our proposed mechanism
-is useful for addressing them.
-
-% ex: generic sum function accumulating result in at least
-% double precision. just using +::T->T->T doesn't work.
-
-\subsubsection{Implementing type embeddings}
-
-Most functions are naturally implemented in the value domain, but some are
-actually easier to implement in the type domain. One reason is that there
-is a bottom element, which most data types lack.
-
-\subsubsection{Diversity of number and number-like types in practice}
-
-Originally, our reasons for implementing all numeric types at the library
-level were not entirely practical. We had a principled opposition to
-including such definitions in a compiler, and guessed that being able to
-define numeric types would help ensure the language was ``powerful enough''.
-However, defining numeric and number-like types and their interactions turns
-out to be surprisingly useful. Once such types become easy to obtain,
-people find more and more uses for them.
-
-Ordinal types: Pointer, Char
-
-Integer types: Int8, Int16, Int32, Int64, Int128, UInt8, UInt16, UInt32, UInt64, UInt128, BigInt
-
-Floating point types: Float16, Float32, Float64, BigFloat
-(Float128, double-double)
-
-Fixed point: Fixed32{b}, Ufixed8, Ufixed16
-
-Extensions: Complex, Quaternion, Interval, DualNumber
-
-Number-like: Date, TimePeriod, DatePeriod, Color, (Units), DNA nucleotide type (bioseq.jl)
-dates: different cardinal and ordinal behavior
-
-musical notes
-
-\subsubsection{Applications}
-
-\emph{Ranges} illustrate an interesting application of type promotion.
-A range data type, notated \texttt{a:s:b}, represents a sequence of values
-starting at \texttt{a} and ending at \texttt{b}, with a distance of \texttt{s}
-between elements (internally, this notation is translated to
-\texttt{colon(a, s, b)}). Ranges seem simple enough, but a reliable,
-efficient, and generic implementation is difficult to achieve.
-We propose the following requirements:
-
-\begin{itemize}
-\item The start and stop values can be passed as different types, but internally
-  should be of the same type.
-\item Ranges should work with ordinal types, not just numbers (examples include
-  characters, pointers, and calendar dates).
-\item If any of the arguments is a floating-point number, a special
-  \texttt{FloatRange} type designed to cope well with roundoff is returned.
-\end{itemize}
-
-In the case of ordinal types, the step value is naturally of a different type
-than the elements of the range. For example, one may add 1 to a character to
-get the ``next'' encoded character, but it does not make sense to add two
-characters.
-
-It turns out that the desired behavior can be achieved with six definitions:
-
-First, given three floats of the same type we can construct a \texttt{FloatRange}
-right away:
-
-\begin{verbatim}
-colon{T<:FloatingPoint}(start::T, step::T, stop::T) = FloatRange{T}(start, step, stop)
-\end{verbatim}
-
-Next, if \texttt{a} and \texttt{b} are of the same type and there are no floats,
-we can construct a general range:
-
-\begin{verbatim}
-colon{T}(start::T, step, stop::T) = StepRange(start, step, stop)
-\end{verbatim}
-
-Now there is a problem to fix: if the first and last arguments are of some
-non-floating-point numeric type, but the step is floating point, we want to
-promote all arguments to a common floating point type. We must also do this
-if the first and last arguments are floats, but the step is some other kind
-of number:
-
-\begin{verbatim}
-colon{T<:Real}(a::T, s::FloatingPoint, b::T) = colon(promote(a,s,b)...)
-
-colon{T<:FloatingPoint}(a::T, s::Real, b::T) = colon(promote(a,s,b)...)
-\end{verbatim}
-
-These two definitions are correct, but ambiguous: if the step is a float
-of a different type than \texttt{a} and \texttt{b} both definitions are
-equally applicable. We can add the following disambiguating definition:
-
-\begin{verbatim}
-colon{T<:FloatingPoint}(a::T, s::FloatingPoint, b::T) = colon(promote(a,s,b)...)
-\end{verbatim}
-
-All of these five definitions require \texttt{a} and \texttt{b} to be of the
-same type. If they are not, we must promote just those two arguments, and leave
-the step alone in case we are dealing with ordinal types:
-
-\begin{verbatim}
-colon{A,B}(a::A, s, b::B) = colon(convert(promote_type(A,B),a), s, convert(promote_type(A,B),b))
-\end{verbatim}
-
-This example shows that it is not always sufficient to have a built-in set of
-``promoting operators''. Library functions like this \texttt{colon} need more
-control.
-
-
-\subsubsection{Current approaches}
-
-Numbers tend to be among the most
-complex features of a language. Numeric types usually need to be a special
-case: in a typical language with built-in numeric types, describing their
-behavior is beyond the expressive power of the language itself. For example,
-in C arithmetic operators like \texttt{+} accept multiple types of arguments
-(ints and floats), but no user-defined C function can do this (this situation
-is of course improved in C++). In Python, a special arrangement is made for
-\texttt{+} to call either an \texttt{\_\_add\_\_} or \texttt{\_\_radd\_\_} method,
-effectively providing double-dispatch for arithmetic in a language that is
-idiomatically single-dispatch.
-
-
-
-\subsection{Multidimensional array indexing}
-
-One-dimensional arrays are a simple and essential data structure found in
-most programming languages. The multi-dimensional arrays required in
-scientific computing, however, are a different beast entirely. Allowing
-any number of dimensions entails a significant increase in complexity. Why?
-The essential reason is that core properties of the data structure no
-longer fit in a constant amount of space. The space needed to store the
-sizes of the dimensions (the array shape) is proportional to the number
-of dimensions. This does not seem so bad, but becomes a large problem
-due to three additional facts.
-
-% TODO: break up using enumerate
-First, code that operates on the dimension
-sizes needs to be highly efficient. Typically the overhead of a loop is
-unacceptable, and such code needs to be fully unrolled. Second, in some
-code the number of dimensions is a \emph{dynamic} property --- it is
-only known at run time. Third, programs may wish to treat arrays with
-different numbers of dimensions very differently. A vector (1d) might
-have rather different behaviors than a matrix (2d) (for example, to
-compute a norm). This kind of
-behavior makes the number of dimensions a crucial part of program
-semantics, preventing it from remaining a compiler implementation detail.
-
-% TODO: break up using enumerate
-These facts pull in different directions. The first fact asks for static
-analysis. The second fact asks for run-time flexibility. The third fact asks
-for dimensionality to be part of the type system, but partly determined
-at run time (for example, via virtual method dispatch). Current approaches
-choose a compromise. In some systems, the number of dimensions has a strict
-limit (e.g. 3 or 4), so that separate classes for each case may be written
-out in full. Other systems choose flexibility, and just accept that most
-or all operations will be dynamically dispatched. Other systems might
-provide flexibility only at compile time, for example a template library
-where the number of dimensions must be statically known.
-
-%% TODO: insert example of limited power of C++ array libraries
-
-%% TODO: examples of systems limited to n==3
-
-Whatever decision is made, rules must be defined for how various operators
-act on dimensions. For now we will focus on indexing, since selecting
-parts of arrays has particularly rich behavior with respect to
-dimensionality. For example, if a single row or column of a matrix is
-selected, does the result have one or two dimensions? Array implementations
-prefer to invoke general rules to answer such questions. Such a rule might
-say ``dimensions indexed with scalars are dropped'', or ``trailing
-dimensions of size one are dropped'', or ``the rank of the result
-is the sum of the ranks of the indexes'' (as in APL).
-
-%%%
-Our goal here is a bit unusual: we are not concerned with which rules
-might work best, but merely with how they can be specified, so that
-domain experts can experiment.
-
-In fact different domains want different things. E.g. in images, each
-dimension might be quite different, e.g. time vs. space vs. color,
-so you don't want to drop or rearrange dimensions very often.
-%%%
-
-Here are our ground rules:
-
-\begin{enumerate}
-\item You can't manually implement the behavior inside the compiler
-\item The compiler must be able to reasonably understand the program
-\item The code must be reasonably easy to write
-\end{enumerate}
-
-
-How are such rules implemented? For a
-language with built-in multidimensional arrays, the compiler will
-analyze indexing expressions and determine an answer using hard-coded
-logic.
-% TODO: grab example from one of these compilers
-However, this approach is not satisfying: we would rather
-implement the behavior in libraries, so that different kinds of arrays
-may be defined, or so that rules of similar complexity may be
-defined for other kinds of objects. But these kinds of rules are
-unusually difficult to implement in libraries. If a library writes out
-its indexing logic using imperative code, the host language compiler
-is not likely to be able to analyze it. Using compile-time abstracton
-(templates) would provide better performance, but such libraries tend
-to be difficult to write (and read), and the full complement of
-indexing behavior expected by technical users strains the capabilities
-of such systems.
-
-% TODO: insert actual example of numpy
-
-Our dispatch mechanism permits a novel solution. If a multiple dispatch
-system supports variadic functions and argument ``splicing'' (the ability
-to pass a structure of $n$ values as $n$ separate arguments to a function),
-then indexing behavior can be defined as method signatures.
-
-This solution is still a compromise among the factors outlined above,
-but it is a new compromise that provides a net-better solution.
-% TODO more
-
-Below we define a function \texttt{index\_shape} that computes the
-shape of a result array given a series of index arguments. We show
-three versions, each implementing a different rule that users in
-different domains might want:
-
-% TODO: point out array = (shape, data), so those are the two parts
-% we need to handle. In julia the ``data'' part is not a first class
-% object; it is not directly exposed to the user, but this is more
-% of an implementation detail.
-
-\begin{verbatim}
-# drop dimensions indexed with scalars
-index_shape() = ()
-index_shape(i::Real, I...) = index_shape(I...)
-index_shape(i, I...) = tuple(length(i), index_shape(I...)...)
-\end{verbatim}
-
-\begin{verbatim}
-# drop trailing dimensions indexed with scalars
-index_shape(i::Real...) = ()
-index_shape(i, I...) = tuple(length(i), index_shape(I...)...)
-\end{verbatim}
-
-\begin{verbatim}
-# rank summing (APL)
-index_shape() = ()
-index_shape(i, I...) = tuple(size(i)..., index_shape(I...)...)
-\end{verbatim}
-
-Inferring the length of the result of \texttt{index\_shape} is sufficient
-to infer the rank of the result array.
-
-These definitions are concise, easy to write, and possible for a
-compiler to understand fully using straightforward techniques.
-
-% TODO: point out how this combines the ``object part'' and the
-% ``array part'' into a coherent whole.
-
-Here is a sample derivation for the call \texttt{index\_shape(1:m,1,1:n)}
-(the argument type tuple is \texttt{(Range1,Int,Range1)}), using the first
-definition above (dropping scalar-indexed dimensions):
-
-\begin{verbatim}
-index_shape(1:n, 1, 1:m) => tuple(length(::Range1)::Int, index_shape((::Int, ::Range1)...)...)
-
-index_shape((::Int, ::Range1)...) => index_shape(::Int, ::Range1)
-
-index_shape(::Int, ::Range1) => index_shape((::Range1,)...)
-
-index_shape((::Range1,)...) => index_shape(::Range1)
-
-index_shape(::Range1) => tuple(length(::Range1)::Int, index_shape(()...)...)
-
-index_shape(()...) => index_shape()::()
-
-back substitute => tuple(length(::Range1)::Int, index_shape(()...)::()...)::(Int,)
-
-back substitute => tuple(length(::Range1)::Int, ::(Int,)...)
-
-tuple(::Int, ::(Int,)...) => tuple(::Int, ::Int)
-
-::(Int, Int)
-
-\end{verbatim}
-
-The result type is determined using only dataflow type inference, plus a
-rule for splicing an immediate container (the type of \texttt{f((a,b)...)} is
-the type of \texttt{f(a,b)}). Argument list destructuring takes place inside
-the type intersection operator used to combine argument types with method
-signatures.
-
-This approach does not depend on any heuristics. Each call to \texttt{index\_shape}
-simply requires one recursive invocation of type inference. This process reaches
-the base case \texttt{()} for these definitions, since each recursive call
-handles a shorter argument list (for less-well-behaved definitions, we might
-end up invoking a widening operator instead).
-
-
-\begin{verbatim}
-diverge() = randbool() ? () : tuple(1, diverge()...)
-\end{verbatim}
-
-\subsection{Array views}
-
-\subsection{Units}
-
-\subsection{Even more elimination?}
-
-Some features of the language could be even further eliminated. For example data
-types could be implemented in terms of lambda abstractions. But certain patterns
-are so useful that they might as well be provided in a standard form. It also
-probably makes the compiler much more efficient not to need to pass around and
-repeatedly analyze full representations of the meanings of such ubiquitous constructs.

@@ -406,7 +406,7 @@ The library also provides standard
 \texttt{LatticeElement} provides some useful default method definitions.
 
 
-\subsection{Symbolic programming and predicate dispatch}
+\subsection{Symbolic programming}
 
 Systems based on symbolic rewrite rules arguably occupy a further tier of
 dispatch sophistication. In these systems, you can dispatch on essentially
@@ -419,11 +419,60 @@ representations of values are exposed to the dispatch system
 (e.g. there is no difference between being a list and being something
 represented as a list).
 
-Patterns are very powerful, but the tradeoff is that there is not
-necessarily a useful relationship between what your program does and
-what a static analysis (based on a finite-height partial order over
-patterns) can discover. Maybe julia could be considered a sweet spot
-somewhere in between.
+\subsection{Predicate dispatch}
+
+%Patterns are very powerful, but the tradeoff is that there is not
+%necessarily a useful relationship between what your program does and
+%what a static analysis (based on a finite-height partial order over
+%patterns) can discover. Maybe julia could be considered a sweet spot
+%somewhere in between.
+
+Predicate dispatch is a powerful object-oriented mechanism that allows
+methods to be selected based on arbitrary predicates (TODO cite).
+It is, in some
+sense, the most powerful \emph{possible} dispatch system, since any
+computation may be done as part of method selection. Since a predicate
+denotes a set (the set of values for which it is true), it also denotes
+a set-theoretic type. Some type systems of this kind, notably that of
+Common Lisp (TODO cite), have actually included predicates as types.
+However, such a type system is obviously undecidable, since it
+requires computing the predicates themselves or, even worse, computing
+predicate implication.
+\footnote{
+Many type systems involving bounded quantification, such as system
+$F_{<:}$, are already undecidable (TODO cite).
+However, they seem to be decidable for most practical
+programs, and also admit minor variations that yield decidable
+systems (TODO cite). It is fair to say they are \emph{just barely}
+undecidable, while predicates are \emph{very} undecidable.
+}
+
+For a language that is willing to do run-time type checks anyway, the
+undecidability of predicate dispatch is not a problem.
+Interestingly, it can also pose no problem for \emph{static} type systems
+that wish to prove that every call site has an applicable method.
+Even without evaluating predicates, one can prove that the available methods
+are exhaustive (e.g. methods for both $p$ and $\neg p$ exist).
+In contrast, and most relevant to this thesis, predicate types \emph{are} a
+problem for code \emph{specialization}. Static method lookup would require
+evaluating the predicates, and optimal code generation would require
+understanding something about what the predicates mean. One approach would
+be to include a list of satisfied predicates in a type. However, to the
+extent such a system is decidable, it is essentially equivalent to multiple
+inheritance. Another approach would be to separate predicates into a
+second ``level'' of the type system. The compiler would combine methods
+with the same ``first level'' type, and then generate branches to evaluate
+the predicates. Such a system would be very useful, and could be
+% TODO cite, as this has probably been done
+combined with a language like Julia or, indeed, most object-oriented
+languages. However this comes at the expense of conceding that predicates
+are not ``really'' types.
+
+In considering the problems of predicate dispatch for code specialization,
+we seem to be up against a fundamental obstacle: some sets of values are
+simply more robust under evaluation than others. Programs that map integers
+to integers abound, but programs that map, say, even integers to even
+integers are rare to the point of irrelevance.
 
 
 \section{Domain theory}

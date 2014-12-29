@@ -25,6 +25,18 @@ is needed to maximize composability and reusability in scientific code.
 Without it, certain programs may be easy to write today, but changing
 functional and performance requirements can become difficult to meet.
 
+
+A new programming language is not the only thing the world of technical
+computing needs. Compiler techniques, library design, high-performance
+computational kernels, and approaches to parallelism are all important,
+and can usually be applied within multiple languages. For example the C
+and Fortran language families have taken on many changes and extensions
+over the years to accomodate new technologies. So we do not expect a
+new language to ``solve'' technical computing all by itself, but rather
+we want to ask whether any language-level abstractions can provide a
+better base for high-productivity technical computing.
+
+
 It is clear that scientific and technical users have their own particular
 needs. So far there have been two paths available for fulfilling these
 needs: using a mainstream general-purpose language like C++ or Java, or
@@ -75,6 +87,19 @@ It is striking how different these priorities are. We believe these technical fa
 contributed significantly to the persistence of specialized environments in this area.
 
 
+%problem of finding connections between array programming and OOP.
+%array programming is a powerful paradigm for describing computational
+%kernels operating over potentially large amounts of data.
+
+%an ``object system'' in this context is often considered a separate
+%part of the language, to be used only when arrays no longer
+%suffice.
+
+%technical computing systems have an unusually large amount of
+%``failure of abstraction'' --- manual duplication of facts
+%all over the system. imagine changing from column-major to
+%row-major.
+
 \section{Proposed solution}
 
 It is clear that any future scientific computing language will need to be able to
@@ -100,12 +125,15 @@ languages, and (2) users of these languages don't want to use types.
 The first assumption makes practical sense.
 Convenience is hard to quantify, so using existing languages that have already
 been deemed convenient by popular opinion puts us on solid footing.
-This thesis describes a new language, so we simply take the negation of the
-first assumption as a premise.
+%This thesis describes a new language, so we simply take the negation of the
+%first assumption as a premise.
 Our work addresses the second assumption more directly.
-Specifically, we point out that types do not have to be used for
-static checking, and that using them for \emph{code selection} and
-\emph{code specialization} is particularly useful in technical computing.
+We point out that types
+\footnote{For an excellent discussion of the many meanings of the word ``type''
+see \cite{Kell2014}.}
+do not have to be used for static checking, and that using them for
+\emph{code selection} and \emph{code specialization} is particularly useful in
+technical computing.
 This perspective has not been explored thoroughly in the past.
 
 When static analyses (often incorporating run-time information) are applied
@@ -120,7 +148,7 @@ However, we claim that the amount of information that can be statically inferred
 exceeds most dynamic languages' capacity to exploit it. For example,
 if method calls are dispatched on the first argument, but the types of all
 arguments can be inferred, some power has been ``left on the table'' ---
-we could have had multi-methods for the same cost. In fact, method-at-a-time
+we could have had multi-methods for little extra cost. In fact, method-at-a-time
 JIT compilers (TODO cite) can specialize method bodies on all arguments,
 and might use multiple dispatch \emph{internally} to select implementations
 at run time (TODO cite a system that did this). This argument does not
@@ -146,7 +174,7 @@ needed for 64-bit arguments (TODO cite).
 In cryptographic applications, exploiting this difference in an inner loop
 could bring significant benefits.
 
-In more demanding applications, even selecting an algorithm might not
+In demanding applications, selecting the right algorithm might not
 be enough, and we might need to automatically \emph{generate} code
 to handle different situations. While these cases are relatively rare
 in most kinds of programming, they are remarkably common in technical
@@ -185,24 +213,20 @@ static overloading can lead to calling a sub-optimal case when multiple
 overloads exist for the sake of performance.
 
 
-(one way to describe it: you can start with the notation you want, or with the
-notation that people are using already, and come up with better ways to
-*explain* it.
-in other words, design a robust framework that assigns a satisfactory meaning
-to each thing we'd like to write.
-the amazing thing about programming languages it that a better
-explanation can directly lead to better performance!)
+%(one way to describe it: you can start with the notation you want, or with the
+%notation that people are using already, and come up with better ways to
+%*explain* it.
+%in other words, design a robust framework that assigns a satisfactory meaning
+%to each thing we'd like to write.
+%the amazing thing about programming languages it that a better
+%explanation can directly lead to better performance!)
 
 
+% - mention dual traps of wasted power and divergence
 
-- mention dual traps of wasted power and divergence
-
-
-- vs predicate dispatch: we extend dispatch power in a different direction,
-guided by semantic subtyping. goal is maximum power that still yields high
-likelihood of resolving many calls to a single implementation.
-
-a multimethod system designed for type inference and specialization.
+%- vs predicate dispatch: we extend dispatch power in a different direction,
+%guided by semantic subtyping. goal is maximum power that still yields high
+%likelihood of resolving many calls to a single implementation.
 
 past (static) type systems for dispatch were designed to ensure the absence of
 no-method errors and ambiguities (completeness and uniqueness). our goal
@@ -211,33 +235,34 @@ best-effort. since static types shouldn't affect program behavior, we
 conclude that the dispatch must be dynamic, which is happily the same
 conclusion you would reach if you simply wanted dynamic typing.
 
-
-it is quite possible that some static type system will work well for this
-however we defer this question.
+%it is quite possible that some static type system will work well for this
+%however we defer this question.
 
 interesting variants:
 - require static single method matches
 - reject programs with no-method errors
 - reject programs that yield Unions
 
+%%%%%%
 
-%problem of finding connections between array programming and OOP.
-%array programming is a powerful paradigm for describing computational
-%kernels operating over potentially large amounts of data.
+By \emph{selection} we mean any mechanism used to pick one of several
+pieces of code to run. This includes object-oriented mechanisms, as well
+as function overloading, and even branches.
 
-%an ``object system'' in this context is often considered a separate
-%part of the language, to be used only when arrays no longer
-%suffice.
+By \emph{specialization} we mean transformation of a given piece of code,
+particularly as done by a compiler to generate efficient code for some
+special case of a flexible piece of high-level code.
 
-%technical computing systems have an unusually large amount of
-%``failure of abstraction'' --- manual duplication of facts
-%all over the system. imagine changing from column-major to
-%row-major.
-
-%it may be true, as a practical matter, that we as a species need to agree on
-%one set of rules and stick to it. however this shouldn't be forced by
-%technical limitations.
-
+Specialization entails program analysis. By necessity, a language's
+code selection mechanisms must inform this process, to ensure the
+correctness of the analysis. A central argument of this thesis is that
+specialization should feed back into selection, allowing the
+\emph{approximate values} processed by a compiler to be used in the
+source language for dispatch. We argue that this is the key feature
+missing from the present generation of dynamically-typed languages.
+%This conclusion would not be surprising to advocates of static
+%type systems, but the approach we propose is actually a run-time
+%mechanism that does not restrict the class of valid programs.
 
 Solution: integrate code specialization and code selection
 
