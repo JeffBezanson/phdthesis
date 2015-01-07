@@ -33,12 +33,25 @@ been seriously under-explored.
 
 \subsection{Separate compilation vs. performance}
 
+Writing the signature of a generic method that needs to be separately compiled,
+as in Java for example, can be a difficult exercise.
+The programmer must use the type system to write down sufficient conditions on all
+arguments.
+(TODO example from \cite{Garcia:2003:CSL:949305.949317})
+If, however, we are going to specialize the method, the compiler can analyze it
+using actual types from call sites, and see for itself whether the method works
+in each case (this is how C++ templates are type-checked; they are analyzed
+again for each instantiation).
+
+It is quite interesting that performance and ease-of-use pull this design
+decision in the same direction.
+
 \subsection{Parametric vs. ad-hoc polymorphism}
 
 The idea of specialization unites parametric and ad-hoc polymorphism.
 Beginning with a parametrically-polymorphic function, one can imagine
 a compiler specializing it for various cases, i.e. certain concrete argument
-values. These specializations would be stored in a lookup table, for use
+values. These specializations could be stored in a lookup table, for use
 either at compile time or at run time.
 
 Next we can imagine that the compiler might not optimally specialize
@@ -439,12 +452,12 @@ However, such a type system is obviously undecidable, since it
 requires computing the predicates themselves or, even worse, computing
 predicate implication.
 \footnote{
-Many type systems involving bounded quantification, such as system
-$F_{<:}$, are already undecidable (TODO cite).
-However, they seem to be decidable for most practical
-programs, and also admit minor variations that yield decidable
-systems (TODO cite). It is fair to say they are \emph{just barely}
-undecidable, while predicates are \emph{very} undecidable.
+Many type systems involving bounded quantification, such as system $F_{<:}$,
+are already undecidable \cite{Pierce1994131}.
+However, they seem to terminate for most practical programs, and also admit
+minor variations that yield decidable systems \cite{Castagna:1994:DBQ:174675.177844}.
+It is fair to say they are ``just barely'' undecidable, while predicates
+are ``very'' undecidable.
 }
 
 For a language that is willing to do run-time type checks anyway, the
@@ -466,7 +479,7 @@ the predicates. Such a system would be very useful, and could be
 % TODO cite, as this has probably been done
 combined with a language like Julia or, indeed, most object-oriented
 languages. However this comes at the expense of conceding that predicates
-are not ``really'' types.
+are not ``real'' types.
 
 In considering the problems of predicate dispatch for code specialization,
 we seem to be up against a fundamental obstacle: some sets of values are
