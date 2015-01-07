@@ -1,0 +1,72 @@
+
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage[colorinlistoftodos, textwidth=1.5\marginparwidth, shadow]{todonotes}
+
+\newcommand{\julia}{\text{Julia}}
+\newcommand{\ALGOL}{A\textsc{LGOL}}
+\newcommand{\python}{\text{Python}}
+\newcommand{\octave}{\text{Octave}}
+\newcommand{\scilab}{\text{Scilab}}
+\newcommand{\rlang}{\textsc{R}}
+\newcommand{\clang}{\textsc{C}}
+\newcommand{\fortran}{\text{Fortran}}
+\newcommand{\java}{\text{Java}}
+\newcommand{\cpp}{\text{C++}}
+\newcommand{\mathematica}{\text{Mathematica}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+\setlength{\oddsidemargin}{-.0in}
+\setlength{\evensidemargin}{-.0in}
+\setlength{\textwidth}{6.25 in}
+\setlength{\topmargin}{-0.25in}
+\setlength{\textheight}{8.25in}
+
+
+
+\newlength{\boxwidth}
+\setlength{\boxwidth}{\textwidth}
+\addtolength{\boxwidth}{-20 pt}
+\newcommand{\boxer}[1]{\begin{center} \fbox{\fbox{
+     \begin{minipage}{\boxwidth} #1 \end{minipage}}} \end{center}}
+
+
+     \renewcommand{\,}{\hspace*{1em}   }
+
+          \renewcommand{\>}{\hspace*{0.1em}   }
+     %Julia stuff
+     %---------
+    \usepackage{graphicx}
+\usepackage{color}
+\usepackage{framed}
+
+\definecolor{shadecolor}{gray}{.92}
+\definecolor{incolor}{rgb}{0,0,.7}
+\definecolor{outcolor}{rgb}{.65,0,0}
+\definecolor{syntaxcolor}{rgb}{.65,0,0}
+\usepackage{verbatim}
+\newcommand{\sh}[1]{\textcolor{syntaxcolor}{#1}}
+
+\newcounter{jcounter}
+\newenvironment{jinput}[1][]{\ifx#1\relax\else\setcounter{jcounter}{#1}\addtocounter{jcounter}{-1}\fi\refstepcounter{jcounter}\ttfamily\hspace*{-.7in}\noindent\begin{minipage}[t]{.19\textwidth}\vskip2ex\hspace*{\fill}\textcolor{incolor}{In[\arabic{jcounter}]: }\end{minipage}\begin{minipage}[t]{.8\textwidth}\vskip-0ex\begin{shaded}}{\end{shaded}\end{minipage}\par}
+
+\newenvironment{joutput}[1][]{\vskip1ex plus .2ex minus .1ex\ifx#1\relax\else\setcounter{jcounter}{#1}\fi\addtocounter{jcounter}{-1}\refstepcounter{jcounter}\ttfamily\noindent\hspace*{-.5in}\begin{minipage}[t]{.19\textwidth}\vskip0ex\hspace*{\fill}\textcolor{outcolor}{Out[\arabic{jcounter}]: }\end{minipage}\begin{minipage}[t]{.8\textwidth}\vskip-0ex}{\end{minipage}\par\vskip1.5ex}
+
+
+
+
+     \newcommand{\ja}{\begin{jinput}}
+     \newcommand{\jb}{\end{jinput}\begin{joutput}}
+     \newcommand{\jc}{\end{joutput}}
+
+
+    \newcommand{\jav}{\begin{jinput}\begin{verbatim}}
+     \newcommand{\jbv}{\end{verbatim}\end{jinput}\begin{joutput}\begin{verbatim}}
+     \newcommand{\jcv}{\end{verbatim} \end{joutput}}
+
+
+\usepackage{fancyvrb}
+
+
