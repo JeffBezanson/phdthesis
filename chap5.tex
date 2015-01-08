@@ -404,9 +404,57 @@ repeatedly analyze full representations of the meanings of such ubiquitous const
 
 \section{Numerical linear algebra}
 
+The crucial roles of code selection and code specialization in technical
+computing are captured well in the linear algebra software engineer's dilemma,
+described in the context of LAPACK and ScaLAPACK by Demmel and Dongarra,
+et.al. \cite{lawn181}:
+\begin{verbatim}
+(1) for all linear algebra problems
+     (linear systems, eigenproblems, ...)
+(2)     for all matrix types
+            (general, symmetric, banded, ...)
+(3)           for all data types
+                  (real, complex, single, double, higher precision)
+(4)                  for all machine architectures
+                       and communication topologies
+(5)                        for all programming interfaces
+(6)                             provide the best algorithm(s) available in terms of
+                                  performance and accuracy (``algorithms" is plural
+                                  because sometimes no single one is always best)
+\end{verbatim}
+
+
 Multiple dispatch on special matrices
 
 29 LAPACK types via composition of 9 types, issue 8240
+
+QR factorization: want to support it on all input types, but many
+types (integer, rational) are not closed under the needed operations.
+compare to eigen: in C++, if you want a qrfact of an integer matrix,
+you might get a compile-time error, or it might work but all the values
+will be truncated when stored. this is a big generic programming
+challenge. you can't expect types to have a ``type to use for QR fact''
+trait.
+
+qrfact computes the type of the result needed:
+
+\begin{singlespace}
+\begin{lstlisting}[style=customjulia]
+function qrfact{T}(A::StridedMatrix{T}; pivot=false)
+    S = typeof(one(T)/norm(one(T)))
+    if S != T
+        qrfact!(convert(AbstractMatrix{S},A), pivot=pivot)
+    else
+        qrfact!(copy(A),pivot=pivot))
+    end
+end
+\end{lstlisting}
+\end{singlespace}
+
+This code is not statically typeable, and yet with specialization a
+compiler could in fact determine the type of each call site.
+It just happens to be convenient to specify this behavior with a
+branch.
 
 
 \section{Boundary-element method}
@@ -549,7 +597,6 @@ high-performance programming the ``force inlining'' behavior of macros
 is welcome.)
 
 If nothing else, demonstrates that removing glue code overhead is worthwhile.
-
 
 grisu: 6kLOC to 1kLOC (PR 7291)
 
