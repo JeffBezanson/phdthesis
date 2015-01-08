@@ -128,13 +128,12 @@ since the static type of a value might not be apparent.
 
 \subsection{Mismatches with mathematical abstractions}
 
-programs, in general, deal with values of widely varying disjoint types:
-functions, numbers, lists, network sockets, etc. type systems
-are good at sorting out values of these different types. however, in
-mathematical code most values are numbers. numerical properties (such as
+Programs, in general, deal with values of widely varying disjoint types:
+functions, numbers, lists, network sockets, etc. Type systems
+are good at sorting out values of these different types. However, in
+mathematical code most values are numbers or number-like. Numerical properties (such as
 positive, negative, even, odd, greater than 1, etc.) are what matter,
-and these are highly dynamic. the lattices involved are generally not of
-finite height.
+and these are highly dynamic.
 
 different number representations exist only for efficiency, and are often
 incidental to the meaning of a piece of code. for example people want

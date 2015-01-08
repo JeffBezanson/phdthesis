@@ -408,21 +408,22 @@ The crucial roles of code selection and code specialization in technical
 computing are captured well in the linear algebra software engineer's dilemma,
 described in the context of LAPACK and ScaLAPACK by Demmel and Dongarra,
 et.al. \cite{lawn181}:
+\vspace{-3ex}
+\begin{singlespace}
+\begin{small}
 \begin{verbatim}
-(1) for all linear algebra problems
-     (linear systems, eigenproblems, ...)
-(2)     for all matrix types
-            (general, symmetric, banded, ...)
-(3)           for all data types
-                  (real, complex, single, double, higher precision)
-(4)                  for all machine architectures
-                       and communication topologies
-(5)                        for all programming interfaces
-(6)                             provide the best algorithm(s) available in terms of
-                                  performance and accuracy (``algorithms" is plural
-                                  because sometimes no single one is always best)
+(1) for all linear algebra problems (linear systems, eigenproblems, ...)
+(2)    for all matrix types (general, symmetric, banded, ...)
+(3)       for all data types (real, complex, single, double, higher precision)
+(4)          for all machine architectures
+                and communication topologies
+(5)                for all programming interfaces
+(6)                   provide the best algorithm(s) available in terms of
+                      performance and accuracy (``algorithms" is plural
+                      because sometimes no single one is always best)
 \end{verbatim}
-
+\end{small}
+\end{singlespace}
 
 Multiple dispatch on special matrices
 
