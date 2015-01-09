@@ -74,18 +74,12 @@ This problem implies that a single built-in type hierarchy is not
 sufficient: we want to model custom *kinds* of relationships between
 types (e.g. ``can be embedded in'' in addition to ``is a'').
 
-Two further problems should also be kept in mind. First, the natural isomorphisms
-between sets of numbers might not be isomorphisms on a real computer. For example,
-due to the behavior of floating-point arithmetic, an operation on complex numbers
-with zero imaginary part might not give an answer equal to the same operation on
-real numbers. Second, the contexts that demand use of one type of number or
-another are often not easily described by type systems. The classic example is
-square root (\texttt{sqrt}), whose result is complex for negative arguments.
-Including a number's sign in its type is a possibility, but this quickly gets
-out of hand --- should a type system attempt to prove a matrix symmetric before
-we compute its eigenvalues? While we cannot offer a once-and-for-all solution
-to these problems, we will show how the flexibility of our proposed mechanism
-is useful for addressing them.
+%% Two further problems should also be kept in mind. First, the natural isomorphisms
+%% between sets of numbers might not be isomorphisms on a real computer. For example,
+%% due to the behavior of floating-point arithmetic, an operation on complex numbers
+%% with zero imaginary part might not give an answer equal to the same operation on
+%% real numbers. Second, the contexts that demand use of one type of number or
+%% another are often not easily described by type systems.
 
 % ex: generic sum function accumulating result in at least
 % double precision. just using +::T->T->T doesn't work.
@@ -403,6 +397,7 @@ repeatedly analyze full representations of the meanings of such ubiquitous const
 
 
 \section{Numerical linear algebra}
+\label{sec:linalg}
 
 The crucial roles of code selection and code specialization in technical
 computing are captured well in the linear algebra software engineer's dilemma,

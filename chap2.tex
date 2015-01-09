@@ -70,11 +70,33 @@ following features:
 \end{enumerate}
 \end{singlespace}
 
-Clearly, language design choices affect the ability to provide this
-user experience (though the first two items are more related to
-library design). These characteristics are strongly associated
+Language design choices affect the ability to provide this
+user experience (though the first two items are also related to
+library design). Informally, in order to provide
+the desired experience a language needs to be able to assign a
+meaning to a brief and isolated piece of code such as \texttt{sin(x)}.
+This leads directly to making declarations and annotations optional,
+eliding administrative tasks like memory management, and leaving
+information implicit (for example the definition scopes and types of the
+identifiers \texttt{sin} and \texttt{x}).
+These characteristics are strongly associated
 with the Lisp tradition of dynamically-typed, garbage collected
 languages with interactive REPLs.
+
+However, there are subtle cultural differences. A case in point is the
+MATLAB \texttt{mldivide}, or backslash, operator \cite{matlabman:mldivide}.
+By writing only \texttt{A\textbackslash B}, the user can solve square,
+over- or under-determined linear systems that are dense or sparse, for multiple
+data types. The arguments can even be scalars, in which case simple
+division is performed. In short, a rather large amount of linear algebra
+software is accessed via a single character! This contrasts with the
+software engineering tradition, where clarifying programmer intent would
+likely be considered more important. (TODO cite if possible?)
+Even the Lisp tradition, which originated most of the convenience features
+enumerated above, has sought to separate functionality into small pieces.
+For example Scheme provides separate functions \texttt{list-ref} and
+\texttt{vector-ref} \cite{schemelang} for indexing lists and vectors.
+
 
 
 \section{Why dynamic typing?}
@@ -84,7 +106,52 @@ on a computer. For example, mathematicians can move instinctively between
 isomorphic objects such as scalars and 1-by-1 matrices, but most programming
 languages would prefer to represent scalars and matrices quite differently.
 A system might be able to convert automatically from one to the other, but
-it cannot always know which one we *meant*.
+it cannot always know which one we \emph{meant}.
+
+
+\subsection{Mismatches with mathematical abstractions}
+
+Programs in general, deal with values of widely varying disjoint types:
+functions, numbers, lists, network sockets, etc.
+Type systems are good at sorting out values of these different types.
+However, in mathematical code most values are numbers or number-like.
+Numerical properties (such as positive, negative, even, odd, greater
+than one, etc.) are what matter, and these are highly dynamic.
+
+The classic example is square root (\texttt{sqrt}), whose result is complex
+for negative arguments.
+Including a number's sign in its type is a possibility, but this quickly gets
+out of hand.
+When computing eigenvalues, for example, the key property is matrix
+symmetry.
+Linear algebra provides many more examples where algorithm and data type
+changes arise from subtle properties. These will be discussed in more
+detail in section~\ref{sec:linalg}.
+
+We must immediately acknowledge that static type systems provide
+mechanisms for dealing with ``dynamic'' variations like these.
+
+
+% as another
+%example, in many cases it is convenient not to need to worry about
+%integer overflow.
+
+
+multiple common features underlie mathematical objects of different
+types (e.g. numbers, sets, matrices). in some cases it makes sense to
+consider numbers and matrices as the same kind of thing, and in other
+cases it doesn't matter. A given type system is likely not to have
+anticipated the particular common features that matter to your program,
+making it more difficult to express an idea. A concrete example is
+the matlab fragment
+if condition
+  idx = ':'
+else
+  idx = 1
+end
+where we want to select either an entire dimension or the first position
+alone. The ':' and 1 are both indexes in this context, though they would
+be of disjoint types in most programming languages.
 
 
 \subsection{Operational reasoning}
@@ -125,39 +192,6 @@ decisions based on static types. this is confusing. if type declarations
 can be omitted, as in a type-inferred language, the situation is even worse
 since the static type of a value might not be apparent.
 
-
-\subsection{Mismatches with mathematical abstractions}
-
-Programs, in general, deal with values of widely varying disjoint types:
-functions, numbers, lists, network sockets, etc. Type systems
-are good at sorting out values of these different types. However, in
-mathematical code most values are numbers or number-like. Numerical properties (such as
-positive, negative, even, odd, greater than 1, etc.) are what matter,
-and these are highly dynamic.
-
-different number representations exist only for efficiency, and are often
-incidental to the meaning of a piece of code. for example people want
-"y = sqrt(x)" to compute the square root of x whether it is positive or
-negative, and give a real or complex result accordingly. as another
-example, in many cases it is convenient not to need to worry about
-integer overflow.
-
-
-multiple common features underlie mathematical objects of different
-types (e.g. numbers, sets, matrices). in some cases it makes sense to
-consider numbers and matrices as the same kind of thing, and in other
-cases it doesn't matter. A given type system is likely not to have
-anticipated the particular common features that matter to your program,
-making it more difficult to express an idea. A concrete example is
-the matlab fragment
-if condition
-  idx = ':'
-else
-  idx = 1
-end
-where we want to select either an entire dimension or the first position
-alone. The ':' and 1 are both indexes in this context, though they would
-be of disjoint types in most programming languages.
 
 
 \section{The software stack is too complex}
