@@ -48,7 +48,6 @@ technical computing (see gang of 40).
 \section{The technical computing problem}
 
 \begin{figure}
-  \label{PLpriorities}
   \begin{center}
     \begin{tabular}{|l|l|}\hline
       \textbf{Mainstream PL} & \textbf{Technical computing} \\
@@ -74,6 +73,7 @@ technical computing (see gang of 40).
     Priorities of mainstream object-oriented and functional programming language research and
     implementation compared to those of the technical computing domain.
   }
+  \label{PLpriorities}
 \end{figure}
 
 Figure~\ref{PLpriorities} compares the general design priorities of mainstream programming
@@ -313,6 +313,9 @@ Challenges of this approach (why has this not been done before?)
 1 - an analysis of the nature of technical computing that suggests what
 sort of language would form a good base for it. it should emphasize
 complex operators and code generation/specialization.
+% this includes our real-world experience with building a new
+% technical computing environment from the ground up with a large open
+% source community.
 
 2 - the idea of integrating specialization and selection, using multiple dispatch
 and semantic subtyping.

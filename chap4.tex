@@ -97,6 +97,16 @@ names are bound to corresponding elements of the argument tuple. If the
 specializer is a vararg type, then the last argument name is bound to a
 tuple of all trailing arguments.
 
+\subsection{A note on static typing}
+
+% isomorphism between our types T and propositions ``term will be of type T''
+% we will elide the difference
+% trivially undecidable due to the definition of new()
+% it is quite likely a useful static version could be developed. but
+% we do not do that here, since our goals are (1) to develop the system
+% for specialization & selection, not checking, and (2) to emphasize
+% that no amount of ``dynamism'' need be given up.
+
 
 \section{Type system}
 
@@ -169,6 +179,12 @@ literature \cite{Day:1995:SVC:217838.217852}.
 Invariance preserves the property that the only subtypes of a concrete type are \texttt{Bottom}
 and itself. We also find that most uses of covariance are more flexibly
 handled by union type connectives, which will be introduced below.
+
+% TODO: note that invariance fits well with tagging. otherwise we would have
+% arrays tagged Array{Int}, and Array{Real}, but the int array would appear
+% to have both tags. tuples are a special case where covariance works, because
+% each type need only refer to single value, so there is no need for concrete
+% tuple types with non-concrete parameters.
 
 Next we add conventional product (tuple) types, which are used to represent the
 arguments to methods. These are almost identical to the nominal types defined above,
@@ -431,6 +447,14 @@ which program behavior can be selected. Though generic functions change
 with the addition of methods, it would be more satisfying for their
 types to somehow reflect an intrinsic, unchanging property.
 
+An additional minor problem with the intersection of arrows
+interpretation is that we have found, in practice, that Julia methods
+often have a large number of definitions. For example, the \texttt{+}
+function in Julia v0.3.4 has 117 definitions, and in a more recent
+development version with more functionality, it has 150 methods. An
+intersection of 150 types would be unwieldy to manage, even if only
+used when debugging the compiler.
+
 A slightly different approach we might try would be to immitate
 the types of higher-order functions in traditional
 statically-typed functional languages. For example, we might wish
@@ -460,25 +484,61 @@ Such heuristics are fine for merely \emph{analyzing} a program, but
 are not appropriate for determining the value of a user-visible
 variable, as this would make program behavior unpredictable.
 
-
 \subsection{Problems for code specialization}
 
-re: specialization:
+For code specialization to be effective, it must eliminate as many
+irrelevant cases as possible. Intersection types seem to be naturally
+opposed to this process, since they have the ability to
+generate infinite descending chains of ever-more-specific function
+types by tacking on more terms with $\cap$. There would be no such
+thing as a maximally-specific function type. In particular, there would
+be no good way to express that a function has exactly one definition,
+which is an especially important case for optimizing code.
 
-- GFs have many methods and no two are the same in practice
+For example, say we have a definition \texttt{f(g::String->String)},
+and a function \texttt{h} with a single $\texttt{Int}\rightarrow \texttt{Int}$ definition.
+Naturally, \texttt{f} is not applicable to \texttt{h}.
+However, given the call site \texttt{f(h)}, we are forced to conclude
+that \texttt{f} might be called with a function of type
+$(\texttt{Int}\rightarrow \texttt{Int})\cap(\texttt{String}\rightarrow \texttt{String})$,
+since in general $\texttt{Int}\rightarrow \texttt{Int}$ might be only an
+approximation of the true type of the argument.
 
-- there is no way to restrict a function to one definition
+%re: specialization:
+%specialization wants to exclude irrelevant cases, and intersections
+%*manufacture* irrelevant cases!
+%- GFs have many methods and no two are the same in practice
+%- there is no way to restrict a function to one definition
 
-if we have f(g::String->String) and call it with
+The other major concern when specializing code is whether, having generated code
+for a certain type, we would be able to reuse that code often enough for the
+effort to be worthwhile.
+In the case of arrow types, this equates to asking how often generic functions
+share the same set of signatures.
+This question can be answered empirically.
+Studying the Julia \texttt{Base} library as of this writing, there are 1059
+generic functions. We examined all 560211 pairs of functions; summary
+statistics are shown in figure~\ref{fig:matchingfuncs}.
 
-x::Int->Int
-f(x)
+\begin{figure}
+  \begin{center}
+    \begin{tabular}{|l|r|r|r|}\hline
+    &  \textbf{matching pairs} & \textbf{GFs with matches} & \textbf{mean} \\
+      \hline \hline
+arguments only             & 1831 (0.327\%)  &   329       &             1.73 \\
+arguments and return types &  241 (0.043\%)  &   85        &             0.23 \\
+\hline
+\end{tabular}
+\end{center}
+  \caption{
+    Number and percentage of pairs of functions with matching arguments, or
+    matching arguments and return types. The second column gives the number of
+    functions that have some number of matches. The third column gives the
+    mean number of matches per function.
+  }
+  \label{fig:matchingfuncs}
+\end{figure}
 
-where x has only one definition, we would expect the method not to be
-applicable. however it is applicable with type $Int->Int \cap String->String$
-
-specialization wants to exclude irrelevant cases, and intersections
-*manufacture* irrelevant cases!
 
 \subsection{Possible solutions}
 solutions:
