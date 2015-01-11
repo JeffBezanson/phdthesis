@@ -16,7 +16,7 @@ tagged data values, mutable cells, and assignment.
         &\ |\ \texttt{if}\ e_1\ e_2\ e_3 & \textrm{(conditional)} \\
         &\ |\ e_1(e_2)       & \textrm{(application)} \\
         &\ |\ e_1; e_2       & \textrm{(sequencing)} \\
-        &\ |\ (e)          & \textrm{(grouping)} \\
+%        &\ |\ (e)          & \textrm{(grouping)} \\
         &\ |\ \texttt{function}\ x_{name}\ e_{type}\ (x_1, x_2, \cdots)\ e_{body} & \textrm{(method definition)}
 \end{align*}
 \end{singlespace}
@@ -80,12 +80,14 @@ specified by name rather than by value in order to make it easier to syntactical
 restrict where functions can be extended. This, in turn, allows the language to
 specify when new method definitions take effect, providing useful windows of
 time within which methods do not change, allowing programs to be optimized more
-effectively.
+effectively (and hopefully discouraging abusive and confusing run-time
+method replacements).
 
 % (TODO describe restrictions)
 
 The equivalent of ordinary lambda expressions can be obtained by introducing
 a unique local name and defining a single method on it.
+
 Mutable lexical bindings are provided by the usual translation to operations
 on mutable cells.
 
@@ -106,6 +108,14 @@ tuple of all trailing arguments.
 % we do not do that here, since our goals are (1) to develop the system
 % for specialization & selection, not checking, and (2) to emphasize
 % that no amount of ``dynamism'' need be given up.
+
+% static type systems begin with errors we want to exclude, then design
+% restrictions to make that possible, then go on to show that, indeed,
+% most useful programs can still be written.
+
+% one reason we skip static checking is to reverse this process:
+% first see what kinds of type behavior technical users want in their
+% programs, then identify and quantify any regularities later.
 
 
 \section{Type system}
@@ -207,7 +217,8 @@ provide convenient interfaces for tasks like concatenating any number of arrays.
 Multiple dispatch has been formulated as dispatch on tuple types before \cite{Leavens1998}.
 This formulation has the advantage that \emph{any} type that is a subtype of a
 tuple type can be used to express the signature of a method. It also makes the system
-simpler, since subtype queries can be used to ask questions about methods.
+simpler and more reflective, since subtype queries can be used to ask questions about
+methods.
 
 The types introduced so far would be perfectly sufficient for many programs, and are
 roughly equal in power to several multiple dispatch systems that have been designed
@@ -229,8 +240,8 @@ of whether they are signed or unsigned, it can be specialized for \texttt{Union\
 To see this, notice that they provide an unlimited number of ways to rewrite any type.
 For example a type \texttt{T} can always be rewritten as \texttt{Union\{T,Bottom\}}, or
 \texttt{Union\{Bottom,Union\{T,Bottom\}\}}, etc. Any code that processes types must
-``understand'' these equivalences. \texttt{Union} types also commute with covariant
-type constructors (tuples in our case), providing even more ways to rewrite types:
+``understand'' these equivalences. Covariant constructors (tuples in our case)
+also distribute over \texttt{Union} types, providing even more ways to rewrite types:
 
 \[
 \texttt{Tuple\{Union\{A,B\},C\}} = \texttt{Union\{Tuple\{A,C\},Tuple\{B,C\}\}}
@@ -244,11 +255,14 @@ perspectives of both data-flow analysis and method specialization, they are
 perfectly natural and even essential \cite{Igarashi} \cite{Smith:2008:JTI:1449764.1449804}
 (TODO cite analyses that have used union types).
 
-The next problem we need to solve arises from combining data-flow analysis
-and parametric invariance. When a type constructor \texttt{C} is applied to a type
+The next problem we need to solve arises from data-flow analysis of
+the \texttt{new} construct.
+When a type constructor \texttt{C} is applied to a type
 $S$ that is known only approximately at compile time, the type \texttt{C\{}$S$\texttt{\}}
-does not correctly represent the result if \texttt{C} is invariant. The correct
-result would be the union of all types \texttt{C\{}$T$\texttt{\}} where $T\leq S$.
+does not correctly represent the result.
+%if \texttt{C} is invariant.
+The correct result would be the union of all types \texttt{C\{}$T$\texttt{\}}
+where $T\leq S$.
 Interestingly, there is again a corresponding need for such types in method
 dispatch. Often one has, for example, a method that applies to arrays of any
 kind of integer (\texttt{Array\{Int32\}}, \texttt{Array\{Int64\}}, etc.).
@@ -313,6 +327,7 @@ Instead, we find it intuitive and appealing for \texttt{Array} to refer to
 any kind of array, so that a declaration such as \texttt{x::Array} simply
 asserts \texttt{x} to be some kind of array. In other words,
 
+\vspace{-2ex}
 \[
 \texttt{Array} = \texttt{UnionAll T Array$^\prime$\{T\}}
 \]
@@ -324,6 +339,12 @@ type at a particular parameter value.
 
 \subsection{Associated types and type computation}
 
+
+Multiple dispatch systems have often only dispatched on the classes of
+arguments. This makes it appear necessary to introduce a separate
+template system to handle other kinds of parameterization.
+
+
 \subsection{Subtyping}
 
 Describe algorithm.
@@ -332,12 +353,12 @@ Very likely $\Pi_2^{\textrm{P}}$-hard.
 Checking a subtype relation with unions requires checking that for all choices
 on the left, there exists a choice on the right that makes the relation hold.
 This matches the quantifier structure of 2-TQBF problems of the form
-$\forall x_i . \exists y_i . F$ where $F$ is a logical formula. If the formula
+$\forall x_i . \exists y_i . F$ where $F$ is a boolean formula. If the formula
 is rewritten in conjunctive normal form, it corresponds to subtype checking
 between two tuple types, where the relation must hold for each pair of
 corresponding types. Now use a type \texttt{N\{}$x$\texttt{\}} to
 represent $\neg x$. The clause $(x_i \vee y_i)$ can be translated to
-$x_i$\texttt{ <: Union\{N\{}$y_i$\texttt{\}, True\}} (where the $x_i$ and
+$x_i\ \texttt{<:\ Union\{N\{}y_i\texttt{\}, True\}}$ (where the $x_i$ and
 $y_i$ are type variables bound by \texttt{UnionAll} on the left and right,
 respectively).
 
@@ -452,7 +473,7 @@ interpretation is that we have found, in practice, that Julia methods
 often have a large number of definitions. For example, the \texttt{+}
 function in Julia v0.3.4 has 117 definitions, and in a more recent
 development version with more functionality, it has 150 methods. An
-intersection of 150 types would be unwieldy to manage, even if only
+intersection of 150 types would be unwieldy, even if only
 used when debugging the compiler.
 
 A slightly different approach we might try would be to immitate
@@ -480,7 +501,7 @@ be helpful if we wanted to dispatch on arrow types, though they would
 not solve the ambiguity problem). Or we could use type inference
 of \texttt{f} on argument type \texttt{A}. This would not work very
 well, since the result would depend on partly-arbitrary heuristics.
-Such heuristics are fine for merely \emph{analyzing} a program, but
+Such heuristics are fine for analyzing a program, but
 are not appropriate for determining the value of a user-visible
 variable, as this would make program behavior unpredictable.
 
@@ -496,13 +517,14 @@ be no good way to express that a function has exactly one definition,
 which is an especially important case for optimizing code.
 
 For example, say we have a definition \texttt{f(g::String->String)},
-and a function \texttt{h} with a single $\texttt{Int}\rightarrow \texttt{Int}$ definition.
+and a function \texttt{h} with a single $\texttt{Int}\rightarrow\texttt{Int}$ definition.
 Naturally, \texttt{f} is not applicable to \texttt{h}.
 However, given the call site \texttt{f(h)}, we are forced to conclude
 that \texttt{f} might be called with a function of type
-$(\texttt{Int}\rightarrow \texttt{Int})\cap(\texttt{String}\rightarrow \texttt{String})$,
-since in general $\texttt{Int}\rightarrow \texttt{Int}$ might be only an
+\mbox{$(\texttt{Int}\rightarrow\texttt{Int})\cap(\texttt{String}\rightarrow\texttt{String})$},
+since in general $\texttt{Int}\rightarrow\texttt{Int}$ might be only an
 approximation of the true type of the argument.
+% TODO so? wouldn't be able to exclude the method
 
 %re: specialization:
 %specialization wants to exclude irrelevant cases, and intersections
@@ -519,25 +541,46 @@ This question can be answered empirically.
 Studying the Julia \texttt{Base} library as of this writing, there are 1059
 generic functions. We examined all 560211 pairs of functions; summary
 statistics are shown in figure~\ref{fig:matchingfuncs}.
+Overall, it is rare for functions to share type signatures.
+Many of the 85 functions with matches (meaning there exists some other function
+with the same type) are predicates, which all have types similar to
+$\texttt{Any}\rightarrow \texttt{Bool}$. The mean of 0.23 means that if we
+pick a function uniformly at random, on average 0.23 other functions will
+match it.
+The return types compared here depend on our heuristic type inference algorithm,
+so it useful to exclude them in order to get an upper bound.
+If we do that, and only consider arguments, the mean number of matches rises to 1.73.
 
 \begin{figure}
   \begin{center}
     \begin{tabular}{|l|r|r|r|}\hline
     &  \textbf{matching pairs} & \textbf{GFs with matches} & \textbf{mean} \\
       \hline \hline
-arguments only             & 1831 (0.327\%)  &   329       &             1.73 \\
-arguments and return types &  241 (0.043\%)  &   85        &             0.23 \\
+arguments only             & 1831 (0.327\%)  &   329       &          1.73 \\
+\hline
+arguments and return types &  241 (0.043\%)  &   85        &          0.23 \\
 \hline
 \end{tabular}
 \end{center}
   \caption{
     Number and percentage of pairs of functions with matching arguments, or
     matching arguments and return types. The second column gives the number of
-    functions that have some number of matches. The third column gives the
+    functions that have matches. The third column gives the
     mean number of matches per function.
   }
   \label{fig:matchingfuncs}
 \end{figure}
+
+The specific example of the \texttt{sin} and \texttt{cos} functions provides
+some intuition for why there are so few matches.
+One would guess that the type behavior of these functions would be identical,
+however the above evaluation showed this not to be the case.
+The reason is that the functions have definitions to make them operate
+elementwise on both dense and sparse arrays.
+\texttt{sin} maps zero to zero, but \texttt{cos} maps zero to one,
+so \texttt{sin} of a sparse array gives a sparse array, but
+\texttt{cos} of a sparse array gives a dense array.
+% todo conclusion
 
 
 \subsection{Possible solutions}
@@ -558,3 +601,5 @@ arrow types without intersections, used to ``slice'' generic functions
 \subsection{Type inference}
 
 \subsection{Specialization}
+
+% ? \section{Staged programming}
