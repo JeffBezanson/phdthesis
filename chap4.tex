@@ -1,6 +1,7 @@
 \chapter{The Julia approach}
 
 \section{Core calculus and data model}
+\label{sec:corecalc}
 
 Julia is based on an untyped lambda calculus augmented with generic functions,
 tagged data values, mutable cells, and assignment.
@@ -584,17 +585,68 @@ so \texttt{sin} of a sparse array gives a sparse array, but
 
 
 \subsection{Possible solutions}
-solutions:
 
-identity-typing
+%identity-typing
+The general lack of sharing of generic function types suggests the first
+possible solution: give each generic function a new type that is uniquely
+associated with it. For example, the type of \texttt{sin} would be
+\texttt{GenericFunction\{sin\}}. This type merely identifies the function
+in question, and says nothing more about its behavior. It is easy to read,
+and easily specific enough to avoid ambiguity and specialization
+problems. It does \emph{not} immediately solve the above problem
+determining the result type of \texttt{map}. However there are
+corresponding performance benefits, since specialzing code for a
+specific function argument naturally lends itself to inlining.
 
-nominal function types
+% todo: note that this is just a special case of specializing on a
+% constant. however this analysis argues for specializing on constant
+% functions by default, where specializing on other values by default
+% is less surely a good idea.
 
-arrow types without intersections, used to ``slice'' generic functions
+%nominal function types
+Another approach that is especially relevant to technical computing is to use
+nominal function types.
+In mathematics, the argument and return types of a function are often among its
+least interesting properties.
+In some domains, for example, all functions can implicitly be assumed
+$\mathbb{R}\rightarrow\mathbb{R}$, and the interesting property might be
+what order of integrable singularity is present (see section~\ref{sec:BEM} for
+an application), or what dimension of linear operator the function represents.
+The idea of nominal function types is to describe the properties of interest
+using a data object, and then allow that data object to be treated as a
+function, i.e. ``called''. Some object-oriented languages call such an object
+a \emph{functor}.
 
-(generic functions with declared overall types)
+Julia accomodates this approach with a small adjustment to the evaluation
+rules: in the application syntax $e_1(e_2)$ when $e_1$ is not a function,
+evaluate $\texttt{call}(e_1,e_2)$ instead, where \texttt{call} is
+a particular generic function known to the system.
+Now we can define
+
+\begin{singlespace}
+\begin{lstlisting}[style=customjulia]
+
+\end{lstlisting}
+\end{singlespace}
+
+
+\begin{singlespace}
+\begin{lstlisting}[style=customjulia]
+immutable Arrow{A,B}
+    f
+end
+
+call{A,B}(a::Arrow{A,B}, x::A) = a.f(x)::B
+\end{lstlisting}
+\end{singlespace}
+
+% arrow types without intersections, used to ``slice'' generic functions
+
+% (generic functions with declared overall types)
 
 \subsection{Implementing \texttt{map}}
+
+
 
 \section{Performance model}
 

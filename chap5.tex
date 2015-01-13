@@ -31,22 +31,63 @@ type it is already an instance of. In our system this can be handled by
 a single definition that performs ``triangular'' dispatch:
 
 \begin{verbatim}
-convert{T}(::Type{T}, x::T) = x
+convert{T,S<:T}(::Type{T}, x::S) = x
 \end{verbatim}
 
 \noindent
 ``Triangular'' refers to the rough shape of the dispatch matrix covered
 by such a definition: for all types \texttt{T} in the first argument slot,
-match any type less than it in the second argument slot.
+match values of any type less than it in the second argument slot.
+
+A similar trick is useful for defining equivalence relations.
+It is most likely unavoidable for programming languages to need multiple
+notions of equality. Two in particular are natural: an \emph{intensional}
+notion that equates objects that look identical, and an \emph{extensional}
+notion that equates objects that mean the same thing for some standard
+set of purposes. Intensional equality (\texttt{===} in Julia, mentioned
+in section~\ref{sec:corecalc}) lends itself to being implemented once
+by the language implementer, since it can work by directly comparing
+the representations of objects. Extensional equality (\texttt{==} in
+Julia), on the other hand, must be extensible to user-defined data types.
+The latter function must call the former in order to have any basis for
+its comparisons.
+
+As with conversion, we would like to provide default definitions for
+\texttt{==} that cover families of cases. Numbers are a reasonable
+domain to pick, since all numbers should be equality-comparable to each
+other. We might try
+
+\begin{singlespace}
+\begin{lstlisting}[style=customjulia]
+==(x::Number, y::Number) = x === y
+\end{lstlisting}
+\end{singlespace}
+
+\noindent
+meaning that number comparison can simply fall back to intensional
+equality. However this definition is rather dubious. It gets the wrong
+answer every time the arguments are different representations (e.g.
+integer and floating point) of the same quantity. We might hope that
+its behavior will be ``patched up'' later by more specific definitions
+for various concrete number types, but it still covers a dangerous
+amount of dispatch space. If later definitions somehow miss a particular
+combination of number types, we could get a silent wrong answer instead
+of an error. (Note that statically checking method exhaustiveness is no
+help here.)
 
 
-- The abstractions of equality and comparison. Different equivalence classes between
 
-is/===, isequal and ==
+\begin{singlespace}
+\begin{lstlisting}[style=customjulia]
+=={T<:Number}(x::T, y::T) = x === y
+\end{lstlisting}
+\end{singlespace}
 
-- Numeric vs lexicographic ordering?
 
-cmp, lexcmp, vs isless, <
+%- The abstractions of equality and comparison. Different equivalence classes between
+%is/===, isequal and ==
+%- Numeric vs lexicographic ordering?
+%cmp, lexcmp, vs isless, <
 
 \subsection{Numeric types and embeddings}
 
@@ -89,6 +130,67 @@ types (e.g. ``can be embedded in'' in addition to ``is a'').
 Most functions are naturally implemented in the value domain, but some are
 actually easier to implement in the type domain. One reason is that there
 is a bottom element, which most data types lack.
+
+It has been suggested on theoretical grounds \cite{categorytheoryoperators}
+that generic binary operators should have ``key variants'' where the
+arguments are of the same type.
+
+\begin{singlespace}
+\begin{lstlisting}[style=customjulia]
++(x::Number, y::Number) = +(promote(x,y)...)
+
++{T<:Number}(x::T, y::T) = no_op_err("+", T)
+
+\end{lstlisting}
+\end{singlespace}
+
+
+A full-featured promotion operator is a tall order. We would like
+
+- each combination of types only needs to be defined in one order
+- it falls back to join
+- must prevent promotion above a certain point to avoid circularity in
+  promoting fallback definitions of operators.
+
+
+\begin{singlespace}
+\begin{lstlisting}[style=customjulia]
+promote{T,S}(x::T, y::S) =
+    (convert(promote_type(T,S),x), convert(promote_type(T,S),y))
+
+promote_type{T,S}(::Type{T}, ::Type{S}) =
+    promote_result(T, S, promote_rule(T,S), promote_rule(S,T))
+
+promote_rule(T, S) = Bottom
+
+promote_result(t,s,T,S) = promote_type(T,S)
+# If no promote_rule is defined, both directions give Bottom. In that
+# case use typejoin on the original types instead.
+promote_result{T,S}(::Type{T},::Type{S},::Type{Bottom},::Type{Bottom}) = typejoin(T, S)
+
+
+
+# Because of the promoting fallback definitions for Number, we need
+# a special case for undefined promote_rule on numeric types.
+# Otherwise, typejoin(T,S) is called (returning Number) so no conversion
+# happens, and +(promote(x,y)...) is called again, causing a stack
+# overflow.
+promote_result{T<:Number,S<:Number}(::Type{T},::Type{S},::Type{Bottom},::Type{Bottom}) =
+    promote_to_super(T, S, typejoin(T,S))
+
+# promote numeric types T and S to typejoin(T,S) if T<:S or S<:T
+# for example this makes promote_type(Integer,Real) == Real without
+# promoting arbitrary pairs of numeric types to Number.
+promote_to_super{T<:Number          }(::Type{T}, ::Type{T}, ::Type{T}) = T
+promote_to_super{T<:Number,S<:Number}(::Type{T}, ::Type{S}, ::Type{T}) = T
+promote_to_super{T<:Number,S<:Number}(::Type{T}, ::Type{S}, ::Type{S}) = S
+promote_to_super{T<:Number,S<:Number}(::Type{T}, ::Type{S}, ::Type) =
+    error("no promotion exists for ", T, " and ", S)
+
+\end{lstlisting}
+\end{singlespace}
+
+
 
 \subsubsection{Diversity of number and number-like types in practice}
 
@@ -454,6 +556,7 @@ branch.
 
 
 \section{Boundary-element method}
+\label{sec:BEM}
 
 There are lots of general packages for FEM problems, but it is much more
 difficult to create such a package for BEM problems. The method requires
