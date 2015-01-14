@@ -498,7 +498,6 @@ want a process by which we can assign the meaning ``factorial'' to it.
 This is about modeling the behavior of a program without running it.
 
 
-
 The idea of analyzing computer programs began in earnest in the 1960s with
 Dana Scott's invention of domain theory. A ``domain'' in this theory is a
 partial order of sets of values that a program might manipulate. 
@@ -522,6 +521,12 @@ program according to whether they are evenness-preserving and so on.
 It should be clear that this sort of analysis, while clearly related
 to type systems, is fairly different from what most programmers
 think of as type checking.
+
+
+\subsection{Monotonicity}
+
+Functions of types are not monotonic. \texttt{isa(2,3)} is \texttt{false},
+but \texttt{isa(2,Int)} is \texttt{true}.
 
 
 \section{Subtyping}

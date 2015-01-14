@@ -75,7 +75,7 @@ combination of number types, we could get a silent wrong answer instead
 of an error. (Note that statically checking method exhaustiveness is no
 help here.)
 
-
+``Diagonal'' dispatch lets us improve the definition:
 
 \begin{singlespace}
 \begin{lstlisting}[style=customjulia]
@@ -83,11 +83,20 @@ help here.)
 \end{lstlisting}
 \end{singlespace}
 
+\noindent
+Now \texttt{===} will only be used on arguments of the same type,
+making it far more likely to give the right answer. Even better,
+any case where it does not give the right answer can be fixed with
+a single definition, i.e. \texttt{==(x::S, y::S)} for some
+concrete type \texttt{S}. The more general \texttt{(Number, Number)}
+case is left open, and in the next section we will take advantage
+of this to implement ``automatic'' type promotion.
 
 %- The abstractions of equality and comparison. Different equivalence classes between
 %is/===, isequal and ==
 %- Numeric vs lexicographic ordering?
 %cmp, lexcmp, vs isless, <
+
 
 \subsection{Numeric types and embeddings}
 
@@ -124,6 +133,20 @@ types (e.g. ``can be embedded in'' in addition to ``is a'').
 
 % ex: generic sum function accumulating result in at least
 % double precision. just using +::T->T->T doesn't work.
+
+\subsubsection{Current approaches}
+
+Numbers tend to be among the most
+complex features of a language. Numeric types usually need to be a special
+case: in a typical language with built-in numeric types, describing their
+behavior is beyond the expressive power of the language itself. For example,
+in C arithmetic operators like \texttt{+} accept multiple types of arguments
+(ints and floats), but no user-defined C function can do this (this situation
+is of course improved in C++). In Python, a special arrangement is made for
+\texttt{+} to call either an \texttt{\_\_add\_\_} or \texttt{\_\_radd\_\_} method,
+effectively providing double-dispatch for arithmetic in a language that is
+idiomatically single-dispatch.
+
 
 \subsubsection{Implementing type embeddings}
 
@@ -169,7 +192,6 @@ promote_result(t,s,T,S) = promote_type(T,S)
 promote_result{T,S}(::Type{T},::Type{S},::Type{Bottom},::Type{Bottom}) = typejoin(T, S)
 
 
-
 # Because of the promoting fallback definitions for Number, we need
 # a special case for undefined promote_rule on numeric types.
 # Otherwise, typejoin(T,S) is called (returning Number) so no conversion
@@ -186,39 +208,12 @@ promote_to_super{T<:Number,S<:Number}(::Type{T}, ::Type{S}, ::Type{T}) = T
 promote_to_super{T<:Number,S<:Number}(::Type{T}, ::Type{S}, ::Type{S}) = S
 promote_to_super{T<:Number,S<:Number}(::Type{T}, ::Type{S}, ::Type) =
     error("no promotion exists for ", T, " and ", S)
-
 \end{lstlisting}
 \end{singlespace}
 
 
 
-\subsubsection{Diversity of number and number-like types in practice}
-
-Originally, our reasons for implementing all numeric types at the library
-level were not entirely practical. We had a principled opposition to
-including such definitions in a compiler, and guessed that being able to
-define numeric types would help ensure the language was ``powerful enough''.
-However, defining numeric and number-like types and their interactions turns
-out to be surprisingly useful. Once such types become easy to obtain,
-people find more and more uses for them.
-
-Ordinal types: Pointer, Char
-
-Integer types: Int8, Int16, Int32, Int64, Int128, UInt8, UInt16, UInt32, UInt64, UInt128, BigInt
-
-Floating point types: Float16, Float32, Float64, BigFloat
-(Float128, double-double)
-
-Fixed point: Fixed32{b}, Ufixed8, Ufixed16
-
-Extensions: Complex, Quaternion, Interval, DualNumber
-
-Number-like: Date, TimePeriod, DatePeriod, Color, (Units), DNA nucleotide type (bioseq.jl)
-dates: different cardinal and ordinal behavior
-
-musical notes
-
-\subsubsection{Applications}
+\subsubsection{Application to ranges}
 
 \emph{Ranges} illustrate an interesting application of type promotion.
 A range data type, notated \texttt{a:s:b}, represents a sequence of values
@@ -280,7 +275,7 @@ colon{T<:FloatingPoint}(a::T, s::FloatingPoint, b::T) = colon(promote(a,s,b)...)
 
 All of these five definitions require \texttt{a} and \texttt{b} to be of the
 same type. If they are not, we must promote just those two arguments, and leave
-the step alone in case we are dealing with ordinal types:
+the step alone (in case we are dealing with ordinal types):
 
 \begin{verbatim}
 colon{A,B}(a::A, s, b::B) = colon(convert(promote_type(A,B),a), s, convert(promote_type(A,B),b))
@@ -290,20 +285,55 @@ This example shows that it is not always sufficient to have a built-in set of
 ``promoting operators''. Library functions like this \texttt{colon} need more
 control.
 
+\subsubsection{Diversity of number and number-like types in practice}
 
-\subsubsection{Current approaches}
+Originally, our reasons for implementing all numeric types at the library
+level were not entirely practical. We had a principled opposition to
+including such definitions in a compiler, and guessed that being able to
+define numeric types would help ensure the language was ``powerful enough''.
+However, defining numeric and number-like types and their interactions turns
+out to be surprisingly useful. Once such types are easy to obtain,
+people find more and more uses for them.
 
-Numbers tend to be among the most
-complex features of a language. Numeric types usually need to be a special
-case: in a typical language with built-in numeric types, describing their
-behavior is beyond the expressive power of the language itself. For example,
-in C arithmetic operators like \texttt{+} accept multiple types of arguments
-(ints and floats), but no user-defined C function can do this (this situation
-is of course improved in C++). In Python, a special arrangement is made for
-\texttt{+} to call either an \texttt{\_\_add\_\_} or \texttt{\_\_radd\_\_} method,
-effectively providing double-dispatch for arithmetic in a language that is
-idiomatically single-dispatch.
+Even among basic types that might reasonably be ``built in'', there is enough
+complexity to require an organizational strategy. We might have
 
+\begin{itemize}
+  \item Ordinal types \texttt{Pointer}, \texttt{Char}
+
+  \item Integer types \texttt{Bool}, \texttt{Int8}, \texttt{Int16}, \texttt{Int32}, \texttt{Int64}, \texttt{Int128}, \texttt{UInt8}, \texttt{UInt16}, \texttt{UInt32}, \texttt{UInt64}, \texttt{UInt128}, \texttt{BigInt}
+
+  \item Floating point types \texttt{Float16}, \texttt{Float32}, \texttt{Float64}, \texttt{Float80}$^*$, \texttt{Float128}$^*$, \texttt{BigFloat}, \texttt{DoubleDouble}
+
+  \item Extensions \texttt{Rational}, \texttt{Complex}, \texttt{Quaternion}
+\end{itemize}
+
+\noindent
+Types with $^*$ have not been implemented yet, but the rest have.
+In external packages, people have implemented types for interval arithmetic,
+dual and hyper-dual numbers for computing first and second derivatives,
+and finite fields.
+
+Some applications benefit in performance from fixed-point arithmetic.
+This has been implemented in a package as \texttt{Fixed32\{b\}}, where
+the number of fraction bits is a parameter.
+
+A problem in the design of image processing libraries was solved by
+defining a new kind of fixed-point type \cite{ufixed}. The problem
+is that image scientists often want to work with fractional pixel values in the
+interval $[0,1]$, but most graphics libraries (and memory
+efficiency concerns) require 8-bit integer pixel components with
+values in the interval $[0,255]$. The solution is a \texttt{Ufixed8}
+type that uses an unsigned 8-bit integer as its representation, but
+behaves like a fraction over $255$.
+
+Many real-world quantities are not numbers exactly, but benefit from the
+same mechanisms in their implementation. Examples include colors (which form
+a vector space, and where many different useful bases have been standardized),
+physical units, and DNA nucleotides. Date and time arithmetic is especially
+intricate and irregular (more on this in section~\ref{sec:dates}).
+% dates: different cardinal and ordinal behavior
+% musical notes
 
 
 \subsection{Multidimensional array indexing}
@@ -360,19 +390,17 @@ is the sum of the ranks of the indexes'' (as in APL).
 Our goal here is a bit unusual: we are not concerned with which rules
 might work best, but merely with how they can be specified, so that
 domain experts can experiment.
-
-In fact different domains want different things. E.g. in images, each
-dimension might be quite different, e.g. time vs. space vs. color,
+In fact different domains want different things. Working with images, each
+dimension might be quite different, e.g. representing time, space, or color,
 so you don't want to drop or rearrange dimensions very often.
 %%%
 
-Here are our ground rules:
-
-\begin{enumerate}
-\item You can't manually implement the behavior inside the compiler
-\item The compiler must be able to reasonably understand the program
-\item The code must be reasonably easy to write
-\end{enumerate}
+%Here are our ground rules:
+%\begin{enumerate}
+%\item You can't manually implement the behavior inside the compiler
+%\item The compiler must be able to reasonably understand the program
+%\item The code must be reasonably easy to write
+%\end{enumerate}
 
 
 How are such rules implemented? For a
@@ -400,7 +428,8 @@ to pass a structure of $n$ values as $n$ separate arguments to a function),
 then indexing behavior can be defined as method signatures.
 
 This solution is still a compromise among the factors outlined above,
-but it is a new compromise that provides a net-better solution.
+but it is a new compromise that provides a modest, but definite,
+increment of power.
 % TODO more
 
 Below we define a function \texttt{index\_shape} that computes the
@@ -441,32 +470,32 @@ compiler to understand fully using straightforward techniques.
 % TODO: point out how this combines the ``object part'' and the
 % ``array part'' into a coherent whole.
 
-Here is a sample derivation for the call \texttt{index\_shape(1:m,1,1:n)}
-(the argument type tuple is \texttt{(Range1,Int,Range1)}), using the first
-definition above (dropping scalar-indexed dimensions):
+%% Here is a sample derivation for the call \texttt{index\_shape(1:m,1,1:n)}
+%% (the argument type tuple is \texttt{(Range1,Int,Range1)}), using the first
+%% definition above (dropping scalar-indexed dimensions):
 
-\begin{verbatim}
-index_shape(1:n, 1, 1:m) => tuple(length(::Range1)::Int, index_shape((::Int, ::Range1)...)...)
+%% \begin{verbatim}
+%% index_shape(1:n, 1, 1:m) => tuple(length(::Range1)::Int, index_shape((::Int, ::Range1)...)...)
 
-index_shape((::Int, ::Range1)...) => index_shape(::Int, ::Range1)
+%% index_shape((::Int, ::Range1)...) => index_shape(::Int, ::Range1)
 
-index_shape(::Int, ::Range1) => index_shape((::Range1,)...)
+%% index_shape(::Int, ::Range1) => index_shape((::Range1,)...)
 
-index_shape((::Range1,)...) => index_shape(::Range1)
+%% index_shape((::Range1,)...) => index_shape(::Range1)
 
-index_shape(::Range1) => tuple(length(::Range1)::Int, index_shape(()...)...)
+%% index_shape(::Range1) => tuple(length(::Range1)::Int, index_shape(()...)...)
 
-index_shape(()...) => index_shape()::()
+%% index_shape(()...) => index_shape()::()
 
-back substitute => tuple(length(::Range1)::Int, index_shape(()...)::()...)::(Int,)
+%% back substitute => tuple(length(::Range1)::Int, index_shape(()...)::()...)::(Int,)
 
-back substitute => tuple(length(::Range1)::Int, ::(Int,)...)
+%% back substitute => tuple(length(::Range1)::Int, ::(Int,)...)
 
-tuple(::Int, ::(Int,)...) => tuple(::Int, ::Int)
+%% tuple(::Int, ::(Int,)...) => tuple(::Int, ::Int)
 
-::(Int, Int)
+%% ::(Int, Int)
 
-\end{verbatim}
+%% \end{verbatim}
 
 The result type is determined using only dataflow type inference, plus a
 rule for splicing an immediate container (the type of \texttt{f((a,b)...)} is
@@ -481,13 +510,19 @@ handles a shorter argument list (for less-well-behaved definitions, we might
 end up invoking a widening operator instead).
 
 
-\begin{verbatim}
-diverge() = randbool() ? () : tuple(1, diverge()...)
-\end{verbatim}
+%\begin{verbatim}
+%diverge() = randbool() ? () : tuple(1, diverge()...)
+%\end{verbatim}
 
 \subsection{Array views}
 
+tim holy in issue 8839:
+
+``without staged functions in my initial post in 8235. The take-home message: generating all methods through dimension 8 resulted in more than 5000 separate methods, and required over 4 minutes of parsing \& lowering time (i.e., a 4-minute delay while compiling julia). By comparison, the stagedfunction implementation loads in a snap, and of course can go even beyond 8 dimensions.''
+
+
 \subsection{Units}
+
 
 \subsection{Even more elimination?}
 
@@ -575,12 +610,11 @@ either manually or with ad-hoc scripts. To polish the implementation for
 use as a practical library, a likely next step would be to add a Python
 interface, adding yet another layer of complexity.
 
+%Features of julia this demonstrates:
 
-Features of julia this demonstrates:
-
-- functions that need to dispatch on more than one argument
-- staged methods providing a natural way to integrate code generation
-- doing specialization through the object system, leading to a ``flat'' system
+%- functions that need to dispatch on more than one argument
+%- staged methods providing a natural way to integrate code generation
+%- doing specialization through the object system, leading to a ``flat'' system
 
 The code can be structured as a simple function library.
 
@@ -665,6 +699,7 @@ A prototype implementation of this approach follows.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{Dates}
+\label{sec:dates}
 
 compare to python DateTime, compare code length
 
@@ -683,6 +718,7 @@ benchmarked against CGAL
 \section{Beating the incumbents}
 
 - erfinv and digamma using horner macro
+
 - randn beating matlab
 
 \texttt{@evalpoly} macro has separate cases for real and complex in order to
@@ -698,13 +734,6 @@ is welcome.)
 If nothing else, demonstrates that removing glue code overhead is worthwhile.
 
 grisu: 6kLOC to 1kLOC (PR 7291)
-
-
-\section{misc staged functions}
-
-tim holy in issue 8839:
-
-``without staged functions in my initial post in 8235. The take-home message: generating all methods through dimension 8 resulted in more than 5000 separate methods, and required over 4 minutes of parsing \& lowering time (i.e., a 4-minute delay while compiling julia). By comparison, the stagedfunction implementation loads in a snap, and of course can go even beyond 8 dimensions.''
 
 
 %\section{ACAS}
