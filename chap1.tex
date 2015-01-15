@@ -3,58 +3,165 @@
 Scientific computing has evolved from being essentially the only kind of
 computing that existed, to being a small part of how and why computers
 are used.
+Over this period of time, programming tools have advanced in terms of
+the abstractions and generalizations they are capable of.
+Many special-purpose languages have been subsumed by more powerful and
+general languages, much in the manner of improving scientific theories.
+How has this trend affected scientific computing?
+The surprising answer is: not as much as we would like.
+We see scientists and technical users generally either turning away
+from the ``best'' new programming languages, or else pushing them
+to their limits in unusual ways.
+
+%% Much of the history of programming languages has been about increasing abstraction
+%% and generalization. Today we take it for granted that a single suitably powerful
+%% language could be used for nearly any programming task, were it not for pragmatic
+%% factors beyond our control. Over time,
+%% The field of technical computing --- programming for applied math and the
+%% sciences --- is something of a holdout from this trend, with its own
+%% purpose-built languages still dominating.
+%% There are probably many reasons for this, including historical, social and
+%% technical.
+
+\begin{figure}
+  \begin{center}
+    \begin{tabular}{|llll|}\hline
+Matlab  &  Maple &  Mathematica & SciPy \\
+SciLab  &  IDL   &  R  & Octave \\
+S-PLUS  & SAS & J & APL \\
+Maxima & Mathcad & Axiom & Sage \\
+Lush & Ch & LabView & O-Matrix \\
+PV-WAVE & Igor Pro & OriginLab & FreeMat \\
+Yorick & GAUSS & MuPad & Genius \\
+SciRuby & Ox & Stata & JLab \\
+Magma & Euler & Rlab & Speakeasy \\
+GDL & Nickle & gretl & ana \\
+Torch7 &&& \\
+\hline
+    \end{tabular}
+  \end{center}
+  \caption{
+    41 technical computing languages
+  }
+  \label{gangof40}
+\end{figure}
+
+In fact, we have discovered at least \emph{41} programming languages
+designed for technical computing since Fortran (figure~\ref{gangof40}).
+This is a high number by any standard. A reasonable hypothesis to
+explain this is that language design is the level of abstraction with
+the most flexibility (permitting \emph{any} conceivable means of
+describing computations), so that is where you go when you need a lot
+of it. This is not so surprising when one reflects on the tradition
+of inventing new notation in mathematics and science.
+%This certainly
+%helps distinguish scientific programming from other application areas.
+
+The need for language-level flexibility is corroborated by
+the ways the technical computing domain uses general purpose
+languages.
+Effective scientific libraries extensively employ
+polymorphism, custom operators, and compile-time abstraction.
+Code generation approaches (writing a program that writes the needed
+program) are unusually common.
+Most of these techniques are presently fairly difficult to use, and so
+programmers working at this level give up the notational conveniences
+of the purpose-built languages above.
+
+%Yet it also demands the greatest ease-of-use.
+%A good rule of thumb is that if you need to write a program that prints
+%out code in language X, then language X is not powerful enough.
+
+%pathologies arising from the language level are subtle
+%not as immediate as ``this new matrix multiply is faster''
+
+This thesis argues that the situation can be improved considerably by
+abstracting, with a new language, the essential challenges from the state
+of affairs we have described.
+Of course, a language is not the only thing the world of technical
+computing needs.
+Compiler techniques, library design, high-performance
+computational kernels, new algorithms, and approaches to parallelism might
+be more important than language design.
+However these sorts of technologies can usually be applied to multiple
+languages, as has happened in the C and Fortran language families.
+%, which have taken on many such extensions over the years.
+So in our view languages targeting this space need to dig deeper,
+at least temporarily forgetting about matrices and cache utilization,
+and look for bigger patterns.
+
+%% %%
+
+By \emph{selection} we mean any mechanism used to pick one of several
+pieces of code to run. This includes object-oriented mechanisms, as well
+as function overloading, and even branches.
+
+By \emph{specialization} we mean transformation of a given piece of code,
+particularly as done by a compiler to generate efficient code for some
+special case of a flexible piece of high-level code.
+
+%% Specialization entails program analysis. By necessity, a language's
+%% code selection mechanisms must inform this process, to ensure the
+%% correctness of the analysis. A central argument of this thesis is that
+%% specialization should feed back into selection, allowing the
+%% \emph{approximate values} processed by a compiler to be used in the
+%% source language for dispatch. We argue that this is the key feature
+%% missing from the present generation of dynamically-typed languages.
+%This conclusion would not be surprising to advocates of static
+%type systems, but the approach we propose is actually a run-time
+%mechanism that does not restrict the class of valid programs.
+
+Solution: integrate code specialization and code selection
+
+Why integrate code specialization and code selection?
+
+\begin{itemize}
+\item specialization requires selection anyway
+\item simpler system
+\item can sometimes collapse 2 layers of dispatch into 1
+\item can replace library code with a code generator without either changing
+  client code *or* any extra overhead
+\end{itemize}
+
+Extensive code specialization is a key feature of
+technical computing. ``what to specialize on'' has been an open problem.
+our types are a possible solution to this for two reasons:
+
+\begin{enumerate}
+\item you can tune the amount of information they contain
+\item everybody agrees to use them, which helps ensure that specializing on
+  the types will actually do something useful.
+\end{enumerate}
 
 
-Much of the history of programming languages has been about increasing abstraction
-and generalization. Today we take it for granted that a single suitably powerful
-language could be used for nearly any programming task, were it not for pragmatic
-factors beyond our control. Over time, many special-purpose languages
-have been subsumed by these more powerful and general languages.
-The field of technical computing --- programming for applied math and the
-sciences --- is something of a holdout from this trend, with its own
-purpose-built languages still dominating.
-There are probably many reasons for this, including historical, social and
-technical.
-
-In this work we will focus on the technical reasons for this, and the
-problems that the current state of affairs causes.
-
-What do we mean by a \emph{language} for scientific computing?
-The prevailing
-answer is that it is about numeric arrays, perhaps matrices specifically,
-and numerical libraries that use them.
-Instead we intend to argue that, at a
-deeper level, it is about certain kinds of flexibility, particularly
-flexibility in the behavior of key operators and functions. This flexibility
-is needed to maximize composability and reusability in scientific code.
-Without it, certain programs may be easy to write today, but changing
-functional and performance requirements can become difficult to meet.
+%the amazing thing about programming languages it that a better
+%explanation can directly lead to better performance!)
 
 
-A new programming language is not the only thing the world of technical
-computing needs. Compiler techniques, library design, high-performance
-computational kernels, and approaches to parallelism are all important,
-and can usually be applied within multiple languages. For example the C
-and Fortran language families have taken on many changes and extensions
-over the years to accomodate new technologies. So we do not expect a
-new language to ``solve'' technical computing all by itself, but rather
-we want to ask whether any language-level abstractions can provide a
-better base for high-productivity technical computing.
+% conclusion: the language should not necessarily try to address these
+% things. it only needs to capture the essential priorities.
+% however many past lang efforts *have* tried to address these.
 
+%From this perspective, the language used is
+%incidental (``mere choice of notation''), which helps explain
+%the proliferation of languages --- any language that can call BLAS
+%\cite{blas} will do!
 
-It is clear that scientific and technical users have their own particular
-needs. So far there have been two paths available for fulfilling these
-needs: using a mainstream general-purpose language like C++ or Java, or
-designing a new language like R or MATLAB. Designing your own language
-seems like a drastic thing to do, and yet it is unusually common in
-technical computing (see gang of 40).
+%What do we mean by a \emph{language} for scientific computing?
+%The prevailing
+%answer is that it is about numeric arrays, perhaps matrices specifically,
+%and numerical libraries that use them.
+%Instead we intend to argue that, at a
+%deeper level, it is about certain kinds of flexibility, particularly
+%flexibility in the behavior of key operators and functions. This flexibility
+%is needed to maximize composability and reusability in scientific code.
+%Without it, certain programs may be easy to write today, but changing
+%functional and performance requirements can become difficult to meet.
 
-
-Technical computing tends to push programming languages to their limits.
-It requires extensive polymorphism, custom operators, compile-time
-abstraction, and quite often even problem-specific compilers.
-Yet it also demands the greatest ease-of-use.
-
+%So we do not expect a
+%new language to ``solve'' technical computing all by itself, but rather
+%we want to ask whether any language-level abstractions can provide a
+%better base for high-productivity technical computing.
 
 
 \section{The technical computing problem}
@@ -130,7 +237,20 @@ of flexibility (as in Fortress \cite{fortresspec} or Polyduce \cite{polyduce1},
 for instance), but it is still too early to call a winner between these two
 approaches (if, indeed, there even needs to be a winner).
 
-Our contribution derives from experience with the second approach.
+Here we will use a dynamically-typed approach. There are several
+reasons for this. First, we want to emphasize that insufficient static
+checking is most likely not the current limiting factor in scientific
+computing productivity. Second, some idioms in this domain appear to be
+inherently, or at least naturally, dynamically-typed (as we will explore in
+later chapters). Third, there has been a sense that ``dynamic'' or
+``scripting'' language users do not want to hear about types: they are
+associated with verbosity and nuisance compiler errors. We hope to
+contribute an example of a language where types are useful, and not
+burdensome.
+%Occasionally one hears that ``dynamic type'' is an oxymoron, or that
+%these types are not ``real types''
+
+%Our contribution derives from experience with the second approach.
 Efforts to analyze and optimize dynamically-typed programs generally make two
 assumptions: (1) we should work on analyzing \emph{existing} popular
 languages, and (2) users of these languages don't want to use types.
@@ -147,6 +267,9 @@ do not have to be used for static checking, and that using them for
 \emph{code selection} and \emph{code specialization} is particularly useful in
 technical computing.
 This perspective has not been explored thoroughly in the past.
+
+
+% the wasted power problem
 
 When static analyses (often incorporating run-time information) are applied
 to dynamically-typed programs, it is typically possible to recover a
@@ -174,6 +297,8 @@ can be represented as a native \texttt{Int32} array \cite{Bolz2013}.
 If this information is not reflected in the source language, then
 certain uses like passing data to native code become unnecessarily more
 complicated.
+And if one is going to implement homogeneous arrays anyway, why not
+let programmers request them?
 
 Some levels of performance are difficult to reach with implicitly
 specialized code and data. Given the knowledge that
@@ -201,6 +326,9 @@ raises several complexities:
 \item How is the generated code incorporated into an application?
 \end{itemize}
 \end{singlespace}
+
+
+% the divergence problem
 
 
 % TODO:
@@ -235,78 +363,27 @@ static overloading can lead to calling a sub-optimal case when multiple
 overloads exist for the sake of performance.
 
 
-%(one way to describe it: you can start with the notation you want, or with the
-%notation that people are using already, and come up with better ways to
-%*explain* it.
-%in other words, design a robust framework that assigns a satisfactory meaning
-%to each thing we'd like to write.
-%the amazing thing about programming languages it that a better
-%explanation can directly lead to better performance!)
-
-
-% - mention dual traps of wasted power and divergence
 
 %- vs predicate dispatch: we extend dispatch power in a different direction,
 %guided by semantic subtyping. goal is maximum power that still yields high
 %likelihood of resolving many calls to a single implementation.
 
-past (static) type systems for dispatch were designed to ensure the absence of
-no-method errors and ambiguities (completeness and uniqueness). our goal
-is instead to statically resolve methods. this is inherently heuristic and
-best-effort. since static types shouldn't affect program behavior, we
-conclude that the dispatch must be dynamic, which is happily the same
-conclusion you would reach if you simply wanted dynamic typing.
+%past (static) type systems for dispatch were designed to ensure the absence of
+%no-method errors and ambiguities (completeness and uniqueness). our goal
+%is instead to statically resolve methods. this is inherently heuristic and
+%best-effort. since static types shouldn't affect program behavior, we
+%conclude that the dispatch must be dynamic, which is happily the same
+%conclusion you would reach if you simply wanted dynamic typing.
 
 %it is quite possible that some static type system will work well for this
 %however we defer this question.
-
-interesting variants:
-- require static single method matches
-- reject programs with no-method errors
-- reject programs that yield Unions
+%interesting variants:
+%- require static single method matches
+%- reject programs with no-method errors
+%- reject programs that yield Unions
 
 %%%%%%
 
-By \emph{selection} we mean any mechanism used to pick one of several
-pieces of code to run. This includes object-oriented mechanisms, as well
-as function overloading, and even branches.
-
-By \emph{specialization} we mean transformation of a given piece of code,
-particularly as done by a compiler to generate efficient code for some
-special case of a flexible piece of high-level code.
-
-Specialization entails program analysis. By necessity, a language's
-code selection mechanisms must inform this process, to ensure the
-correctness of the analysis. A central argument of this thesis is that
-specialization should feed back into selection, allowing the
-\emph{approximate values} processed by a compiler to be used in the
-source language for dispatch. We argue that this is the key feature
-missing from the present generation of dynamically-typed languages.
-%This conclusion would not be surprising to advocates of static
-%type systems, but the approach we propose is actually a run-time
-%mechanism that does not restrict the class of valid programs.
-
-Solution: integrate code specialization and code selection
-
-Why integrate code specialization and code selection?
-
-\begin{itemize}
-\item specialization requires selection anyway
-\item simpler system
-\item can sometimes collapse 2 layers of dispatch into 1
-\item can replace library code with a code generator without either changing
-  client code *or* any extra overhead
-\end{itemize}
-
-Extensive code specialization is a key feature of
-technical computing. ``what to specialize on'' has been an open problem.
-our types are a possible solution to this for two reasons:
-
-\begin{enumerate}
-\item you can tune the amount of information they contain
-\item everybody agrees to use them, which helps ensure that specializing on
-  the types will actually do something useful.
-\end{enumerate}
 
 
 The key ingredients:

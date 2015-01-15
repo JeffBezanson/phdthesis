@@ -421,6 +421,13 @@ The library also provides standard
 
 \subsection{Symbolic programming}
 
+There has always been an essential divide between ``numeric'' and ``symbolic''
+languages in the world of technical computing. To many people the
+distinction is fundamental, and we should happily live with both
+kinds of languages. But if one insists on an answer as to which approach
+is the right one, then the answer is: symbolic.
+
+
 Systems based on symbolic rewrite rules arguably occupy a further tier of
 dispatch sophistication. In these systems, you can dispatch on essentially
 anything, including arbitrary values and structures. These systems are
@@ -527,7 +534,22 @@ think of as type checking.
 
 Functions of types are not monotonic. \texttt{isa(2,3)} is \texttt{false},
 but \texttt{isa(2,Int)} is \texttt{true}.
-
+This provides one way to separate ``real types'' from set-valued terms:
+if there is a way to interpret execution over types such that all functions
+are monotonic in the (alleged) type lattice, then we are really dealing
+with types.
+One way to do this is to specify a genuinely multi-valued term language
+like $\lambda_\aleph$ \cite{Glew:2013:MLD:2502409.2502412}.
+In this approach a term like \texttt{isa(2,Int)} is interpreted as a
+union of all results obtained by substituting all possible single values
+for each sub-term. One cannot help but be impressed by such a language,
+though it seems prohibitively difficult to actually implement.
+%$\lambda_\aleph$ was introduced a couple years after we began work on Julia
+We opt instead for a simpler approach where \texttt{Int} is
+interpreted as \texttt{Type\{Int\}} (in a near-borrowing of notation from
+\cite{Glew:2013:MLD:2502409.2502412} and \cite{cardelli1986polymorphic}),
+and multi-valued terms exist only statically within a separate
+maximum-fixed-point evaluator.
 
 \section{Subtyping}
 
@@ -545,28 +567,22 @@ overlap. However if one substitutes ``symbolic expression'' for
 This is exciting because the type system can do useful computational work for you,
 instead of only checking the work done by the rest of the program.
 
-Joins of quantified types
+%Joins of quantified types
 
-``Diagonal dispatch''
+%``Diagonal dispatch''
 
-(T,T) (Int, Real)
+%(T,T) (Int, Real)
 
-\textbackslash{}(Int,Int)/
+%\textbackslash{}(Int,Int)/
 
-Avoid hard coding logic into the compiler.
-
-
-Exposing to the user what is part of the language anyway and not just
-hiding it in the compiler.
+%Exposing to the user what is part of the language anyway and not just
+%hiding it in the compiler.
 
 Data flow analysis has to actually work
 
 Taking things out of the language that break dataflow analysis
 
 Local reasoning
-
-You are imposing a type system anyway, even implicitly perhaps, so
-might as well make that from the get-go.
 
 
 \subsection{Objections to dynamic typing}
