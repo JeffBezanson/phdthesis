@@ -185,9 +185,12 @@ function issub(a::Var, b::Var, env)
   a === b && return true
   aa = env.vars[a]; bb = env.vars[b]
   if aa.right
-    bb.right && return issub(bb.ub, bb.lb, env) && issub(aa.ub, aa.lb, env)
+    bb.right && return issub(bb.ub, bb.lb, env)
     return var_lt(a, b, env)
   else
+    if !bb.right   # check ∀a,b . a<:b
+      return issub(aa.ub, b, env) || issub(a, bb.lb, env)
+    end
     return var_gt(b, a, env)
   end
 end

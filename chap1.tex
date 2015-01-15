@@ -90,15 +90,45 @@ So in our view languages targeting this space need to dig deeper,
 at least temporarily forgetting about matrices and cache utilization,
 and look for bigger patterns.
 
-%% %%
+In brief, our idea is to \emph{integrate code selection and specialization}.
+The aforementioned flexibility requirement can be explained as
+sufficiently powerful means for \emph{selecting} which piece of code
+to run. This notion subsumes method dispatch, function overloading,
+and potentially even branches. When such mechanisms are used in
+technical computing, there is nearly always a corresponding need to
+\emph{specialize} code for specific cases to obtain performance.
+Polymorphic languages sometimes support some forms of specialization,
+but often only through a designated mechanism (e.g. templates), or
+deployed rather conservatively out of resource concerns.
+We intend to show that a kind of equillibrium point in the design
+space can be found by combining selection and specialization
+into essentially the same mechanism. This point is identified via
+subtyping theories and closure under data-flow operations.
 
-By \emph{selection} we mean any mechanism used to pick one of several
-pieces of code to run. This includes object-oriented mechanisms, as well
-as function overloading, and even branches.
 
-By \emph{specialization} we mean transformation of a given piece of code,
-particularly as done by a compiler to generate efficient code for some
-special case of a flexible piece of high-level code.
+%Extensive code specialization is a key feature of
+%technical computing. ``what to specialize on'' has been an open problem.
+%our types are a possible solution to this for two reasons:
+
+%\begin{enumerate}
+%\item you can tune the amount of information they contain
+%\item everybody agrees to use them, which helps ensure that specializing on
+%  the types will actually do something useful.
+%\end{enumerate}
+
+%the amazing thing about programming languages it that a better
+%explanation can directly lead to better performance!)
+
+
+
+
+%By \emph{selection} we mean any mechanism used to pick one of several
+%pieces of code to run. This includes object-oriented mechanisms, as well
+%as function overloading, and even branches.
+
+%By \emph{specialization} we mean transformation of a given piece of code,
+%particularly as done by a compiler to generate efficient code for some
+%special case of a flexible piece of high-level code.
 
 %% Specialization entails program analysis. By necessity, a language's
 %% code selection mechanisms must inform this process, to ensure the
@@ -111,36 +141,14 @@ special case of a flexible piece of high-level code.
 %type systems, but the approach we propose is actually a run-time
 %mechanism that does not restrict the class of valid programs.
 
-Solution: integrate code specialization and code selection
-
-Why integrate code specialization and code selection?
-
-\begin{itemize}
-\item specialization requires selection anyway
-\item simpler system
-\item can sometimes collapse 2 layers of dispatch into 1
-\item can replace library code with a code generator without either changing
-  client code *or* any extra overhead
-\end{itemize}
-
-Extensive code specialization is a key feature of
-technical computing. ``what to specialize on'' has been an open problem.
-our types are a possible solution to this for two reasons:
-
-\begin{enumerate}
-\item you can tune the amount of information they contain
-\item everybody agrees to use them, which helps ensure that specializing on
-  the types will actually do something useful.
-\end{enumerate}
-
-
-%the amazing thing about programming languages it that a better
-%explanation can directly lead to better performance!)
-
-
-% conclusion: the language should not necessarily try to address these
-% things. it only needs to capture the essential priorities.
-% however many past lang efforts *have* tried to address these.
+%Why integrate code specialization and code selection?
+%\begin{itemize}
+%\item specialization requires selection anyway
+%\item simpler system
+%\item can sometimes collapse 2 layers of dispatch into 1
+%\item can replace library code with a code generator without either changing
+%  client code *or* any extra overhead
+%\end{itemize}
 
 %From this perspective, the language used is
 %incidental (``mere choice of notation''), which helps explain
@@ -249,6 +257,9 @@ contribute an example of a language where types are useful, and not
 burdensome.
 %Occasionally one hears that ``dynamic type'' is an oxymoron, or that
 %these types are not ``real types''
+
+% mention value of having types that are agreed-on and work well within
+% the language. enables so many optimizations.
 
 %Our contribution derives from experience with the second approach.
 Efforts to analyze and optimize dynamically-typed programs generally make two

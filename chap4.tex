@@ -190,17 +190,21 @@ cannot have direct instances.
 
 These types closely resemble the classes of an object-oriented language with
 generic (parametric) types, invariant type parameters, and no concrete inheritance.
-We prefer parametric \emph{invariance} for reasons that have been addressed in the
+We prefer parametric \emph{invariance} partly for reasons that have been addressed in the
 literature \cite{Day:1995:SVC:217838.217852}.
 Invariance preserves the property that the only subtypes of a concrete type are \texttt{Bottom}
-and itself. We also find that most uses of covariance are more flexibly
-handled by union type connectives, which will be introduced below.
-
-% TODO: note that invariance fits well with tagging. otherwise we would have
-% arrays tagged Array{Int}, and Array{Real}, but the int array would appear
-% to have both tags. tuples are a special case where covariance works, because
-% each type need only refer to single value, so there is no need for concrete
-% tuple types with non-concrete parameters.
+and itself.
+This is important given how we map types to data representations: an \texttt{Array\{Int\}}
+cannot also be an \texttt{Array\{Any\}}, since those types imply different
+representations.
+If we tried to use covariance despite this, there would have to be some \emph{other}
+notion of which type a value \emph{really} had, which would be unsatisfyingly
+complex
+(tuples are a special case where covariance works, because each component type need
+only refer to single value, so there is no need for concrete
+tuple types with non-concrete parameters).
+We also find that most uses of covariance are more flexibly
+handled by union type connectives (introduced below).
 
 Next we add conventional product (tuple) types, which are used to represent the
 arguments to methods. These are almost identical to the nominal types defined above,
@@ -353,9 +357,139 @@ template system to handle other kinds of parameterization.
 
 \subsection{Subtyping}
 
-Describe algorithm.
+\begin{figure}
+  \begin{center}
+    \def\arraystretch{3.5}
+    \begin{tabular}{|cc|}\hline
+    %\Large{
+    \AxiomC{$_A^B X^L, \Gamma\ \vdash\ T \leq S$}
+    \UnaryInfC{$\Gamma\ \vdash\ \exists {}_A^B X . T\ \leq\ S$}
+    \DisplayProof
 
-Very likely $\Pi_2^{\textrm{P}}$-hard.
+    \hspace{8ex}
+
+    &
+
+    \AxiomC{$_A^BX^R, \Gamma\ \vdash\ T \leq S$}
+    \UnaryInfC{$\Gamma\ \vdash\ T\ \leq\ \exists {}_A^B X . S$}
+    \DisplayProof
+
+    \\[8pt]
+
+    \AxiomC{$^BX^L,\Gamma\ \vdash\ B\leq T$}
+    \UnaryInfC{$^BX^L,\Gamma\ \vdash\ X \leq T$}
+    \DisplayProof
+
+    \hspace{4ex}
+
+    &
+
+    \AxiomC{$_AX^L,\Gamma\ \vdash\ T\leq A$}
+    \UnaryInfC{$_AX^L,\Gamma\ \vdash\ T \leq X$}
+    \DisplayProof
+
+    \\[8pt]
+
+    \AxiomC{$^BX^L,{} _AY^L,\Gamma\ \vdash\ B\leq Y\ \vee\ X\leq A$}
+    \UnaryInfC{$^BX^L,{} _AY^L,\Gamma\ \vdash\ X \leq Y$}
+    \DisplayProof
+
+    \hspace{4ex}
+
+    &
+
+    \AxiomC{$_A^BX^R,{} Y^R,\Gamma\ \vdash\ B\leq A$}
+    \UnaryInfC{$_A^BX^R,{} Y^R,\Gamma\ \vdash\ X \leq Y$}
+    \DisplayProof
+
+    \\[8pt]
+
+    \AxiomC{$_A^BX^R,\Gamma\ \vdash\ A\leq T$}
+    \UnaryInfC{$_A^TX^R,\Gamma\ \vdash\ X \leq T$}
+    \DisplayProof
+
+    \hspace{4ex}
+
+    &
+
+    \AxiomC{$_A^BX^R,\Gamma\ \vdash\ T\leq B$}
+    \UnaryInfC{$_{A \cup T}^{\ \ \ B}X^R,\Gamma\ \vdash\ T\leq X$}
+    \DisplayProof
+
+    \\[8pt]
+
+    \hline
+    \end{tabular}
+    %}
+  \end{center}
+  \caption{
+    Subtyping algorithm for \texttt{UnionAll} ($\exists$) and variables.
+    $X$ and $Y$ are variables, $A$, $B$, $T$, and $S$ are types.
+    $_A^BX$ means $X$ has lower bound $A$ and upper bound $B$.
+    %$^R$ and $^L$ are used to track whether a variable originated on
+    %the right or on the left.
+  }
+  \label{subtvars}
+\end{figure}
+
+
+Deciding subtyping for base types is straightforward: \texttt{Bottom} is
+a subtype of everything, everything is a subtype of \texttt{Any}, and
+tuple types are compared component-wise. The invariant parameters
+of tag types are compared in both directions: to check
+$\texttt{A\{B\}}\leq \texttt{A\{C\}}$, check $\texttt{B}\leq\texttt{C}$ and
+then $\texttt{C}\leq\texttt{B}$. In fact, the algorithm depends on these
+checks being done in this order, as we will see in a moment.
+
+Checking union types is a bit harder. When a union $A\cup B$ occurs in the
+algorithm, we need to nondeterministically replace it with either $A$ or
+$B$. The rule is that for all such choices on the left of $\leq$, there
+must exist a set of choices on the right such that the rest of the
+algorithm answers ``yes''. This can be implemented by keeping a stack of
+decision points, and looping over all possibilities with an outer
+for-all loop and an inner there-exists loop. We speak of ``decision points''
+instead of individual unions, since in a type like \texttt{Tuple\{Union\{A,B\}...\}}
+a single union might be compared many times.
+
+The algorithm for \texttt{UnionAll} and variables is shown in figure~\ref{subtvars}.
+The first row says to handle a \texttt{UnionAll} by extending the environment
+with its variable, marked according to which side of $\leq$ it came from,
+and then recurring into the body.
+In analogy to union types, we need to check that for all variable values on
+the left, there exists a value on the right such that the relation holds.
+The for-all side is relatively easy to implement, since we can just use
+a variable's bounds as proxies for its possible values (this is shown in
+the second row of the figure).
+We implement the there-exists side by narrowing a variable's bounds
+(raising the lower bound and lowering the upper bound). The relation holds
+as long as the bounds remain consistent (i.e. lower bound $\leq$
+upper bound). The algorithm assumes that all input types are well-formed,
+which includes variable lower bounds always being less than or equal to
+upper bounds.
+
+However, at this point (starting in the third row, second column) the
+algorithm appears asymmetric. This is a result of exploiting the lack of
+contravariant constructors. No contravariance means that every time a
+right-side variable appears on the \emph{left} side of a comparison,
+it must be because it occurs in invariant position, and the steps outlined
+in the first paragraph of this section have ``flipped'' the order
+(comparing both $\texttt{B}\leq\texttt{C}$ and $\texttt{C}\leq\texttt{B}$).
+By symmetry, one would expect the bottom-left rule in the figure to
+update $X$'s upper bound to $B\cap T$. But because of invariance,
+$T\leq B$ has already been checked by the bottom-right rule in the
+figure. Therefore $B\cap T = T$. This is the reason the ``forward''
+direction of the comparison needs to be checked first: otherwise,
+we would have updated $B$ to equal $T$ already and the $T\leq B$
+comparison would become vacuous. Alternatively, we could actually
+compute $B\cap T$. However there is reason to suspect that serious
+trouble lies that way. We would need either to add intersection types
+to the system, or compute a meet without them. Either way, the
+algorithm would become much more complex and, judging by past
+results, very likely undecidable.
+
+TODO: termination and correctness.
+
+These subtyping rules are very likely $\Pi_2^{\textrm{P}}$-hard.
 Checking a subtype relation with unions requires checking that for all choices
 on the left, there exists a choice on the right that makes the relation hold.
 This matches the quantifier structure of 2-TQBF problems of the form
@@ -367,6 +501,10 @@ represent $\neg x$. The clause $(x_i \vee y_i)$ can be translated to
 $x_i\ \texttt{<:\ Union\{N\{}y_i\texttt{\}, True\}}$ (where the $x_i$ and
 $y_i$ are type variables bound by \texttt{UnionAll} on the left and right,
 respectively).
+We have not worked out the details, but this sketch is reasonably
+convincing. $\Pi_2^{\textrm{P}}$ is only the most obvious
+reduction to try; it is possible our system equals PSPACE or even greater,
+as has often been the case for subtyping systems like ours.
 
 
 \subsection{Type system variants}
