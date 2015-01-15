@@ -601,7 +601,7 @@ numerically on each iteration is much too slow. As a result, many
 special-purpose implementations have been written by hand for different
 problems.
 
-Some recent work (TODO cite Homer) managed a more general solution,
+Some recent work \cite{ReidWhJo14} managed a more general solution,
 using Mathematica to generate C++ code for different cases. This worked
 well, but was difficult to implement and the resulting system is difficult
 to use. We see the familiar pattern of using multiple languages and
@@ -722,7 +722,7 @@ benchmarked against CGAL
 - randn beating matlab
 
 \texttt{@evalpoly} macro has separate cases for real and complex in order to
-automatically take advantage of a subtle algorithm (TODO cite TAOCP).
+automatically take advantage of a subtle algorithm \cite{knuth1969art}.
 A macro is perfect for generating the neccessary code, however it lacks
 the type information needed to select between the two cases.
 In Julia, it can generate a branch with a type check, and rely on the

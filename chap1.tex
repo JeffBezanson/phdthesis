@@ -97,7 +97,7 @@ to run. This notion subsumes method dispatch, function overloading,
 and potentially even branches. When such mechanisms are used in
 technical computing, there is nearly always a corresponding need to
 \emph{specialize} code for specific cases to obtain performance.
-Polymorphic languages sometimes support some forms of specialization,
+Polymorphic languages sometimes support forms of specialization,
 but often only through a designated mechanism (e.g. templates), or
 deployed rather conservatively out of resource concerns.
 We intend to show that a kind of equillibrium point in the design
@@ -176,6 +176,7 @@ subtyping theories and closure under data-flow operations.
 
 \begin{figure}
   \begin{center}
+    \def\arraystretch{1.25}
     \begin{tabular}{|l|l|}\hline
       \textbf{Mainstream PL} & \textbf{Technical computing} \\
       \hline \hline
@@ -208,10 +209,19 @@ languages to those of technical computing languages. The priorities in each row 
 necessarily opposites or even mutually exclusive, but rather are a matter of emphasis.
 For example, it is certainly possible to have both parametric and ad-hoc polymorphism within
 the same language, but syntax, recommended idioms, and the design of the standard library will
-tend to emphasize one or the other.
+tend to emphasize one or the other. Of course, the features on the left side can
+also be useful for technical computing; we exaggerate to help make the point.
 
 It is striking how different these priorities are. We believe these technical factors have
 contributed significantly to the persistence of specialized environments in this area.
+Imagine you want just the features on the left. Then there are many good
+languages available: Haskell, ML, Java, C\#, perhaps C++.
+Getting everything on the right, by comparison, always seems to be awkward.
+The most popular approach is to use multiple language, as in e.g. NumPy~\cite{numpy},
+with a high-level productivity language layered on top of a large library
+written in lower-level languages. Seeking a similar tradeoff,
+others have written a C++ interpreter \cite{vasilev2012cling}.
+
 
 
 %problem of finding connections between array programming and OOP.
@@ -227,7 +237,7 @@ contributed significantly to the persistence of specialized environments in this
 %all over the system. imagine changing from column-major to
 %row-major.
 
-\section{Proposed solution}
+\section{Solution space}
 
 It is clear that any future scientific computing language will need to be able to
 match the performance of C, C++, and Fortran. To do that, it is almost certain
@@ -255,6 +265,11 @@ later chapters). Third, there has been a sense that ``dynamic'' or
 associated with verbosity and nuisance compiler errors. We hope to
 contribute an example of a language where types are useful, and not
 burdensome.
+%Finally, it is often the case that a seemingly-minor
+%modification to a type system makes type checking undecidable. Rejecting
+%such a system is totally reasonable. However if we are willing to
+%accept undecidable checking from the beginning, opportunities arise to
+%simplify and increase the power of the language.
 %Occasionally one hears that ``dynamic type'' is an oxymoron, or that
 %these types are not ``real types''
 
@@ -354,24 +369,24 @@ raises several complexities:
 % control, so need to be meaningful.
 
 
-what to dispatch on? dispatch power has been extended in many ways, but
-there is no real limit to what somebody might want to dispatch on.
-so what to do?
-some sets of values are more robust under computation than others
-(closure properties).
-identify those sets using dataflow concerns.
+%% what to dispatch on? dispatch power has been extended in many ways, but
+%% there is no real limit to what somebody might want to dispatch on.
+%% so what to do?
+%% some sets of values are more robust under computation than others
+%% (closure properties).
+%% identify those sets using dataflow concerns.
 
-say we have a method defined for integers, and also for the special cases
-``2'' and ``odd integers''. a realistic implementation
-will group all of these under ``integer'', and ideally generate a couple
-branches to handle the other cases. we argue the concept of ``integer''
-here is a more robust set, and so a more fundamental language concept.
+%% say we have a method defined for integers, and also for the special cases
+%% ``2'' and ``odd integers''. a realistic implementation
+%% will group all of these under ``integer'', and ideally generate a couple
+%% branches to handle the other cases. we argue the concept of ``integer''
+%% here is a more robust set, and so a more fundamental language concept.
 
 
-somewhat counter-intuitively, dynamic dispatch can be good for performance
-since it permits invoking the most specialized possible method.
-static overloading can lead to calling a sub-optimal case when multiple
-overloads exist for the sake of performance.
+%% somewhat counter-intuitively, dynamic dispatch can be good for performance
+%% since it permits invoking the most specialized possible method.
+%% static overloading can lead to calling a sub-optimal case when multiple
+%% overloads exist for the sake of performance.
 
 
 
