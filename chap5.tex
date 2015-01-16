@@ -616,11 +616,14 @@ interface, adding yet another layer of complexity.
 %- staged methods providing a natural way to integrate code generation
 %- doing specialization through the object system, leading to a ``flat'' system
 
-The code can be structured as a simple function library.
+% The code can be structured as a simple function library.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % writeup by SGJ
+
+Thanks to Professor Steven Johnson for providing the following section describing
+the problem.
 
 \subsection{Galerkin matrix assembly for singular kernels}
 
@@ -686,7 +689,7 @@ problem:
 
 \item Staged functions allow computer-algebra systems to be invoked at
   compile-time to generate specialized cubature schemes for particular
-  kernels.  New developments in BEM integration schemes [ref Homer] have
+  kernels.  New developments in BEM integration schemes \cite{ReidWhJo14} have
   provided efficient cubature-generation algorithms of this sort, but it
   has not yet been practical to integrate them with runtime code in
   a completely automated way.

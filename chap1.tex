@@ -25,28 +25,30 @@ to their limits in unusual ways.
 
 \begin{figure}
   \begin{center}
-    \begin{tabular}{|llll|}\hline
-Matlab  &  Maple &  Mathematica & SciPy \\
-SciLab  &  IDL   &  R  & Octave \\
-S-PLUS  & SAS & J & APL \\
-Maxima & Mathcad & Axiom & Sage \\
-Lush & Ch & LabView & O-Matrix \\
-PV-WAVE & Igor Pro & OriginLab & FreeMat \\
-Yorick & GAUSS & MuPad & Genius \\
-SciRuby & Ox & Stata & JLab \\
-Magma & Euler & Rlab & Speakeasy \\
-GDL & Nickle & gretl & ana \\
-Torch7 &&& \\
-\hline
+    \begin{tabular}{|llll|l|}\hline
+      \multicolumn{4}{|c|}{Productivity} & Performance \\
+      \hline
+      Matlab  &  Maple &  Mathematica & SciPy & Fortress\\
+      SciLab  &  IDL   &  R  & Octave         & Chapel \\
+      S-PLUS  & SAS & J & APL                 & X10 \\
+      Maxima & Mathcad & Axiom & Sage         & SAC \\
+      Lush & Ch & LabView & O-Matrix          & ZPL \\
+      PV-WAVE & Igor Pro & OriginLab & FreeMat &\\
+      Yorick & GAUSS & MuPad & Genius &\\
+      SciRuby & Ox & Stata & JLab &\\
+      Magma & Euler & Rlab & Speakeasy &\\
+      GDL & Nickle & gretl & ana &\\
+      Torch7 & A+ & PDL & Nial & \\
+      \hline
     \end{tabular}
   \end{center}
   \caption{
-    41 technical computing languages
+    49 technical computing languages
   }
   \label{gangof40}
 \end{figure}
 
-In fact, we have discovered at least \emph{41} programming languages
+In fact, we have discovered at least \emph{49} programming languages
 designed for technical computing since Fortran (figure~\ref{gangof40}).
 This is a high number by any standard. A reasonable hypothesis to
 explain this is that language design is the level of abstraction with
@@ -100,10 +102,22 @@ technical computing, there is nearly always a corresponding need to
 Polymorphic languages sometimes support forms of specialization,
 but often only through a designated mechanism (e.g. templates), or
 deployed rather conservatively out of resource concerns.
-We intend to show that a kind of equillibrium point in the design
+We intend to show that an equillibrium point in the design
 space can be found by combining selection and specialization
-into essentially the same mechanism. This point is identified via
+into a single dynamic multiple dispatch mechanism.
+The specific design is identified via
 subtyping theories and closure under data-flow operations.
+
+%what does this system achieve?
+%-
+
+% why dynamic dispatch?
+%% somewhat counter-intuitively, dynamic dispatch can be good for performance
+%% since it permits invoking the most specialized possible method.
+%% static overloading can lead to calling a sub-optimal case when multiple
+%% overloads exist for the sake of performance.
+
+
 
 
 %Extensive code specialization is a key feature of
@@ -118,7 +132,6 @@ subtyping theories and closure under data-flow operations.
 
 %the amazing thing about programming languages it that a better
 %explanation can directly lead to better performance!)
-
 
 
 
@@ -166,11 +179,6 @@ subtyping theories and closure under data-flow operations.
 %Without it, certain programs may be easy to write today, but changing
 %functional and performance requirements can become difficult to meet.
 
-%So we do not expect a
-%new language to ``solve'' technical computing all by itself, but rather
-%we want to ask whether any language-level abstractions can provide a
-%better base for high-productivity technical computing.
-
 
 \section{The technical computing problem}
 
@@ -207,7 +215,7 @@ subtyping theories and closure under data-flow operations.
 Figure~\ref{PLpriorities} compares the general design priorities of mainstream programming
 languages to those of technical computing languages. The priorities in each row are not
 necessarily opposites or even mutually exclusive, but rather are a matter of emphasis.
-For example, it is certainly possible to have both parametric and ad-hoc polymorphism within
+It is certainly possible to have both parametric and ad-hoc polymorphism within
 the same language, but syntax, recommended idioms, and the design of the standard library will
 tend to emphasize one or the other. Of course, the features on the left side can
 also be useful for technical computing; we exaggerate to help make the point.
@@ -220,9 +228,14 @@ Getting everything on the right, by comparison, always seems to be awkward.
 The most popular approach is to use multiple language, as in e.g. NumPy~\cite{numpy},
 with a high-level productivity language layered on top of a large library
 written in lower-level languages. Seeking a similar tradeoff,
-others have written a C++ interpreter \cite{vasilev2012cling}.
+others have gone as far as writing a C++ interpreter \cite{vasilev2012cling}.
 
 
+
+%technical computing systems have an unusually large amount of
+%``failure of abstraction'' --- manual duplication of facts
+%all over the system. imagine changing from column-major to
+%row-major.
 
 %problem of finding connections between array programming and OOP.
 %array programming is a powerful paradigm for describing computational
@@ -231,11 +244,6 @@ others have written a C++ interpreter \cite{vasilev2012cling}.
 %an ``object system'' in this context is often considered a separate
 %part of the language, to be used only when arrays no longer
 %suffice.
-
-%technical computing systems have an unusually large amount of
-%``failure of abstraction'' --- manual duplication of facts
-%all over the system. imagine changing from column-major to
-%row-major.
 
 \section{Solution space}
 
@@ -255,8 +263,12 @@ of flexibility (as in Fortress \cite{fortresspec} or Polyduce \cite{polyduce1},
 for instance), but it is still too early to call a winner between these two
 approaches (if, indeed, there even needs to be a winner).
 
-Here we will use a dynamically-typed approach. There are several
-reasons for this. First, we want to emphasize that insufficient static
+Here we will use a dynamically-typed approach, with approximate
+type inference
+(for an excellent discussion of the many meanings of the word ``type''
+see \cite{Kell2014}).
+There are several reasons for this.
+First, we want to emphasize that insufficient static
 checking is most likely not the current limiting factor in scientific
 computing productivity. Second, some idioms in this domain appear to be
 inherently, or at least naturally, dynamically-typed (as we will explore in
@@ -265,6 +277,7 @@ later chapters). Third, there has been a sense that ``dynamic'' or
 associated with verbosity and nuisance compiler errors. We hope to
 contribute an example of a language where types are useful, and not
 burdensome.
+
 %Finally, it is often the case that a seemingly-minor
 %modification to a type system makes type checking undecidable. Rejecting
 %such a system is totally reasonable. However if we are willing to
@@ -276,27 +289,26 @@ burdensome.
 % mention value of having types that are agreed-on and work well within
 % the language. enables so many optimizations.
 
-%Our contribution derives from experience with the second approach.
-Efforts to analyze and optimize dynamically-typed programs generally make two
-assumptions: (1) we should work on analyzing \emph{existing} popular
-languages, and (2) users of these languages don't want to use types.
-The first assumption makes practical sense.
-Convenience is hard to quantify, so using existing languages that have already
-been deemed convenient by popular opinion puts us on solid footing.
+%Efforts to analyze and optimize dynamically-typed programs generally make two
+%assumptions: (1) we should work on analyzing \emph{existing} popular
+%languages, and (2) users of these languages don't want to use types.
+%The first assumption makes practical sense.
+%Convenience is hard to quantify, so using existing languages that have already
+%been deemed convenient by popular opinion puts us on solid footing.
 %This thesis describes a new language, so we simply take the negation of the
 %first assumption as a premise.
-Our work addresses the second assumption more directly.
-We point out that types
-\footnote{For an excellent discussion of the many meanings of the word ``type''
-see \cite{Kell2014}.}
-do not have to be used for static checking, and that using them for
-\emph{code selection} and \emph{code specialization} is particularly useful in
-technical computing.
-This perspective has not been explored thoroughly in the past.
+%Our work addresses the second assumption more directly.
+%We point out that types
+%\footnote{}
+%do not have to be used for static checking, and that using them for
+%\emph{code selection} and \emph{code specialization} is particularly useful in
+%technical computing.
+%This perspective has not been explored thoroughly in the past.
 
+\subsection{The excess power problem}
 
-% the wasted power problem
-
+Much work has been done on program analysis and optimization techniques
+for dynamically-typed languages.
 When static analyses (often incorporating run-time information) are applied
 to dynamically-typed programs, it is typically possible to recover a
 significant amount of type information (TODO cite). What, then, can one
@@ -317,7 +329,7 @@ apply equally to statically-typed languages, since they cannot simply
 ``switch'' their functions to generic functions without significant
 consequences for type checking.
 
-The ``wasted power'' problem applies to data structures as well.
+This ``excess power'' problem applies to data structures as well.
 For example, static or run time analysis might reveal that a certain array
 can be represented as a native \texttt{Int32} array \cite{Bolz2013}.
 If this information is not reflected in the source language, then
@@ -325,6 +337,8 @@ certain uses like passing data to native code become unnecessarily more
 complicated.
 And if one is going to implement homogeneous arrays anyway, why not
 let programmers request them?
+%Of course, a library like NumPy \emph{does} allow this, but with a
+%mechanism
 
 Some levels of performance are difficult to reach with implicitly
 specialized code and data. Given the knowledge that
@@ -337,25 +351,22 @@ needed for 64-bit arguments (TODO cite).
 In cryptographic applications, exploiting this difference in an inner loop
 could bring significant benefits.
 
-In demanding applications, selecting the right algorithm might not
-be enough, and we might need to automatically \emph{generate} code
-to handle different situations. While these cases are relatively rare
-in most kinds of programming, they are remarkably common in technical
-computing. Code generation, also known as \emph{staged programming},
-raises several complexities:
 
-\vspace{-2ex}
-\begin{singlespace}
-\begin{itemize}
-\item What is the input to the code generator?
-\item When and how is code generation invoked?
-\item How is the generated code incorporated into an application?
-\end{itemize}
-\end{singlespace}
+\subsection{The divergence problem}
 
+Another problem that occurs when analyzing programs with complex
+type behavior is divergence: the analysis is likely to infer an
+overly-large result from failing to eliminate enough possible
+behaviors. Narrowing the inferred types requires some extra source
+of type information. Multi-method signatures work well for this
+purpose.
 
-% the divergence problem
-
+However the divergence problem also places a limit on what
+kinds of dispatch specifications are useful to program analyses:
+some sets of values tend to be more robust under execution
+than others.
+%Dispatch expressiveness can always be increased
+%(e.g. including arbitrary predicates), but
 
 % TODO:
 % claim dispatch works better on approximate type info than branches
@@ -367,7 +378,6 @@ raises several complexities:
 % by the sophistication of the t-functions you write.
 % adding dispatch, the types become an abstraction under user
 % control, so need to be meaningful.
-
 
 %% what to dispatch on? dispatch power has been extended in many ways, but
 %% there is no real limit to what somebody might want to dispatch on.
@@ -382,17 +392,59 @@ raises several complexities:
 %% branches to handle the other cases. we argue the concept of ``integer''
 %% here is a more robust set, and so a more fundamental language concept.
 
-
-%% somewhat counter-intuitively, dynamic dispatch can be good for performance
-%% since it permits invoking the most specialized possible method.
-%% static overloading can lead to calling a sub-optimal case when multiple
-%% overloads exist for the sake of performance.
-
-
-
 %- vs predicate dispatch: we extend dispatch power in a different direction,
 %guided by semantic subtyping. goal is maximum power that still yields high
 %likelihood of resolving many calls to a single implementation.
+
+
+\subsection{Staged programming}
+
+In demanding applications, selecting the right algorithm might not
+be enough, and we might need to automatically \emph{generate} code
+to handle different situations. While these cases are relatively rare
+in most kinds of programming, they are remarkably common in technical
+computing. Code generation, also known as \emph{staged programming},
+raises several complexities:
+
+\vspace{-3ex}
+\begin{singlespace}
+\begin{itemize}
+\item What is the input to the code generator?
+\item When and how is code generation invoked?
+\item How is the generated code incorporated into an application?
+\end{itemize}
+\end{singlespace}
+
+\noindent
+These questions lead to practical problems like ad-hoc custom syntax,
+extra build steps, and excessive development effort (writing parsers and
+code generators might take more work than the core problem).
+If code needs to be generated based on run-time information, then a
+% TODO cite julia GPU paper that did this
+staged library might need to implement its own dispatch mechanism
+for invoking its generated code.
+
+We find that our particular style of dynamic multiple dispatch provides
+an unusually good substrate for staged programming.
+The reason is that the language, though semantically dynamically-typed,
+has a canonical (and not optional!) type analysis stage.
+This is a natural place to hook in code generators: semantic (not just
+syntactic) information is available, but machine code has not been
+generated yet.
+In general, this semantic information can also include run-time (or
+approximate run-time) information.
+Since the types used by dispatch have rich, nested structure, they
+convey enough information to drive code generation for a significant
+class of problems.
+In this framework code generators are invoked automatically by
+the compiler, and the results can be called directly or even inlined
+into user code.
+%A library can switched to a staged approach without affecting
+%calling code.
+Our approach is closely related to exotypes
+\cite{DeVito:2014:FRG:2594291.2594307}.
+
+
 
 %past (static) type systems for dispatch were designed to ensure the absence of
 %no-method errors and ambiguities (completeness and uniqueness). our goal
@@ -411,46 +463,53 @@ raises several complexities:
 %%%%%%
 
 
+%% The key ingredients:
 
-The key ingredients:
+%% \begin{singlespace}
+%% \begin{enumerate}
+%% \item Self-describing data model aware of memory layout
+%% \item Type tags with nested structure
+%% \item A fully-connected type tree
+%% \item Dynamic multiple dispatch over all types % including parameters and varargs
+%% \item Dataflow type inference
+%% \item Automatic code specialization
+%% \end{enumerate}
+%% \end{singlespace}
 
-\begin{singlespace}
-\begin{enumerate}
-\item Self-describing data model aware of memory layout
-\item Type tags with nested structure
-\item A fully-connected type tree
-\item Dynamic multiple dispatch over all types % including parameters and varargs
-\item Dataflow type inference
-\item Automatic code specialization
-\end{enumerate}
-\end{singlespace}
+%% This list of features may appear somewhat ad-hoc. However, they turn out to be
+%% remarkably strongly coupled, and deeply constrained by our ultimate goal.
+%% Each of these features has appeared in some form before, but never in a way
+%% that fully solves the problems described here.
 
-This list of features may appear somewhat ad-hoc. However, they turn out to be
-remarkably strongly coupled, and deeply constrained by our ultimate goal.
-Each of these features has appeared in some form before, but never in a way
-that fully solves the problems described here.
-
-Challenges of this approach (why has this not been done before?)
+%% Challenges of this approach (why has this not been done before?)
 
 
 \section{Contributions}
 
-1 - an analysis of the nature of technical computing that suggests what
-sort of language would form a good base for it. it should emphasize
-complex operators and code generation/specialization.
+Our first contribution is a discussion of the nature of technical computing
+that suggests which language-level abstractions might best support real use
+cases. Our way of looking at the space leads to a novel design.
+
+%sort of language would form a good base for it. it should emphasize
+%complex operators and code generation/specialization.
 % this includes our real-world experience with building a new
 % technical computing environment from the ground up with a large open
 % source community.
 
-2 - the idea of integrating specialization and selection, using multiple dispatch
-and semantic subtyping.
+Second, we introduce the idea of integrated code selection and specialization
+as a design goal. This leads to easy-to-use polymorphism, prioritizing
+flexibility and performance over nearly all else.
 
-3 - an explication through elimination of technical computing language features
+%2 - the idea of integrating specialization and selection, using multiple dispatch
+%and semantic subtyping.
 
+% 3 - an explication through elimination of technical computing language features
+
+James Morris eloquently observed that
 ``One of the most fruitful techniques of language analysis is explication through
 elimination. The basic idea is that one explains a linguistic feature by showing
 how one could do without it.'' \cite{morris}
-
-A main contribution of this thesis is the application of this approach to features
+The final contribution of this thesis is the application of this approach to features
 of technical computing environments that have not been subject to such analysis
 before.
+% showing our language is able to ``explain'' ...

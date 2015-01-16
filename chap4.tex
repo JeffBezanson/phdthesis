@@ -94,6 +94,8 @@ through references to other immutable objects).
 
 Functions are generally applied to more than one argument. In the application
 syntax $e_1(e_2)$, $e_2$ is an implicitly-constructed tuple of all arguments.
+$e_1$ must evaluate to a generic function, and its most specific method
+matching the tag of argument $e_2$ is called.
 
 We use the keyword \texttt{function} for method definitions for the sake of
 familiarity, though \texttt{method} is arguably more appropriate. Method
@@ -106,14 +108,6 @@ time within which methods do not change, allowing programs to be optimized more
 effectively (and hopefully discouraging abusive and confusing run-time
 method replacements).
 
-% (TODO describe restrictions)
-
-The equivalent of ordinary lambda expressions can be obtained by introducing
-a unique local name and defining a single method on it.
-
-Mutable lexical bindings are provided by the usual translation to operations
-on mutable cells.
-
 The signature, or specializer, of a method is obtained by evaluating $e_{type}$,
 which must result in a type value as defined above. A method has $n$
 formal argument names $x_i$. The specializer must be a subtype of the
@@ -121,6 +115,15 @@ varargs tuple type of length $n$. When a method is called, its formal argument
 names are bound to corresponding elements of the argument tuple. If the
 specializer is a vararg type, then the last argument name is bound to a
 tuple of all trailing arguments.
+
+
+% (TODO describe restrictions)
+
+The equivalent of ordinary lambda expressions can be obtained by introducing
+a unique local name and defining a single method on it.
+
+Mutable lexical bindings are provided by the usual translation to operations
+on mutable cells.
 
 %\subsection{A note on static typing}
 
@@ -143,7 +146,7 @@ tuple of all trailing arguments.
 
 \section{Type system}
 
-Our goal is to design a type system useful for describing method applicability,
+Our goal is to design a type system for describing method applicability,
 and (similarly) for describing classes of values for which to specialize code.
 Set-theoretic types are a natural basis for such a system.
 A set-theoretic type is a symbolic expression that denotes a set of values.
@@ -157,21 +160,25 @@ a value domain and set relations within it without yet considering how types
 relate to program terms \cite{1029823} \cite{Castagna:2005:GIS:1069774.1069793}.
 Since our goals only include
 performance and expressiveness, we simply skip the later steps for now, and do
-not address how to type-check terms (or, indeed, the question of whether checking
-is even possible).
+not consider in detail possible approaches to type checking.
+A good slogan for this attitude might be ``evaluate softly and carry a big
+subtype relation!''
 
-To avoid the dual traps of ``wasted power'' and divergence, the system we use
+To avoid the dual traps of ``excess power'' and divergence, the system we use
 must have a decidable subtype relation, and must be closed under data-flow operations
 (meet, join, and widen). It must also lend itself to a reasonable definition of
 specificity, so that methods can be ordered automatically (a necessary property for
-extensibility). These requirements are fairly strict, but still admit many possible
-designs. The one we present here is aimed at providing the minimum level of
-sophistication needed to yield a language that feels ``powerful'' to most modern
-programmers. Beginning with the simplest possible system, we added features as
+extensibility). These requirements are fairly strict.
+%, but still admit many possible designs.
+%The one we present here is aimed at providing the minimum level of
+%sophistication needed to yield a language that feels ``powerful'' to most modern
+%programmers.
+Beginning with the simplest possible system, we added features as
 needed either to satsify the aforementioned closure properties, or to allow us to
 write method definitions that seemed particularly useful (as it turns out, these
-two considerations lead to essentially the same features). The presentation that
-follows will partially reproduce the order of this design process.
+two considerations lead to essentially the same features).
+%The presentation that
+%follows will partially reproduce the order of this design process.
 
 We will define our types by formally describing their denotations as sets.
 We use the notation $\llbracket T \rrbracket$ for the set denotation of
@@ -460,6 +467,7 @@ templates using dispatch.
     $_A^BX$ means $X$ has lower bound $A$ and upper bound $B$.
     %$^R$ and $^L$ are used to track whether a variable originated on
     %the right or on the left.
+    % TODO: maybe clarify that types can also be variables.
   }
   \label{subtvars}
 \end{figure}
@@ -474,10 +482,10 @@ then $\texttt{C}\leq\texttt{B}$. In fact, the algorithm depends on these
 checks being done in this order, as we will see in a moment.
 
 Checking union types is a bit harder. When a union $A\cup B$ occurs in the
-algorithm, we need to nondeterministically replace it with either $A$ or
+algorithm, we need to non-deterministically replace it with either $A$ or
 $B$. The rule is that for all such choices on the left of $\leq$, there
 must exist a set of choices on the right such that the rest of the
-algorithm answers ``yes''. This can be implemented by keeping a stack of
+algorithm accepts. This can be implemented by keeping a stack of
 decision points, and looping over all possibilities with an outer
 for-all loop and an inner there-exists loop. We speak of ``decision points''
 instead of individual unions, since in a type like \texttt{Tuple\{Union\{A,B\}...\}}
@@ -523,7 +531,14 @@ to the system, or compute a meet without them. Either way, the
 algorithm would become much more complex and, judging by past
 results, very likely undecidable.
 
-TODO: termination and correctness.
+% worth asking why we go through such contortions, only to end up
+% setting X's bounds both to T exactly. the reason is that this
+% handles covariant and invariant position together, and also
+% automatically handles ``degrees of freedom'' mismatches like
+% Pair{T,T} < Pair{T,S}, which by the way doesn't hold if the
+% variables have equal upper and lower bounds.
+
+%TODO: termination and correctness.
 
 These subtyping rules are very likely $\Pi_2^{\textrm{P}}$-hard.
 Checking a subtype relation with unions requires checking that for all choices
