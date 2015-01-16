@@ -19,19 +19,18 @@ known as { {\it dynamic languages} or {\it dynamically typed languages}.
 In these programming
 languages, programmers write simple, high-level code without any
 mention of types like \code{int}, \code{float} or \code{double} that
-pervade {\it statically typed languages} such as  C and Fortran.
-
+pervade statically typed languages such as C and Fortran.
 
 
 How should a computer scientist approach this space? We might try to
 maximize performance. Or it is also easy to make unfounded assumptions about
-``what users want''. But instead we should study the real world, see
+what users want. But instead we should study the real world, see
 what is happening and figure out how to steer it in a better direction.
 
-Hypothesis: people don't know what they want. It's also hard to
-predict what people will want in the future. We need, in the words
-of Gerry Sussman, systems adaptable to uses not imagined by their
-designers.
+%Hypothesis: people don't know what they want. It's also hard to
+%predict what people will want in the future. We need, in the words
+%of Gerry Sussman, systems adaptable to uses not imagined by their
+%designers.
 
 \section{What is a technical computing environment?}
 
@@ -43,19 +42,16 @@ and what people were exposed to as they learned to program.
 Technical computing software has been designed haphazardly. Each system
 is a pile of features taken without argument.
 
-
 Some languages provide a ``convenient'' experience that is
 qualitatively different from ``inconvenient'' languages. We believe
 this can be made somewhat precise. A large part of it is reducing the
 amount you need to know about any given piece of functionality in order
 to use it.
 
-
 These systems are function-oriented, typically providing a rather
 large number of functions and a much smaller number of data types.
-
-These functions, and the ways they are used, have a particular
-character of being ``manifest'': one can just call them,
+These functions have a particular
+character one might describe as ``manifest'': you just call them,
 interactively, and see what they do. This notion includes the
 following features:
 
@@ -106,8 +102,8 @@ Mathematical abstractions often frustrate our attempts to represent them
 on a computer. For example, mathematicians can move instinctively between
 isomorphic objects such as scalars and 1-by-1 matrices, but most programming
 languages would prefer to represent scalars and matrices quite differently.
-A system might be able to convert automatically from one to the other, but
-it cannot always know which one we \emph{meant}.
+%A system might be able to convert automatically from one to the other, but
+%it cannot always know which one we \emph{meant}.
 
 
 \subsection{Mismatches with mathematical abstractions}
@@ -131,67 +127,73 @@ detail in section~\ref{sec:linalg}.
 
 We must immediately acknowledge that static type systems provide
 mechanisms for dealing with ``dynamic'' variations like these.
+However, these mechanisms require deciding which distinctions
+will be made at the type level, and once the choice is made
+we are restricted in how objects of different types can be used.
+In the domain of linear algebra, for example, it would be useful
+to have matrices that are considered different types for some
+purposes (e.g. having different representations), but not others
+(e.g. different types of matrices can be returned from the same
+function).
 
 
-% as another
-%example, in many cases it is convenient not to need to worry about
-%integer overflow.
-
-
-multiple common features underlie mathematical objects of different
-types (e.g. numbers, sets, matrices). in some cases it makes sense to
-consider numbers and matrices as the same kind of thing, and in other
-cases it doesn't matter. A given type system is likely not to have
-anticipated the particular common features that matter to your program,
-making it more difficult to express an idea. A concrete example is
-the matlab fragment
-if condition
-  idx = ':'
-else
-  idx = 1
-end
-where we want to select either an entire dimension or the first position
-alone. The ':' and 1 are both indexes in this context, though they would
-be of disjoint types in most programming languages.
+%% multiple common features underlie mathematical objects of different
+%% types (e.g. numbers, sets, matrices). in some cases it makes sense to
+%% consider numbers and matrices as the same kind of thing, and in other
+%% cases it doesn't matter. A given type system is likely not to have
+%% anticipated the particular common features that matter to your program,
+%% making it more difficult to express an idea. A concrete example is
+%% the matlab fragment
+%% if condition
+%%   idx = ':'
+%% else
+%%   idx = 1
+%% end
+%% where we want to select either an entire dimension or the first position
+%% alone. The ':' and 1 are both indexes in this context, though they would
+%% be of disjoint types in most programming languages.
 
 
 \subsection{Operational reasoning}
 
-people tend to think about programs operationally, i.e. what it *does* when
-it runs. for example writing
-if false
-  code
-end
-the code does not "occur" and therefore does not need to be valid
+%% people tend to think about programs operationally, i.e. what it *does* when
+%% it runs. for example writing
+%% if false
+%%   code
+%% end
+%% the code does not "occur" and therefore does not need to be valid
 
 
-there is less to learn. with static languages you have to learn what happens
-at both compile time and run time, when only run time really matters.
+%% there is less to learn. with static languages you have to learn what happens
+%% at both compile time and run time, when only run time really matters.
 
 
-there is a desire to parameterize as much as possible. functions
-accept parameters, so function calling ought to be sufficient to express
-any desired parameterization.
+%% there is a desire to parameterize as much as possible. functions
+%% accept parameters, so function calling ought to be sufficient to express
+%% any desired parameterization.
 
 
 \subsection{I/O}
 
-inevitably there is a need to refer to a datatype at run time. the best
-example is file I/O, where you might want to say "read 500 double-precision
-numbers from file X". in static languages the syntax and identifiers used
-to specify such run-time types must be different from those used to specify
-static types. in C you see defined constants such as \texttt{DATATYPE\_DOUBLE}.
+Inevitably there is a need to refer to a datatype at run time.
+A good example is file I/O, where you might want to say ``read $n$ double-precision
+numbers from this file''.
+In static languages the syntax and identifiers that
+specify such run-time types are usually different from those used to specify
+ordinary types, which is an unnecessary distraction.
+A typical example is a constant like \texttt{MPI\_DOUBLE} \cite{snir1998mpi}.
+I/O examples are often used to motivate dynamic typing \cite{Abadi:1991:DTS:103135.103138}.
 
 
 \subsection{Flat metadata hierarchy}
 
-static types are approximations of dynamic types, so languages with static
-types inevitably assign two types to a location (both a static type and a
-dynamic type) where one would do. in some languages, like C++, the desire
-for performance or ease of implementation leads the compiler to make some
-decisions based on static types. this is confusing. if type declarations
-can be omitted, as in a type-inferred language, the situation is even worse
-since the static type of a value might not be apparent.
+%static types are approximations of dynamic types, so languages with static
+%types inevitably assign two types to a location (both a static type and a
+%dynamic type) where one would do. in some languages, like C++, the desire
+%for performance or ease of implementation leads the compiler to make some
+%decisions based on static types. this is confusing. if type declarations
+%can be omitted, as in a type-inferred language, the situation is even worse
+%since the static type of a value might not be apparent.
 
 
 
@@ -199,52 +201,59 @@ since the static type of a value might not be apparent.
 
 Collapsing abstraction layers
 
-- for numerical debuggability in particular
-- debuggability in general
-- no time spent worrying about binding time
-- you will build a dynamic dispatch layer anyway, so build it in
-
+\begin{itemize}
+\item for numerical debuggability in particular
+\item no time spent worrying about binding time
+\item you will build a dynamic dispatch layer anyway, so build it in
+\end{itemize}
 
 How much of the past 30 years of handwritten Matlab internals can
 be autogenerated with a compiler? (A lot)
-
-Can now get past traditional classifications of language boundaries
-- interpreted vs. compiled, high-level vs. low-level, procedural vs.
-imperative vs. functional, etc.
 
 language performance psychology:
 if your language doesn't directly support efficient machine data types,
 users will rewrite their code in C in order to get them, and then be
 happy with the result (though not with the process).
 
-so julia is an all-levels language
-
 
 \section{Code generation}
 
-- tensor contraction engine
-- Firedrake, pyop2 (vs. c++ libmesh)
-- JuMP vs. python puLP and pyomo
-  - want to be able to pass functions, not C++ code as strings
-- FFTW
-- erfinv and horner
+\begin{itemize}
+\item tensor contraction engine
+\item Firedrake, pyop2 (vs. c++ libmesh)
+\item JuMP vs. python puLP and pyomo
+  (want to be able to pass functions, not C++ code as strings)
+\item FFTW
+%\item erfinv and horner
+\end{itemize}
 
 \subsection{A compiler for every problem}
+
+\cite{hopepython}
 
 
 \section{Bad tradeoffs in current designs}
 
+``Ducking'' the issue of typing is not really possible.
 
-- Ducking the issue of typing altogether - why this isn't possible IRL
+NumPy essentially adds an extra type system to Python (the
+\texttt{dtype} class). For a long time, there was no existing
+compiler that was aware of this type system. One was finally
+implemented \cite{oliphant2012numba}, but there are also
+other Python extensions and JITs with their own incompatible
+type systems.
 
-Case in point: Python and NumPy.
+% TODO: example of PyPy needing to implement core numpy functions
+% one by one manually.
 
-NumPy tried to work within the confines of Python, but has more or
-less failed for technical and political reasons. (Technical: hard
-to work with types in language that deliberately tries to obscure
-them from the user. Political: unwillingness to fix broken package
-distribution system.) Consequences: Numba and Numba\_lang, Anaconda.
-Essentially reinventing types in ``Python''. 
+%NumPy tried to work within the confines of Python, but has more or
+%less failed for technical and political reasons. (Technical: hard
+%to work with types in language that deliberately tries to obscure
+%them from the user. Political: unwillingness to fix broken package
+%distribution system.) Consequences: Numba and Numba\_lang, Anaconda.
+%Essentially reinventing types in ``Python''.
+Dictionaries for everything (python, js) is the wrong default. Almost every
+type somebody wants has a fixed number of fields with fixed types.
 
 This phenomenon is increasingly noticed in other domains, particularly
 JavaScript and web programming. Modern JavaScript implementations are
@@ -254,9 +263,6 @@ productivity as well. How so? Because Dart's designers observed that
 JavaScript programmers in practice often write code that could be
 defined using traditional OO classes, but the language does not
 support them.
-
-dictionaries for everything (python, js) is the wrong default. almost every
-type somebody wants has a fixed number of fields with fixed types.
 
 Python is often described as a good glue language. This
 means it is effectively used as an interface standard, a kind of
@@ -272,7 +278,6 @@ it easier to implement the functionality inside NumPy, or other
 more work, through the need to write wrappers and interfaces
 for native code.
 
-
 Merely being ``dynamic'' (e.g. Python) should not be considered
 the gold standard of flexibility. Although these systems permit
 tricks that can solve otherwise difficult programming problems,
@@ -282,14 +287,11 @@ behavior and many cases, one does not primarily need permissiveness,
 but rather powerful and descriptive organizing principles.
 
 
-% TODO: example of PyPy needing to implement core numpy functions
-% one by one manually.
-
-
 \subsection{What needs to be built in?}
 
-On "built-in", why built-in is bad. Built-in-ness often conflates two
-aspects:
+On "built-in", why built-in is bad.
+
+Built-in-ness often conflates two aspects:
 
 \begin{enumerate}
 \item A feature being readily available and agreed-on by all language users
@@ -302,12 +304,11 @@ a library in the standard software distribution. Many technical computing
 languages have done a large amount of (2) while justifying it with point (1).
 
 
-
 While a large part of our motivation is to move more decisions and functionality
 into libraries, it is equally important to identify what *must* be part of a
 language for the system to be successful. We believe that large amounts of
 functionality can be provided by add-ons, but that certain key features
-absolutely cannot be. Past failures to properly classify features this way have
+cannot be. Past failures to properly classify features this way have
 caused a lot of undue pain.
 
 First, performance cannot be an add-on. If some users have a fast version of
@@ -315,8 +316,8 @@ a language and others have a slow version (with the difference being an
 order of magnitude or more), library writers cannot be sure whether users
 will find their code fast enough to be useful. How are we to teach people to
 program in the language? Courses on MATLAB programming emphasize vectorized code,
-but if not all implementations had this performance characteristic the
-curriculum would become confused.
+but if not all implementations had this performance characteristic,
+presumably curricula would need to change.
 
 Psychologically, it may be difficult to accept a ``non standard'' extension
 that changes a language so fundamentally. There is a nagging, though perhaps
@@ -346,20 +347,18 @@ will not be composable.
 
 Programming languages are observed to have strong network effects, and the
 difficulty of getting new languages adopted is well known. However based on
-[socio PLT paper] we believe this doesn't have to be the case. The formula
+\cite{meyerovich2012socio} we believe this doesn't have to be the case.
+The formula
 of improving or redesigning general-purposes languages to be more appealing to
 domain experts might solve the problem. That way the new system has immediate
 appeal for at least some users, without the worry that a different tool will
 be needed as soon as requirements change slightly.
 
-barrier to contributing
+Barriers to contributing.
 
-Software business is based on imposing restrictions
+%Debates about what abstractions mean -- AbstractMatrix
+%we thought we knew what it meant, but what about something like
+%SymTridiagonal? It can implement most of what a dense matrix
+%has, but it can't obey every invariant.
 
-
-Debates about what abstractions mean -- AbstractMatrix
-we thought we knew what it meant, but what about something like
-SymTridiagonal? It can implement most of what a dense matrix
-has, but it can't obey every invariant.
-
-PackedQR
+%PackedQR

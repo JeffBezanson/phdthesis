@@ -188,7 +188,7 @@ are written in typewriter font, and metasymbols are written in mathematical ital
 First there is a universal type \texttt{Any}, an empty type \texttt{Bottom}, and
 a partial order $\leq$:
 
-\vspace{-2ex}
+\vspace{-3ex}
 \begin{align*}
   \llbracket \texttt{Any} \rrbracket &= \mathcal{D} \\
   \llbracket \texttt{Bottom} \rrbracket &= \emptyset \\
@@ -207,7 +207,7 @@ Tag types may have declared supertypes (written as \texttt{super(T)}).
 Any type used as a supertype must be declared as abstract, meaning it
 cannot have direct instances.
 
-\vspace{-2ex}
+\vspace{-3ex}
 \begin{align*}
   \llbracket \texttt{Name\{}\cdots\texttt{\}} \rrbracket &= \{ x\mid \texttt{typeof(}x\texttt{)} = \texttt{Name\{}\cdots\texttt{\}} \} \\
   \llbracket \texttt{Abstract\{}\cdots\texttt{\}} \rrbracket &= \bigcup_{\texttt{super(}T\texttt{)} = \texttt{Abstract\{}\cdots\texttt{\}}} \llbracket T \rrbracket
@@ -237,7 +237,7 @@ but are different in two ways: they are \emph{covariant} in their parameters, an
 a special form ending in three dots (\texttt{...}) that denotes any number of trailing
 elements:
 
-\vspace{-2ex}
+\vspace{-3ex}
 \begin{align*}
   \llbracket \texttt{Tuple\{}P_1,\cdots,P_n\texttt{\}} \rrbracket &= \prod_{1\leq i \leq n} \llbracket P_i \rrbracket \\
   \llbracket \texttt{Tuple\{}\cdots,P_n\texttt{...\}} \rrbracket, n\geq 1 &= \bigcup_{i\geq n-1} \llbracket \texttt{Tuple\{}\cdots,P_n^i\texttt{\}} \rrbracket
@@ -263,6 +263,7 @@ analysis must compute the union of those types to derive the type of the conditi
 The above types are not closed under set union. We therefore add the following
 type connective:
 
+\vspace{-3ex}
 \[
   \llbracket \texttt{Union\{}A,B\texttt{\}} \rrbracket = \llbracket A \rrbracket \cup \llbracket B \rrbracket \\
 \]
@@ -278,6 +279,7 @@ For example a type \texttt{T} can always be rewritten as \texttt{Union\{T,Bottom
 ``understand'' these equivalences. Covariant constructors (tuples in our case)
 also distribute over \texttt{Union} types, providing even more ways to rewrite types:
 
+\vspace{-3ex}
 \[
 \texttt{Tuple\{Union\{A,B\},C\}} = \texttt{Union\{Tuple\{A,C\},Tuple\{B,C\}\}}
 \]
@@ -305,6 +307,7 @@ These cases can be expressed using a \texttt{UnionAll} connective, which denotes
 an iterated union of a type expression for all values of a parameter in a specified
 range:
 
+\vspace{-3ex}
 \[
   \llbracket \texttt{UnionAll }L\texttt{<:T<:}U\ A \rrbracket = \bigcup_{L \leq T \leq U} \llbracket A[T/\texttt{T}] \rrbracket
 \]
@@ -362,7 +365,7 @@ Instead, we find it intuitive and appealing for \texttt{Array} to refer to
 any kind of array, so that a declaration such as \texttt{x::Array} simply
 asserts \texttt{x} to be some kind of array. In other words,
 
-\vspace{-2ex}
+\vspace{-3ex}
 \[
 \texttt{Array} = \texttt{UnionAll T Array$^\prime$\{T\}}
 \]
@@ -826,6 +829,7 @@ evaluate $\texttt{call}(e_1,e_2)$ instead, where \texttt{call} is
 a particular generic function known to the system.
 Now we can define
 
+\vspace{-3ex}
 \begin{singlespace}
 \begin{lstlisting}[style=customjulia]
 

@@ -6,7 +6,9 @@
 It is helpful to begin with a rather coarse classification of programming
 languages, according to how expressive their type systems are, and whether
 their type systems are dynamic or static:
-\\
+
+\vspace{3ex}
+
 \begin{tabular}{|c||c|c|}
 \hline 
  & More types & Fewer types\tabularnewline
@@ -14,10 +16,12 @@ their type systems are dynamic or static:
 \hline 
 Dynamic & Dylan, Julia & Scheme, Python, MATLAB\tabularnewline
 \hline 
-Static & ML, Haskell, Scala & C\tabularnewline
+Static & ML, Haskell, Scala & Fortran, Pascal, C\tabularnewline
 \hline 
 \end{tabular}
-\\
+
+\vspace{3ex}
+
 
 The lower right corner tend to contain older languages. The upper right corner
 contains many popular ``dynamic'' languages. The lower left corner contains
@@ -127,7 +131,8 @@ provides a way to automatically select different behaviors according to
 some structured criteria.
 
 In class-based OO there is essentially \emph{no way} to create an operation
-that dispatches on existing types (the expression problem). This clearly
+that dispatches on existing types (the expression problem \cite{wadler1998expression}).
+This clearly
 does not match technical computing, where most programs deal with the same
 few types (e.g. number, array), and might sensibly want to write new operations
 that dispatch on them.
@@ -150,6 +155,7 @@ As an example, consider a simple simulation, and how it can be written
 under a series of increasingly powerful paradigms. First, written-out
 imperative code:
 
+\begin{singlespace}
 \begin{verbatim}
 while running
     for a in animals
@@ -164,6 +170,7 @@ while running
     end
 end
 \end{verbatim}
+\end{singlespace}
 
 We can see how this would get tedious as we add more kinds of animals
 and more behaviors. Another problem is that the animal behavior is
@@ -173,6 +180,7 @@ behavior. Adding a simple object system leads to a nicer implementation
 \footnote{A perennial problem with simple examples is that better
 implementations often make the code longer.}:
 
+\begin{singlespace}
 \begin{verbatim}
 class Rabbit
     method encounter(b)
@@ -195,6 +203,7 @@ while running
     end
 end
 \end{verbatim}
+\end{singlespace}
 
 Here all of the simulation's animal behavior has been essentially
 compressed into a single program point: \texttt{a.encounter(b)}
@@ -207,6 +216,7 @@ The next enhancement to ``selection criteria'' adds a hierarchy
 of behaviors, to provide further opportunities to avoid
 repetition:
 
+\begin{singlespace}
 \begin{verbatim}
 abstract class Animal
     method nearby()
@@ -235,6 +245,7 @@ while running
     end
 end
 \end{verbatim}
+\end{singlespace}
 
 We are still essentially doing table lookup, but the tables have
 more structure: every \texttt{Animal} has the \texttt{nearby}
@@ -247,6 +258,7 @@ statements with method lookup. However, inside of these methods
 a structured set of \texttt{if} statements remains. We can
 replace these by adding another level of dispatch.
 
+\begin{singlespace}
 \begin{verbatim}
 class Rabbit <: Animal
     method encounter(b: Wolf) = run()
@@ -258,6 +270,7 @@ class Wolf <: Animal
     method encounter(b: Wolf) = follow(b)
 end
 \end{verbatim}
+\end{singlespace}
 
 We now have a \emph{double dispatch} system, where a method call
 uses two lookups, first on the first argument and then on the
@@ -270,6 +283,7 @@ dispatch. But at that point, why is the first argument special?
 Why separate methods in a special way based on the first argument?
 It seems arbitrary, and indeed we can remove the special treatment:
 
+\begin{singlespace}
 \begin{verbatim}
 abstract class Animal
 end
@@ -293,6 +307,7 @@ while running
     end
 end
 \end{verbatim}
+\end{singlespace}
 
 Here we made two major changes: the methods have been moved ``outside''
 of any classes, and all arguments are listed explicitly. This change
@@ -322,12 +337,12 @@ encounter{T<:Animal}(a: T, b: T) = mate(a, b)
 
 \section{Multiple dispatch}
 
-CHART of different multiple dispatches. classify them
+% CHART of different multiple dispatches. classify them
 
-Why ``just overloading'' is not enough. You intercept every operation and
-rewrite it, kind of an escape hatch for a language you don't like. If
-somebody else also tries to do this, there won't necessarily be any
-coherence.
+%Why ``just overloading'' is not enough. You intercept every operation and
+%rewrite it, kind of an escape hatch for a language you don't like. If
+%somebody else also tries to do this, there won't necessarily be any
+%coherence.
 
 A helpful way to classify languages with some kind of generic programming
 support is to look at which language constructs are generic. For example,
@@ -349,7 +364,6 @@ function is effectively generic, and can be overloaded by new classes.
 This enables a programmer to ``intercept'' every function call (and therefore,
 essentially everything a program does)
 
-foo
 
 \subsection{Example: lattices}
 
@@ -419,6 +433,7 @@ The library also provides standard
 \texttt{LatticeElement} provides some useful default method definitions.
 
 
+
 \subsection{Symbolic programming}
 
 There has always been an essential divide between ``numeric'' and ``symbolic''
@@ -426,7 +441,6 @@ languages in the world of technical computing. To many people the
 distinction is fundamental, and we should happily live with both
 kinds of languages. But if one insists on an answer as to which approach
 is the right one, then the answer is: symbolic.
-
 
 Systems based on symbolic rewrite rules arguably occupy a further tier of
 dispatch sophistication. In these systems, you can dispatch on essentially
@@ -501,12 +515,9 @@ In the 1960s Dana Scott asked how to assign meanings to programs,
 which otherwise just appear to be lists of symbols.
 For example, given a program computing the factorial function, we
 want a process by which we can assign the meaning ``factorial'' to it.
-
-This is about modeling the behavior of a program without running it.
-
-
-The idea of analyzing computer programs began in earnest in the 1960s with
-Dana Scott's invention of domain theory. A ``domain'' in this theory is a
+This led to the invention of domain theory, which can be interpreted
+as modeling the behavior of a program without running it.
+A ``domain'' in this theory is a
 partial order of sets of values that a program might manipulate. 
 Domain theory models computation as follows: a program starts with no
 information, the lowest point in the partial order (``bottom'').
@@ -517,7 +528,6 @@ Even the ``result'' of a non-terminating program has a representation ---
 the bottom element. Other elements of the partial order might refer to
 intermediate results.
 
-
 Domain theory gave rise to the study of denotational semantics and the
 design of type systems. However, the original theory is quite general
 and invites us to invent any domains we wish for any sort of language.
@@ -525,9 +535,11 @@ For example, given a program that outputs an integer, we might decide
 that we only care whether this integer is even or odd. Then our posets
 are the even and odd integers, and we will classify operations in the
 program according to whether they are evenness-preserving and so on.
+Abstract interpretation \cite{abstractinterp} is an especially
+elegant and general implementation of this idea.
 It should be clear that this sort of analysis, while clearly related
 to type systems, is fairly different from what most programmers
-think of as type checking.
+think of as type \emph{checking}.
 
 
 \subsection{Monotonicity}
@@ -562,50 +574,25 @@ overlap. However if one substitutes ``symbolic expression'' for
 % maybe subarray as an example of a fancy type here
 
 
-\section{Dynamic type inference}
+%% \subsection{Objections to dynamic typing}
 
-This is exciting because the type system can do useful computational work for you,
-instead of only checking the work done by the rest of the program.
+%% it may be that the ``power'' of a language is equal to the complexity
+%% of the criteria used by the language's run-time dispatch mechanisms.
 
-%Joins of quantified types
+%% pre-OO: pointer indirection
+%% OO: single dispatch, class hierarchies
 
-%``Diagonal dispatch''
+%% Haskell: without typeclasses, a beautiful language, but one that nobody
+%% would use.
 
-%(T,T) (Int, Real)
+%% I claim that compile-time abstractions do not count. The problem is that
+%% at some point you have to *actually run the program*. Specifying the
+%% behavior of a program is hard; this is where we need help from the
+%% language.
 
-%\textbackslash{}(Int,Int)/
-
-%Exposing to the user what is part of the language anyway and not just
-%hiding it in the compiler.
-
-Data flow analysis has to actually work
-
-Taking things out of the language that break dataflow analysis
-
-Local reasoning
-
-
-\subsection{Objections to dynamic typing}
-
-
-it may be that the ``power'' of a language is equal to the complexity
-of the criteria used by the language's run-time dispatch mechanisms.
-
-pre-OO: pointer indirection
-OO: single dispatch, class hierarchies
-
-Haskell: without typeclasses, a beautiful language, but one that nobody
-would use.
-
-I claim that compile-time abstractions do not count. The problem is that
-at some point you have to *actually run the program*. Specifying the
-behavior of a program is hard; this is where we need help from the
-language.
-
-
-Scripting languages are often defended using the observation that most
-code is not performance-critical. However, this fact does not mean that
-it's ok for a language design to ignore performance, nor does it mean
-that performance should be the default priority of every line of code.
-Rather it means that the default should be convenience and safety, with
-a path to performance easily in reach for when it's needed.
+%% Scripting languages are often defended using the observation that most
+%% code is not performance-critical. However, this fact does not mean that
+%% it's ok for a language design to ignore performance, nor does it mean
+%% that performance should be the default priority of every line of code.
+%% Rather it means that the default should be convenience and safety, with
+%% a path to performance easily in reach for when it's needed.

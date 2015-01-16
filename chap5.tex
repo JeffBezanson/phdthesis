@@ -170,11 +170,12 @@ arguments are of the same type.
 
 A full-featured promotion operator is a tall order. We would like
 
-- each combination of types only needs to be defined in one order
-- it falls back to join
-- must prevent promotion above a certain point to avoid circularity in
+\begin{itemize}
+\item each combination of types only needs to be defined in one order
+\item it falls back to join
+\item must prevent promotion above a certain point to avoid circularity in
   promoting fallback definitions of operators.
-
+\end{itemize}
 
 \begin{singlespace}
 \begin{lstlisting}[style=customjulia]
@@ -422,7 +423,8 @@ of such systems.
 
 % TODO: insert actual example of numpy
 
-Our dispatch mechanism permits a novel solution. If a multiple dispatch
+Our dispatch mechanism permits a novel solution \cite{Bezanson2014}.
+If a multiple dispatch
 system supports variadic functions and argument ``splicing'' (the ability
 to pass a structure of $n$ values as $n$ separate arguments to a function),
 then indexing behavior can be defined as method signatures.
