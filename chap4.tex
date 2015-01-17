@@ -168,7 +168,7 @@ To avoid the dual traps of ``excess power'' and divergence, the system we use
 must have a decidable subtype relation, and must be closed under data-flow operations
 (meet, join, and widen). It must also lend itself to a reasonable definition of
 specificity, so that methods can be ordered automatically (a necessary property for
-extensibility). These requirements are fairly strict.
+composability). These requirements are fairly strict.
 %, but still admit many possible designs.
 %The one we present here is aimed at providing the minimum level of
 %sophistication needed to yield a language that feels ``powerful'' to most modern
@@ -313,6 +313,8 @@ range:
 \]
 
 % TODO: The inclusion of lower bounds might make subtyping undecidable?
+% Note that giving up lower bounds might permit intersections or arrows,
+% but we prefer lower bounds.
 
 This is equivalent to an existential type \cite{boundedquant};
 for each concrete subtype of it there exists a corresponding $T$.
@@ -501,7 +503,7 @@ and then recurring into the body.
 In analogy to union types, we need to check that for all variable values on
 the left, there exists a value on the right such that the relation holds.
 The for-all side is relatively easy to implement, since we can just use
-a variable's bounds as proxies for its possible values (this is shown in
+a variable's bounds as proxies for its value (this is shown in
 the second row of the figure).
 We implement the there-exists side by narrowing a variable's bounds
 (raising the lower bound and lowering the upper bound). The relation holds
@@ -529,7 +531,7 @@ direction of the comparison needs to be checked first: otherwise,
 we would have updated $B$ to equal $T$ already and the $T\leq B$
 comparison would become vacuous. Alternatively, we could actually
 compute $B\cap T$. However there is reason to suspect that serious
-trouble lies that way. We would need either to add intersection types
+trouble lies that way. We would need to either add intersection types
 to the system, or compute a meet without them. Either way, the
 algorithm would become much more complex and, judging by past
 results, very likely undecidable.
@@ -865,3 +867,7 @@ call{A,B}(a::Arrow{A,B}, x::A) = a.f(x)::B
 \subsection{Specialization}
 
 % ? \section{Staged programming}
+
+% \section{Separate compilation}
+% Technically julia does not support it, but that's never stopped anybody
+% from doing it anyway. e.g. C++

@@ -397,6 +397,17 @@ than others.
 %likelihood of resolving many calls to a single implementation.
 
 
+% on the ``sufficiently smart compiler''
+% optimizing code is uncomputable in general, and in some sense
+% AI-complete. as soon as a person names any *specific* optimization
+% they want, it immediately becomes possible to imagine a compiler
+% doing it.
+% discussion on when dynamic typing is ``needed'' is related!
+% again, isolated examples often unconvincing.
+% same thing yet again tends to happen with multiple dispatch:
+% it feels very useful overall, but many particular cases can be
+% explained away as something single dispatch could handle.
+
 \subsection{Staged programming}
 
 In demanding applications, selecting the right algorithm might not
@@ -431,8 +442,8 @@ has a canonical (and not optional!) type analysis stage.
 This is a natural place to hook in code generators: semantic (not just
 syntactic) information is available, but machine code has not been
 generated yet.
-In general, this semantic information can also include run-time (or
-approximate run-time) information.
+In general, this semantic information can also include run-time (and
+always, at least, approximate run-time) information.
 Since the types used by dispatch have rich, nested structure, they
 convey enough information to drive code generation for a significant
 class of problems.
@@ -499,6 +510,9 @@ cases. Our way of looking at the space leads to a novel design.
 Second, we introduce the idea of integrated code selection and specialization
 as a design goal. This leads to easy-to-use polymorphism, prioritizing
 flexibility and performance over nearly all else.
+
+% we design a type system for this. and introduce the ``evaluate softly
+% and carry a big subtype relation'' school of thought.
 
 %2 - the idea of integrating specialization and selection, using multiple dispatch
 %and semantic subtyping.
