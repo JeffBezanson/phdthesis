@@ -23,7 +23,7 @@ Static & ML, Haskell, Scala & Fortran, Pascal, C\tabularnewline
 \vspace{3ex}
 
 
-The lower right corner tend to contain older languages. The upper right corner
+The lower right corner tends to contain older languages. The upper right corner
 contains many popular ``dynamic'' languages. The lower left corner contains
 many modern languages resulting from research on static type systems.
 We are most interested in the upper left corner, which is notable for being
@@ -33,9 +33,9 @@ types if they are not going to be checked at compile time. These views have
 some merit, but as a result the top-left corner of this design space has
 been seriously under-explored.
 
-\subsection{Classes vs. functions}
+\subsection{Classes vs.\ functions}
 
-\subsection{Separate compilation vs. performance}
+\subsection{Separate compilation vs.\ performance}
 
 Writing the signature of a generic method that needs to be separately compiled,
 as in Java for example, can be a difficult exercise.
@@ -50,11 +50,14 @@ again for each instantiation).
 It is quite interesting that performance and ease-of-use pull this design
 decision in the same direction.
 
-\subsection{Parametric vs. ad-hoc polymorphism}
+\subsection{Parametric vs.\  ad-hoc polymorphism}
+
+\todo[inline]{Can we have a definition of ad-hoc polymorphism and talk
+about its relation to multiple dispatch?}
 
 The idea of specialization unites parametric and ad-hoc polymorphism.
 Beginning with a parametrically-polymorphic function, one can imagine
-a compiler specializing it for various cases, i.e. certain concrete argument
+a compiler specializing it for various cases, i.e.\ certain concrete argument
 values. These specializations could be stored in a lookup table, for use
 either at compile time or at run time.
 
@@ -80,9 +83,9 @@ symbolic expression systems, XML) permits code to work for any object
 because every object has the same structure, allowing meaningful
 operations.
 
-\subsection{Static checking vs. flexibility}
+\subsection{Static checking vs.\ flexibility}
 
-\subsection{Modularity vs. large vocabularies}
+\subsection{Modularity vs.\ large vocabularies}
 
 In the context of software engineering, modularity is a primary concern.
 To build large systems, separate components must be isolated to some
@@ -100,9 +103,9 @@ designs. For example MATLAB for most of its history supported only a single
 namespace, which comes pre-populated with thousands of functions.
 
 
-\subsection{Eliminating vs. embracing tagged data}
+\subsection{Eliminating vs.\ embracing tagged data}
 
-\subsection{Data hiding vs. explicit memory layout}
+\subsection{Data hiding vs.\ explicit memory layout}
 
 Examples of CSC and CSR sparse representation.
 In one sense this is a perfect example of an interface with multiple implementations,
