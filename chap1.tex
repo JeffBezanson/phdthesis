@@ -71,7 +71,7 @@ of inventing new notation in mathematics and science.
 %helps distinguish scientific programming from other application areas.
 
 The need for language-level flexibility is corroborated by
-the ways the technical computing domain uses general purpose
+the ways that the technical computing domain uses general purpose
 languages.
 Effective scientific libraries extensively employ
 polymorphism, custom operators, and compile-time abstraction.
@@ -88,24 +88,43 @@ of the purpose-built languages above.
 %pathologies arising from the language level are subtle
 %not as immediate as ``this new matrix multiply is faster''
 
-This thesis argues that the situation can be improved considerably by
-abstracting, with a new language, the essential challenges from the state
-of affairs we have described.
-Of course, a language is not the only thing the world of technical
-computing needs.
-Compiler techniques, library design, high-performance
+
+This thesis addresses the essential challenges created by
+this state of affairs.
+We argue that the situation   
+can be improved considerably by
+abstracting, with a new language.
+
+%the essential challenges from the state
+%f affairs we have described.
+%Of course, a language is not the only thing the world of technical
+%computing needs.
+ Compiler \todo{see comment that follows}
+techniques, library design, high-performance
 computational kernels, new algorithms, and approaches to parallelism might
-be more important than language design.
+be as perhaps more important than language design.
 However these sorts of technologies can usually be applied to multiple
 languages, as has happened in the C and Fortran language families.
 %, which have taken on many such extensions over the years.
 So in our view languages targeting this space need to dig deeper,
 at least temporarily forgetting about matrices and cache utilization,
 and look for bigger patterns.
+\todo[inline]{{\it Please consider if this is even more true: }\newline
+Technical computing  can benefit from many technologies.
+Some of these include compiler techniques, library design, high-performance
+computational kernels, new algorithms, and new approaches to parallelism.
+These sorts of technologies can usually be applied to multiple
+languages, as has happened in the C and Fortran language families.
+They do not by themselves insist that a new language be developed.
+However in conjunction with a new language, these technologies can flourish.
+Indeed, we believe that language design
+has reached a level of importance that even (perhaps temporarily) supersedes
+the traditional focus of cache utilization and the use of matrix operations.
+}
 
 In brief, our idea is to \emph{integrate code selection and specialization}.
 The aforementioned flexibility requirement can be explained as
-sufficiently powerful means for \emph{selecting} which piece of code
+a sufficiently powerful means for \emph{selecting} which piece of code
 to run. This notion subsumes method dispatch, function overloading,
 and potentially even branches. When such mechanisms are used in
 technical computing, there is nearly always a corresponding need to
