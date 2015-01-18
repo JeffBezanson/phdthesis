@@ -471,6 +471,7 @@ However, symbolic programming lacks data abstraction: the concrete
 representations of values are exposed to the dispatch system
 (e.g. there is no difference between being a list and being something
 represented as a list).
+\todo{Wish you would say more!}
 
 \subsection{Predicate dispatch}
 
@@ -490,8 +491,7 @@ a set-theoretic type. Some type systems of this kind, notably that of
 Common Lisp \cite{steele1990common:types}, have actually included predicates as types.
 However, such a type system is obviously undecidable, since it
 requires computing the predicates themselves or, even worse, computing
-predicate implication.
-\footnote{
+predicate implication.\footnote{
 Many type systems involving bounded quantification, such as system $F_{<:}$,
 are already undecidable \cite{Pierce1994131}.
 However, they seem to terminate for most practical programs, and also admit
@@ -560,6 +560,7 @@ It should be clear that this sort of analysis, while clearly related
 to type systems, is fairly different from what most programmers
 think of as type \emph{checking}.
 
+\todo[inline]{Is this a ``by the way, oh and there is that thing over there" section?}
 
 \subsection{Monotonicity}
 
