@@ -340,24 +340,25 @@ burdensome.
 
 \subsection{The excess power problem}
 
+We claim that the amount of information that can be statically inferred
+exceeds most dynamic languages' capacity to exploit it.
 Much work has been done on program analysis and optimization techniques
 for dynamically-typed languages.
 When static analyses (often incorporating run-time information) are applied
 to dynamically-typed programs, it is typically possible to recover a
-significant amount of type information (TODO cite). What, then, can one
+significant amount of type information (TODO cite). \todo{cite} What, then, can one
 do with this information? If the goal is performance, various partial
 evaluations can be done: generating code without type checks, removing
 branches, type-specializing the storage of variables, and compile-time
 method lookup are all valuable and yield large real-world gains.
 
-However, we claim that the amount of information that can be statically inferred
-exceeds most dynamic languages' capacity to exploit it. For example,
+ For example,
 if method calls are dispatched on the first argument, but the types of all
 arguments can be inferred, some power has been ``left on the table'' ---
 we could have had multi-methods for little extra cost. In fact, method-at-a-time
-JIT compilers (TODO cite) can specialize method bodies on all arguments,
+JIT compilers (TODO cite) \todo{cite}  can specialize method bodies on all arguments,
 and might use multiple dispatch \emph{internally} to select implementations
-at run time (TODO cite a system that did this). This argument does not
+at run time (TODO \todo{cite} cite a system that did this). This argument does not
 apply equally to statically-typed languages, since they cannot simply
 ``switch'' their functions to generic functions without significant
 consequences for type checking.
@@ -380,7 +381,7 @@ beyond essential optimizations like storing intermediate values in
 registers, and actually use different algorithms. For example,
 in Miller-Rabin primality testing, checking three ``witness'' values
 suffices for all 32-bit arguments, but up to seven values might be
-needed for 64-bit arguments (TODO cite).
+needed for 64-bit arguments .\todo{cite} (TODO cite)
 In cryptographic applications, exploiting this difference in an inner loop
 could bring significant benefits.
 
