@@ -23,7 +23,7 @@ pervade statically typed languages such as C and Fortran.
 
 
 How should a computer scientist approach this space? We might try to
-maximize performance. Or it is also easy to make unfounded assumptions about
+maximize performance. Unfortunately,  is all to easy to make unfounded assumptions about
 what users want. But instead we should study the real world, see
 what is happening and figure out how to steer it in a better direction.
 
@@ -40,11 +40,12 @@ Views of this are strongly shaped by what systems happen to exist,
 and what people were exposed to as they learned to program.
 
 Technical computing software has been designed haphazardly. Each system
-is a pile of features taken without argument.
+has evolved as a pile of features taken without what we consider
+a sufficiently critical argument.
 
 Some languages provide a ``convenient'' experience that is
 qualitatively different from ``inconvenient'' languages. We believe
-this can be made somewhat precise. A large part of it is reducing the
+this can be made somewhat precise. A large part of ``convenience"  is  the reduction of the
 amount you need to know about any given piece of functionality in order
 to use it.
 
@@ -292,7 +293,7 @@ but rather powerful and descriptive organizing principles.
 
 \subsection{What needs to be built in?}
 
-On "built-in", why built-in is bad.
+On``built-in", why built-in is bad.
 
 Built-in-ness often conflates two aspects:
 
@@ -302,13 +303,13 @@ Built-in-ness often conflates two aspects:
 \end{enumerate}
 
 (2) implies (1), but not the other way around. (2) is the only technically
-interesting item, since the other can be addressed e.g. just by including
+interesting item, since the other can be addressed e.g.\  just by including
 a library in the standard software distribution. Many technical computing
 languages have done a large amount of (2) while justifying it with point (1).
 
 
 While a large part of our motivation is to move more decisions and functionality
-into libraries, it is equally important to identify what *must* be part of a
+into libraries, it is equally important to identify what {\it  must} be part of a
 language for the system to be successful. We believe that large amounts of
 functionality can be provided by add-ons, but that certain key features
 cannot be. Past failures to properly classify features this way have
@@ -320,7 +321,7 @@ order of magnitude or more), library writers cannot be sure whether users
 will find their code fast enough to be useful. How are we to teach people to
 program in the language? Courses on MATLAB programming emphasize vectorized code,
 but if not all implementations had this performance characteristic,
-presumably curricula would need to change.
+presumably curricula would need to change.\todo{Comment, I do not think they all do and curricula therefore must change}
 
 Psychologically, it may be difficult to accept a ``non standard'' extension
 that changes a language so fundamentally. There is a nagging, though perhaps
