@@ -53,7 +53,7 @@ decision in the same direction.
 \subsection{Parametric vs.\  ad-hoc polymorphism}
 
 \todo[inline]{Can we have a definition of ad-hoc polymorphism and talk
-about its relation to multiple dispatch?}
+about its relation to multiple dispatch? and point to a technical computing example?}
 
 The idea of specialization unites parametric and ad-hoc polymorphism.
 Beginning with a parametrically-polymorphic function, one can imagine
@@ -123,6 +123,8 @@ is less of a problem for technical computing, and in some cases even
 advantageous.
 
 \subsection{Dynamic dispatch is key}
+
+\todo[inline]{Comment: Really nice!}
 
 It would be unpleasant if every piece of every program we wrote were forced
 to do only one specific task. Every time we wanted to do something slightly
@@ -218,6 +220,8 @@ simply an integer index into a table of operations.
 The next enhancement to ``selection criteria'' adds a hierarchy
 of behaviors, to provide further opportunities to avoid
 repetition:
+
+\todo[inline]{has  $<:$  been defined yet?}
 
 \begin{singlespace}
 \begin{verbatim}
@@ -331,11 +335,12 @@ We can define a method on \emph{any number} of objects:
 encounter(ws: Wolf...) = pack(ws)
 \end{verbatim}
 
-
+\todo[inline]{We can also do diagonal dispatch:}
 
 \begin{verbatim}
 encounter{T<:Animal}(a: T, b: T) = mate(a, b)
 \end{verbatim}
+
 
 
 \section{Multiple dispatch}
@@ -398,7 +403,10 @@ $\leq$, $\sqcup$, and $\sqcap$ at any time, for any type, and that type will
 function as a lattice. That is certainly convenient, but it also fails to
 provide any reusable functionality for those defining lattices.
 
+
+
 \begin{figure}
+\todo[inline]{what does $===$ mean here?}  
   \begin{center}
 \begin{singlespace}
 \begin{lstlisting}[style=customjulia]
@@ -418,6 +426,8 @@ const ~$\bot$~ = BotElement()
 <=(::BotElement, ::LatticeElement) = true
 <=(::LatticeElement, ::TopElement) = true
 
+
+
 ~$\sqcup$~(x::LatticeElement, y::LatticeElement) =  # join
     (x <= y ? y : y <= x ? x : ~$\top$~)
 
@@ -427,13 +437,19 @@ const ~$\bot$~ = BotElement()
 \end{singlespace}
   \end{center}
   \label{julialattices}
+  \caption{A small Julia library for lattices}
 \end{figure}
+
+
+
+
 
 Figure~\ref{julialattices} shows a small Julia library for lattices.
 It defines an abstract class \texttt{LatticeElement} that may be subclassed
 by objects that will be used primarily as elements of some lattice.
 The library also provides standard
-\texttt{LatticeElement} provides some useful default method definitions.
+\texttt{LatticeElement} provides some useful default method definitions.\todo{sentence grammar?}
+\todo[inline]{Join of two incomparables in general lattices does not have to be top}
 
 
 
@@ -443,7 +459,7 @@ There has always been an essential divide between ``numeric'' and ``symbolic''
 languages in the world of technical computing. To many people the
 distinction is fundamental, and we should happily live with both
 kinds of languages. But if one insists on an answer as to which approach
-is the right one, then the answer is: symbolic.
+is the right one, then the answer is: \todo{Love it!}  symbolic.
 
 Systems based on symbolic rewrite rules arguably occupy a further tier of
 dispatch sophistication. In these systems, you can dispatch on essentially
