@@ -391,7 +391,7 @@ templates using dispatch.
 
 \begin{figure}
   \begin{center}
-    \def\arraystretch{3.5}
+    \def\arraystretch{2}
     \begin{tabular}{|c|}\hline
       \begin{tabular}{ccc}
         \AxiomC{$_A^B X^L, \Gamma\ \vdash\ T \leq S$}
@@ -857,6 +857,97 @@ call{A,B}(a::Arrow{A,B}, x::A) = a.f(x)::B
 % (generic functions with declared overall types)
 
 \subsection{Implementing \texttt{map}}
+
+So, given typed containers and no arrow types, how do you implement
+\texttt{map}? The answer is that the type of container to return must
+also be computed. This should not be too surprising, since it is implied by
+the definition of \texttt{new} at the beginning of the chapter: each
+value is created by computing a type part and a content part.
+
+\begin{singlespace}
+\begin{figure}
+\begin{lstlisting}[style=customjulia]
+function map(f, A::Array)
+    isempty(A) && return Array(Bottom, 0)
+    el = f(A[1]); T = typeof(el)
+    dest = Array(T, length(A))
+    dest[1] = el
+    for i = 2:length(A)
+        el = f(A[i]); S = typeof(el)
+        if !(S <: T)
+            T = typejoin(T, S)
+            new = similar(dest, T)
+            copy!(new, 1, dest, 1, i-1)
+            dest = new
+        end
+        dest[i] = el::T
+    end
+    return dest
+end
+\end{lstlisting}
+  \caption{
+  }
+  \label{fig:mapimpl}
+\end{figure}
+\end{singlespace}
+
+A possible implementation of \texttt{map} for arrays is shown in
+figure~\ref{fig:mapimpl}.
+The basic strategy is to try calling the argument function \texttt{f}
+first, see what it returns, and then optimistically assume that it
+will always return values of the same type.
+This assumption is checked on each iteration.
+If \texttt{f} returns a value that does not fit in the current output
+array \texttt{dest}, we re-allocate the output array to a larger
+type and continue.
+The primitive \texttt{typejoin} computes a union-free join of types.
+For uses like \texttt{map}, this does not need to be a true least
+upper bound; any reasonable upper bound will do.
+
+This implementation works well because it completely ignores the
+question of whether the compiler understands the type behavior of
+\texttt{f}.
+However, it \emph{cooperates} with the compiler by making the
+optimistic assumption that \texttt{f} is well-behaved.
+This is best illuminated by considering three cases.
+In the first case, imagine \texttt{f} always returns \texttt{Int},
+and that the compiler is able to infer that fact.
+Then the test \texttt{!(S <: T)} disappears by specialization,
+and the code reduces to the same simple and efficient loop we
+might write by hand.
+In the second case, imagine \texttt{f} always returns \texttt{Int},
+but that the compiler is \emph{not} able to infer this.
+Then we incur the cost of an extra type check on each iteration,
+but we return the same efficiently-stored \texttt{Int}-specialized
+\texttt{Array} (\texttt{Array\{Int\}}).
+This leads to significant memory savings, and allows subsequent
+operations on the returned array to be more efficient.
+The third case occurs when \texttt{f} returns objects of different
+types.
+Then the code does not do anything particularly efficient, but is
+not much worse than a typical dynamically-typed language manipulating
+heterogeneous arrays.
+
+Overall, the resulting behavior is quite similar to a dynamic
+language that uses \emph{storage strategies} \cite{Bolz2013} for its
+collections.
+The main difference is that the behavior is implemented at the
+library level, rather than inside the run time system.
+This can be a good thing, since one might want a \texttt{map} that
+works differently.
+For example, replacing \texttt{typejoin} with \texttt{promote\_type}
+would collect results of different numeric types into a
+homogeneous array of a single larger numeric type.
+Other applications might not want to use typed arrays at all, in
+which case \texttt{map} can be much simpler and always return an
+\texttt{Array\{Any\}}.
+% todo maybe mention mutation as well
+
+It must be admitted that this \texttt{map} is more complex than
+what we are used to in typical functional languages.
+However, this is at least partly due to \texttt{map} itself
+being more complex, and amenable to more different interpretations,
+than what is usually studied in the context of those languages.
 
 
 
