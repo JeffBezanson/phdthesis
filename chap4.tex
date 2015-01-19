@@ -616,7 +616,7 @@ considered to have multiple such types. For example, a \texttt{sin} function
 with the following two definitions:
 
 \begin{singlespace}
-\begin{lstlisting}[style=customjulia]
+\begin{lstlisting}[language=julia]
 sin(x::Float64) = # compute sine of x in double precision
 sin(v::Vector) = map(sin, v)
 \end{lstlisting}
@@ -641,7 +641,7 @@ this formulation is quite problematic for dispatch and code specialization
 Consider what happens when we try to define an integration function:
 
 \begin{singlespace}
-\begin{lstlisting}[style=customjulia]
+\begin{lstlisting}[language=julia]
 # 1-d integration of a real-valued function
 integrate(f::Float64->Float64, x0, x1)
 
@@ -689,7 +689,7 @@ statically-typed functional languages. For example, we might wish
 to write \texttt{map} as follows:
 
 \begin{singlespace}
-\begin{lstlisting}[style=customjulia]
+\begin{lstlisting}[language=julia]
 map{A,B}(f::A->B, x::List{A}) =
   isempty(x) ? List{B}() : List{B}(f(head(x)), map(f, tail(x)))
 \end{lstlisting}
@@ -833,14 +833,14 @@ Now we can define
 
 \vspace{-3ex}
 \begin{singlespace}
-\begin{lstlisting}[style=customjulia]
+\begin{lstlisting}[language=julia]
 
 \end{lstlisting}
 \end{singlespace}
 
 
 \begin{singlespace}
-\begin{lstlisting}[style=customjulia]
+\begin{lstlisting}[language=julia]
 immutable Arrow{A,B}
     f
 end
@@ -866,7 +866,7 @@ value is created by computing a type part and a content part.
 
 \begin{singlespace}
 \begin{figure}
-\begin{lstlisting}[style=customjulia]
+\begin{lstlisting}[language=julia]
 function map(f, A::Array)
     isempty(A) && return Array(Bottom, 0)
     el = f(A[1]); T = typeof(el)

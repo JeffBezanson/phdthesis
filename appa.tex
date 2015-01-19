@@ -2,7 +2,7 @@
 
 \begin{singlespace}
 \begin{multicols}{2}
-\begin{lstlisting}[style=customjulia]
+\begin{lstlisting}[language=julia]
 abstract Ty
 
 type TypeName
@@ -32,7 +32,7 @@ end
 \end{multicols}
 
 \vspace{-3ex}
-\begin{lstlisting}[style=customjulia]
+\begin{lstlisting}[language=julia]
 ## Any, Bottom, and Tuple
 const AnyT = TagT(TypeName(), ());  AnyT.name.super = AnyT
 type BottomTy <: Ty; end; const BottomT = BottomTy()

@@ -58,7 +58,7 @@ domain to pick, since all numbers should be equality-comparable to each
 other. We might try
 
 \begin{singlespace}
-\begin{lstlisting}[style=customjulia]
+\begin{lstlisting}[language=julia]
 ==(x::Number, y::Number) = x === y
 \end{lstlisting}
 \end{singlespace}
@@ -78,7 +78,7 @@ help here.)
 ``Diagonal'' dispatch lets us improve the definition:
 
 \begin{singlespace}
-\begin{lstlisting}[style=customjulia]
+\begin{lstlisting}[language=julia]
 =={T<:Number}(x::T, y::T) = x === y
 \end{lstlisting}
 \end{singlespace}
@@ -159,7 +159,7 @@ that generic binary operators should have ``key variants'' where the
 arguments are of the same type.
 
 \begin{singlespace}
-\begin{lstlisting}[style=customjulia]
+\begin{lstlisting}[language=julia]
 +(x::Number, y::Number) = +(promote(x,y)...)
 
 +{T<:Number}(x::T, y::T) = no_op_err("+", T)
@@ -178,7 +178,7 @@ A full-featured promotion operator is a tall order. We would like
 \end{itemize}
 
 \begin{singlespace}
-\begin{lstlisting}[style=customjulia]
+\begin{lstlisting}[language=julia]
 promote{T,S}(x::T, y::S) =
     (convert(promote_type(T,S),x), convert(promote_type(T,S),y))
 
@@ -574,7 +574,7 @@ trait.
 qrfact computes the type of the result needed:
 
 \begin{singlespace}
-\begin{lstlisting}[style=customjulia]
+\begin{lstlisting}[language=julia]
 function qrfact{T}(A::StridedMatrix{T}; pivot=false)
     S = typeof(one(T)/norm(one(T)))
     if S != T

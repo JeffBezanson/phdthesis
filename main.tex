@@ -21,6 +21,7 @@
 \usepackage{appendix}
 \usepackage{multicol}
 \usepackage{bussproofs}
+\usepackage[lighttt]{lmodern}
 \pagestyle{plain}
 
 \DeclareMathOperator{\find}{find}
@@ -47,9 +48,23 @@
 
 \include{mainjp}
 
-\lstdefinestyle{customjulia}{
+\lstdefinelanguage{julia}{
   basicstyle=\small\ttfamily,
+  showspaces=false,
+  showstringspaces=false,
+  keywordstyle={\textbf},
+  morekeywords={if,else,elseif,while,for,begin,end,quote,try,catch,return,local,abstract,function,stagedfunction,macro,ccall,finally,typealias,break,continue,type,global,module,using,import,export,const,let,bitstype,do,in,baremodule,importall,immutable},
   escapeinside={~}{~},
+  morecomment=[l]{\#},
+%  commentstyle=\textsf,
+  commentstyle={},
+  morestring=[b]",
+}
+
+\lstdefinestyle{ttcode}{
+  basicstyle=\small\ttfamily,
+  showspaces=false,
+  showstringspaces=false,
 }
 
 \begin{document}

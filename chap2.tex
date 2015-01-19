@@ -290,6 +290,45 @@ When faced with the need to describe many functions with elaborate
 behavior and many cases, one does not primarily need permissiveness,
 but rather powerful and descriptive organizing principles.
 
+\subsection{Vandermonde matrix case study}
+
+\begin{singlespace}
+\begin{lstlisting}[language=python,style=ttcode]
+def vander(x, N):
+  x = asarray(x)
+  if x.ndim != 1:
+    raise ValueError("x must be a one-dimensional array or sequence.")
+
+  v = empty((len(x), N), dtype=promote_types(x.dtype, int))
+
+  if N > 0:
+    v[:, 0] = 1
+  if N > 1:
+    v[:, 1:] = x[:, None]
+    multiply.accumulate(v[:, 1:], out=v[:, 1:], axis=1)
+
+  return v
+\end{lstlisting}
+\end{singlespace}
+
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+function vander{T}(x::Array{T,1}, N::Int)
+  m = length(x)
+  V = Array(T, m, N)
+  if N > 0
+    V[:, 1] = 1
+  end
+  for i = 2:N
+    for j = 1:m
+      V[j,i] = x[j] * V[j,i-1]
+    end
+  end
+  return V
+end
+\end{lstlisting}
+\end{singlespace}
 
 \subsection{What needs to be built in?}
 
