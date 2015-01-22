@@ -358,10 +358,10 @@ in C++ the syntax \texttt{object.method(x)} is generic: a programmer can
 get it to do different things by supplying different values for
 \texttt{object}. The C++ syntax \texttt{f(a,b)} or \texttt{a+b} is
 usually not generic, but can be overloaded by supplying definitions for
-different argument types. However, this overloading only uses compile-time
-types (no run-time information), and so is essentially a form of renaming ---
+different argument types. However, this overloading only uses compile time
+types (no run time information), and so is essentially a form of renaming ---
 it can be implemented by renaming each definition with a unique name, and
-replacing overloaded calls with an appropriate name based on compile-time
+replacing overloaded calls with an appropriate name based on compile time
 types. This is a much weaker form of generic programming, since different
 behaviors cannot be obtained by passing different values at run time.
 
@@ -500,7 +500,7 @@ It is fair to say they are ``just barely'' undecidable, while predicates
 are ``very'' undecidable.
 }
 
-For a language that is willing to do run-time type checks anyway, the
+For a language that is willing to do run time type checks anyway, the
 undecidability of predicate dispatch is not a problem.
 Interestingly, it can also pose no problem for \emph{static} type systems
 that wish to prove that every call site has an applicable method.
@@ -596,7 +596,7 @@ overlap. However if one substitutes ``symbolic expression'' for
 
 %% \subsection{Objections to dynamic typing}
 
-% there are run-time things, and just flow-sensitive things
+% there are run time things, and just flow-sensitive things
 
 % coming up with examples where something needs to be done at
 % run time seems to be difficult. as soon as a concrete example
@@ -605,7 +605,7 @@ overlap. However if one substitutes ``symbolic expression'' for
 
 
 %% it may be that the ``power'' of a language is equal to the complexity
-%% of the criteria used by the language's run-time dispatch mechanisms.
+%% of the criteria used by the language's run time dispatch mechanisms.
 
 %% pre-OO: pointer indirection
 %% OO: single dispatch, class hierarchies
@@ -613,7 +613,7 @@ overlap. However if one substitutes ``symbolic expression'' for
 %% Haskell: without typeclasses, a beautiful language, but one that nobody
 %% would use.
 
-%% I claim that compile-time abstractions do not count. The problem is that
+%% I claim that compile time abstractions do not count. The problem is that
 %% at some point you have to *actually run the program*. Specifying the
 %% behavior of a program is hard; this is where we need help from the
 %% language.

@@ -363,7 +363,7 @@ semantics, preventing it from remaining a compiler implementation detail.
 
 % TODO: break up using enumerate
 These facts pull in different directions. The first fact asks for static
-analysis. The second fact asks for run-time flexibility. The third fact asks
+analysis. The second fact asks for run time flexibility. The third fact asks
 for dimensionality to be part of the type system, but partly determined
 at run time (for example, via virtual method dispatch). Current approaches
 choose a compromise. In some systems, the number of dimensions has a strict
@@ -415,7 +415,7 @@ may be defined, or so that rules of similar complexity may be
 defined for other kinds of objects. But these kinds of rules are
 unusually difficult to implement in libraries. If a library writes out
 its indexing logic using imperative code, the host language compiler
-is not likely to be able to analyze it. Using compile-time abstracton
+is not likely to be able to analyze it. Using compile time abstracton
 (templates) would provide better performance, but such libraries tend
 to be difficult to write (and read), and the full complement of
 indexing behavior expected by technical users strains the capabilities
@@ -566,7 +566,7 @@ Multiple dispatch on special matrices
 QR factorization: want to support it on all input types, but many
 types (integer, rational) are not closed under the needed operations.
 compare to eigen: in C++, if you want a qrfact of an integer matrix,
-you might get a compile-time error, or it might work but all the values
+you might get a compile time error, or it might work but all the values
 will be truncated when stored. this is a big generic programming
 challenge. you can't expect types to have a ``type to use for QR fact''
 trait.
@@ -687,13 +687,13 @@ problem:
 
 \begin{itemize}
 
-\item Multiple dispatch allows the cubature scheme to be selected at compile-time based on the dimensionality, the degree of the singularity, the degree of the polynomial basis, and so on, and allows specialized schemes to be added easily for particular problems with no runtime penalty.
+\item Multiple dispatch allows the cubature scheme to be selected at compile time based on the dimensionality, the degree of the singularity, the degree of the polynomial basis, and so on, and allows specialized schemes to be added easily for particular problems with no run time penalty.
 
-\item Staged functions allow computer-algebra systems to be invoked at
-  compile-time to generate specialized cubature schemes for particular
+\item Staged functions allow computer algebra systems to be invoked at
+  compile time to generate specialized cubature schemes for particular
   kernels.  New developments in BEM integration schemes \cite{ReidWhJo14} have
   provided efficient cubature-generation algorithms of this sort, but it
-  has not yet been practical to integrate them with runtime code in
+  has not yet been practical to integrate them with run time code in
   a completely automated way.
 
 \end{itemize}

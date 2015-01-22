@@ -105,7 +105,7 @@ specified by name rather than by value in order to make it easier to syntactical
 restrict where functions can be extended. This, in turn, allows the language to
 specify when new method definitions take effect, providing useful windows of
 time within which methods do not change, allowing programs to be optimized more
-effectively (and hopefully discouraging abusive and confusing run-time
+effectively (and hopefully discouraging abusive and confusing run time
 method replacements).
 
 The signature, or specializer, of a method is obtained by evaluating $e_{type}$,
@@ -604,7 +604,7 @@ of subtyping:
 \section{Higher-order programming}
 
 Generic functions are first-class objects, and so can be passed as arguments
-just as in any dynamically-typed language with first-class functions.
+just as in any dynamically typed language with first-class functions.
 However, assigning useful type tags to generic functions and deciding how
 they should dispatch is not so simple. Past work has often described the
 types of generic functions using the ``intersection of arrows'' formalism
@@ -925,14 +925,14 @@ operations on the returned array to be more efficient.
 The third case occurs when \texttt{f} returns objects of different
 types.
 Then the code does not do anything particularly efficient, but is
-not much worse than a typical dynamically-typed language manipulating
+not much worse than a typical dynamically typed language manipulating
 heterogeneous arrays.
 
 Overall, the resulting behavior is quite similar to a dynamic
 language that uses \emph{storage strategies} \cite{Bolz2013} for its
 collections.
 The main difference is that the behavior is implemented at the
-library level, rather than inside the run time system.
+library level, rather than inside the runtime system.
 This can be a good thing, since one might want a \texttt{map} that
 works differently.
 For example, replacing \texttt{typejoin} with \texttt{promote\_type}

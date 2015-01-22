@@ -74,7 +74,7 @@ The need for language-level flexibility is corroborated by
 the ways that the technical computing domain uses general purpose
 languages.
 Effective scientific libraries extensively employ
-polymorphism, custom operators, and compile-time abstraction.
+polymorphism, custom operators, and compile time abstraction.
 Code generation approaches (writing a program that writes the needed
 program) are unusually common.
 Most of these techniques are presently fairly difficult to use, and so
@@ -179,7 +179,7 @@ subtyping theories and closure under data-flow operations.
 %% specialization should feed back into selection, allowing the
 %% \emph{approximate values} processed by a compiler to be used in the
 %% source language for dispatch. We argue that this is the key feature
-%% missing from the present generation of dynamically-typed languages.
+%% missing from the present generation of dynamically typed languages.
 %This conclusion would not be surprising to advocates of static
 %type systems, but the approach we propose is actually a run-time
 %mechanism that does not restrict the class of valid programs.
@@ -289,13 +289,13 @@ and productivity languages will persist.
 
 It is fair to say that two approaches to this problem are being tried: one is
 to design better statically-typed languages, and the other is to apply
-program analysis techniques to dynamically-typed languages.
+program analysis techniques to dynamically typed languages.
 Static type systems are getting close to achieving the desired level
 of flexibility (as in Fortress \cite{fortresspec} or Polyduce \cite{polyduce1},
 for instance), but it is still too early to call a winner between these two
 approaches (if, indeed, there even needs to be a winner).
 
-Here we will use a dynamically-typed approach, with approximate
+Here we will use a dynamically typed approach, with approximate
 type inference
 (for an excellent discussion of the many meanings of the word ``type''
 see \cite{Kell2014}).
@@ -303,7 +303,7 @@ There are several reasons for this.
 First, we want to emphasize that insufficient static
 checking is most likely not the current limiting factor in scientific
 computing productivity. Second, some idioms in this domain appear to be
-inherently, or at least naturally, dynamically-typed (as we will explore in
+inherently, or at least naturally, dynamically typed (as we will explore in
 later \todo{Put in a ref to these chapters by number  please.} chapters).  Third, there has been a sense that ``dynamic'' or
 ``scripting'' language users do not want to hear about types: they are 
 thought of as a distraction and 
@@ -322,7 +322,7 @@ burdensome.
 % mention value of having types that are agreed-on and work well within
 % the language. enables so many optimizations.
 
-%Efforts to analyze and optimize dynamically-typed programs generally make two
+%Efforts to analyze and optimize dynamically typed programs generally make two
 %assumptions: (1) we should work on analyzing \emph{existing} popular
 %languages, and (2) users of these languages don't want to use types.
 %The first assumption makes practical sense.
@@ -346,13 +346,13 @@ burdensome.
 We claim that the amount of information that can be statically inferred
 exceeds most dynamic languages' capacity to exploit it.
 Much work has been done on program analysis and optimization techniques
-for dynamically-typed languages.
-When static analyses (often incorporating run-time information) are applied
-to dynamically-typed programs, it is typically possible to recover a
+for dynamically typed languages.
+When static analyses (often incorporating run time information) are applied
+to dynamically typed programs, it is typically possible to recover a
 significant amount of type information (TODO cite). \todo{cite} What, then, can one
 do with this information? If the goal is performance, various partial
 evaluations can be done: generating code without type checks, removing
-branches, type-specializing the storage of variables, and compile-time
+branches, type-specializing the storage of variables, and compile time
 method lookup are all valuable and yield large real-world gains.
 
  For example,
@@ -469,20 +469,20 @@ raises several complexities:
 These questions lead to practical problems like ad-hoc custom syntax,
 extra build steps, and excessive development effort (writing parsers and
 code generators might take more work than the core problem).
-If code needs to be generated based on run-time information, then a
+If code needs to be generated based on run time information, then a
 % TODO cite julia GPU paper that did this
 staged library might need to implement its own dispatch mechanism
 for invoking its generated code.
 
 We find that our particular style of dynamic multiple dispatch provides
 an unusually good substrate for staged programming.
-The reason is that the language, though semantically dynamically-typed,
+The reason is that the language, though semantically dynamically typed,
 has a canonical (and not optional!) type analysis stage.
 This is a natural place to hook in code generators: semantic (not just
 syntactic) information is available, but machine code has not been
 generated yet.
-In general, this semantic information can also include run-time (and
-always, at least, approximate run-time) information.
+In general, this semantic information can also include run time (and
+always, at least, approximate run time) information.
 Since the types used by dispatch have rich, nested structure, they
 convey enough information to drive code generation for a significant
 class of problems.
