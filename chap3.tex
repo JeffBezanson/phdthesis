@@ -530,8 +530,9 @@ integers are rare to the point of irrelevance.
 
 \section{Domain theory}
 
-In the 1960s Dana Scott asked how to assign meanings to programs,
-which otherwise just appear to be lists of symbols.
+In the late 1960s Dana Scott and Christopher Strachey asked how to assign
+meanings to programs, which otherwise just appear to be lists of symbols
+\cite{scott1971toward}.
 For example, given a program computing the factorial function, we
 want a process by which we can assign the meaning ``factorial'' to it.
 This led to the invention of domain theory, which can be interpreted
@@ -547,22 +548,77 @@ Even the ``result'' of a non-terminating program has a representation ---
 the bottom element. Other elements of the partial order might refer to
 intermediate results.
 
-Domain theory gave rise to the study of denotational semantics and the
-design of type systems. However, the original theory is quite general
-and invites us to invent any domains we wish for any sort of language.
+The idea of ``running a program without running it'' is of great interest
+in compiler implementation. A compiler would like to discover as much
+information as possible about a program without running it, since
+running it might take a long time, or produce side effects that the
+programmer does not want yet, or, of course, not terminate.
+The general recipe for doing this is to design a partial order (lattice)
+that captures program properties of interest, and then describe all
+primitive operations in the language based on how they transform
+elements of this lattice.
+Then an input program can be executed, in an approximate sense, until
+it converges to a fixed point.
 For example, given a program that outputs an integer, we might decide
 that we only care whether this integer is even or odd. Then our posets
 are the even and odd integers, and we will classify operations in the
-program according to whether they are evenness-preserving and so on.
-Abstract interpretation \cite{abstractinterp} is an especially
-elegant and general implementation of this idea.
-It should be clear that this sort of analysis, while clearly related
-to type systems, is fairly different from what most programmers
-think of as type \emph{checking}.
+program according to whether they are evenness-preserving,
+evenness-inverting, always even, always odd, of uncertain evenness,
+etc. % TODO figure
+Most modern compilers use a technique like this
+(sometimes called abstract interpretation \cite{abstractinterp})
+to semi-decide
+interesting properties like whether a variable is a constant, whether
+a variable might be used before it is initialized, whether a variable's
+value is never used, and so on.
+%Domain theory gave rise to the study of denotational semantics and the
+%design of type systems. However, the original theory is quite general
+%and invites us to invent any domains we wish for any sort of language.
+%Abstract interpretation \cite{abstractinterp} is an especially
+%elegant and general implementation of this idea.
+%It should be clear that this sort of analysis, while clearly related
+%to type systems, is fairly different from what most programmers
+%think of as type \emph{checking}.
 
-\todo[inline]{Is this a ``by the way, oh and there is that thing over there" section?}
+Given the general undecidability of questions about programs, analyses
+like these are \emph{conservative} in nature.
+For example, if our goal is to warn programmers about use of uninitialized
+variables, we want to be ``better safe than sorry'' and print a warning
+if such a use \emph{might} occur.
+Such a use corresponds to any lattice element greater than or equal to
+the element representing ``uninitialized''.
+Such conservative analyses are the essence of compiler transformations
+for performance (optimizations): we only want to perform an optimization
+if the program property it relies on holds for sure, and not if there is
+any uncertainty.
+
+The generality of this approach makes it a kind of ``ur type system'':
+we can discover a large variety of program properties as long as we are
+willing to accept some uncertainty.
+Of course, many programmers and language designers prefer to maximize
+safety, leading to different approaches that trade away some precision
+(e.g. syntactic type systems such as those in the ML language
+family \cite{hindley1969principal}, \cite{MLtypeinf}).
+But if static guarantees are not the priority, or if a language considers
+itself unconcerned with ``types'', then we can take the domain-theoretic
+model as our type system.
+In some sense, it is our type system whether we like it or not
+(as implied by \cite{scott1976data})!
 
 \subsection{Monotonicity}
+
+When this kind of type system is used, it usually becomes part of the
+meta-theory of the language: values are ``lifted'' into an abstract
+domain, and abstract values are manipulated only by a compiler
+or other program analysis.
+One good reason for this is that the abstract values (which we will
+now interchangeably call ``types'') must meet certain requirements in
+order to be useful.
+For an abstract interpretation to terminate, its lattice must be of
+finite height, and all functions of lattice elements must be
+monotonic (given lattice elements $a$ and $b$, we must have
+$a\subseteq b$ implies $f(a)\subseteq f(b)$ for all $f$).
+
 
 Functions of types are not monotonic. \texttt{isa(2,3)} is \texttt{false},
 but \texttt{isa(2,Int)} is \texttt{true}.

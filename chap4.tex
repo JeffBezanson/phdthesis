@@ -829,15 +829,32 @@ Julia accomodates this approach with a small adjustment to the evaluation
 rules: in the application syntax $e_1(e_2)$ when $e_1$ is not a function,
 evaluate $\texttt{call}(e_1,e_2)$ instead, where \texttt{call} is
 a particular generic function known to the system.
-Now we can define
 
-\vspace{-3ex}
+As an example, we can define a type for polynomials of order $N$ over ring
+$R$:
+
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
+immutable Polynomial{N,R}
+    coeffs:Vector{R}
+end
 
+call{N}(p::Polynomial{N}, x) = sum([p.coeffs[i+1]*x^i for i=0:N])
 \end{lstlisting}
 \end{singlespace}
 
+\noindent
+Now it is possible to use a \texttt{Polynomial} just like a function, while
+also dispatching methods on the relevant properties of order and ring
+(or ignoring them if you prefer).
+It is also easy to examine the polynomial's coefficients, in contrast to
+functions, which are usually opaque.
+
+% nominal types that classify algorithms, e.g. whether a sort is stable
+
+It is even possible to define a ``nominal arrow'' type, which uses this
+mechanism to impose a classification on functions based on argument and
+return types:
 
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
@@ -849,8 +866,17 @@ call{A,B}(a::Arrow{A,B}, x::A) = a.f(x)::B
 \end{lstlisting}
 \end{singlespace}
 
-% nominal types that classify algorithms, e.g. whether a sort is stable
+\noindent
+Calling an \texttt{Arrow} will yield a no-method error if the argument
+type fails to match, and a type error if the return type fails to
+match.
 
+It is worth examining the differences and tradeoffs between nominal
+functions and ``real'' arrow types.
+
+
+% tradeoffs: arrows group all functions together, which is flexible,
+% but nominal functions let you make more distinctions.
 
 % arrow types without intersections, used to ``slice'' generic functions
 
@@ -863,6 +889,8 @@ So, given typed containers and no arrow types, how do you implement
 also be computed. This should not be too surprising, since it is implied by
 the definition of \texttt{new} at the beginning of the chapter: each
 value is created by computing a type part and a content part.
+% also recall the vandermonde example in chapter 2 explicitly
+% computed the result type. this is common in T.C.
 
 \begin{singlespace}
 \begin{figure}
