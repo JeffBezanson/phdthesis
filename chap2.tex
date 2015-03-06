@@ -290,6 +290,47 @@ When faced with the need to describe many functions with elaborate
 behavior and many cases, one does not primarily need permissiveness,
 but rather powerful and descriptive organizing principles.
 
+\subsection{Vectorization}
+
+The vectorized style has the following touted benefits:
+
+\begin{enumerate}
+\item One may write \texttt{sin(x)} to compute the sine of
+all elements of \texttt{x}, which is much more compact than writing a loop.
+\item Most of execution time can be spent inside an expertly-written library,
+taking advantage of special hardware (e.g. SIMD units or stream processors
+like GPUs) and parallelism implicitly.
+\item The performance of the high-level language being used becomes less
+relevant.
+\item The compiler can optimize across whole-array operations, potentially
+drastically rearranging computations in a way that would be difficult to do
+by examining one scalar operation at a time.
+\end{enumerate}
+
+Under closer inspection, this argument breaks down at every level.
+
+An equivocation takes place between being \emph{able} to write a loop
+as \texttt{sin(x)} and being \emph{required} to.
+% TODO cite ``life is too short to spend writing DO loops''
+The former is all we really want, and it is possible in any language that
+supports some form of function overloading.
+There is no inherent reason that a high-performance language like C++ or
+Fortran cannot also support more compact, high-level notation.
+
+Studies reveal that many real-world applications written in vectorization
+languages actually do not spend most of their time in libraries. % TODO cite
+It is perfectly possible for an interpreter to be so slow that it cancels
+the advantage of optimized kernels for a range of realistic data sizes.
+
+The final reason actually is compelling. However at a certain point a
+``vectorization bottleneck'' is reached, where performance is limited by
+expressing computations in terms of in-memory arrays.
+
+graph comparing operation rate of saxpy, polynomial evaluation, etc. in 3
+cases: (1) vectorized with separate loops, (2) vectorized with fused loops,
+(3) looping with no arrays.
+
+
 \subsection{Vandermonde matrix case study}
 
 \begin{singlespace}
