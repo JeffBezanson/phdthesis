@@ -8,13 +8,13 @@ the abstractions and generalizations they are capable of.
 
 Science as a whole evolves through the incorporation of specialized bits
 of knowledge into more powerful general theories.  
-When we examine computer languages we see the parallel:  that
-many special-purpose languages have been subsumed by languages that are more powerful and
-general. 
+There is a parallel in the world of programming languages:
+special-purpose languages have been subsumed by more powerful and general
+languages.
 How has this trend affected scientific computing?
 The surprising answer is: not as much as we would like.
 We see scientists and technical users generally either turning away
-from the ``best'' new programming languages, or else pushing them
+from the best new programming languages, or else pushing them
 to their limits in unusual ways.
 
 %% Much of the history of programming languages has been about increasing abstraction
@@ -48,7 +48,7 @@ to their limits in unusual ways.
     \end{tabular}
   \end{center}
   \caption{
-    49 technical computing languages classified as primarily designed for Productivity or Performance
+    49 technical computing languages classified as primarily designed for productivity or performance
   }
   \label{gangof40}
 \end{figure}
@@ -56,17 +56,13 @@ to their limits in unusual ways.
 
 In fact, we have discovered at least \emph{49} programming languages
 designed for technical computing since Fortran (figure~\ref{gangof40}).
-This is a high number by any standard begging for  a reasonable hypothesis to
-explain this high number.
-We propose that users crave 
-the flexibility to permit \emph{any} conceivable means of
-describing computations.
-Language design is then 
-where you go when you need a lot
-of this flexibility.
-After all, language design is  associated with the highest level of abstraction.
-The desire for scientists to rework their code  is not so surprising when one reflects on the tradition
-of inventing new notation in mathematics and science.
+This high number begs for an explanation.
+We propose that technical users crave the flexibiltiy to pick notation
+for their problems, and
+language design is where you go when you need this level of flexibility.
+Language design is associated with the highest level of abstraction.
+The desire for scientists to rework their code is not so surprising when one reflects
+on the tradition of inventing new notation in mathematics and science.
 %This certainly
 %helps distinguish scientific programming from other application areas.
 
@@ -88,7 +84,6 @@ of the purpose-built languages above.
 %pathologies arising from the language level are subtle
 %not as immediate as ``this new matrix multiply is faster''
 
-
 This thesis addresses the essential challenges created by
 this state of affairs.
 We argue that the situation   
@@ -99,16 +94,18 @@ abstracting, with a new language.
 %f affairs we have described.
 %Of course, a language is not the only thing the world of technical
 %computing needs.
- Compiler \todo{see comment that follows}
+Compiler \todo{see comment that follows}
 techniques, library design, high-performance
-computational kernels, new algorithms, and approaches to parallelism might
-be as perhaps more important than language design.
+computational kernels, new algorithms, and approaches to parallelism may
+ultimately be more important than language design.
 However these sorts of technologies can usually be applied to multiple
 languages, as has happened in the C and Fortran language families.
-%, which have taken on many such extensions over the years.
-So in our view languages targeting this space need to dig deeper,
-at least temporarily forgetting about matrices and cache utilization,
-and look for bigger patterns.
+However in conjunction with a new language, these technologies can flourish.
+
+%So in our view languages targeting this space need to dig deeper,
+%at least temporarily forgetting about matrices and cache utilization,
+%and look for bigger patterns.
+
 \todo[inline]{{\it Please consider if this is even more true: }\newline
 Technical computing  can benefit from many technologies.
 Some of these include compiler techniques, library design, high-performance
@@ -148,8 +145,6 @@ subtyping theories and closure under data-flow operations.
 %% overloads exist for the sake of performance.
 
 
-
-
 %Extensive code specialization is a key feature of
 %technical computing. ``what to specialize on'' has been an open problem.
 %our types are a possible solution to this for two reasons:
@@ -162,7 +157,6 @@ subtyping theories and closure under data-flow operations.
 
 %the amazing thing about programming languages it that a better
 %explanation can directly lead to better performance!)
-
 
 
 %By \emph{selection} we mean any mechanism used to pick one of several
@@ -208,7 +202,6 @@ subtyping theories and closure under data-flow operations.
 %is needed to maximize composability and reusability in scientific code.
 %Without it, certain programs may be easy to write today, but changing
 %functional and performance requirements can become difficult to meet.
-
 
 \section{The technical computing problem}
 
@@ -536,6 +529,8 @@ Our approach is closely related to exotypes
 
 \section{Contributions of this thesis}
 
+% NUMBER ZERO
+
 Our first contribution is a discussion of the nature of technical computing
 that suggests which language-level abstractions might best support real use
 cases.
@@ -544,23 +539,47 @@ without sufficient probing and analysis as to what it is.
 Our looking at the space in this manner has lead to a novel design.
 The success of this design is resonating with users worldwide.
 
+Based on the theory that technical computing is characterized by complex
+operators and particular combinations of binding time behavior.
+
+% NUMBER ONE
+
+To our knowledge, the first technical computing system written in a single language.
+
 %sort of language would form a good base for it. it should emphasize
 %complex operators and code generation/specialization.
 % this includes our real-world experience with building a new
 % technical computing environment from the ground up with a large open
 % source community.
 
-Second, we introduce the idea of integrated code selection and specialization
-as a design goal. This leads to easy-to-use polymorphism, prioritizing
-flexibility and performance over nearly all else.
+% NUMBER TWO
+
+Second, we introduce the idea of integrated code selection and specialization.
+%This leads to easy-to-use polymorphism, prioritizing
+%flexibility and performance over nearly all else.
+
+% Something about dispatch for performance. Given a performance kernel, it takes
+% a lot of info to describe when it is applicable.
+
+% Instead of ``running dynamic code faster'', it's ``find the static part automatically''
+
+% NUMBER THREE
+
+Easy polymorphism
+
+- library writers can decide what to put at the type level without affecting users
+- a single mechanism to cover overloading, dispatch, and specialization
+
+% NUMBER FOUR
+
+Subtyping algorithm
 
 % we design a type system for this. and introduce the ``evaluate softly
 % and carry a big subtype relation'' school of thought.
 
-%2 - the idea of integrating specialization and selection, using multiple dispatch
-%and semantic subtyping.
+% NUMBER FIVE
 
-% 3 - an explication through elimination of technical computing language features
+Library design issues
 
 James Morris eloquently observed that
 ``One of the most fruitful techniques of language analysis is explication through

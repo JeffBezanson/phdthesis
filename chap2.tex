@@ -290,6 +290,22 @@ When faced with the need to describe many functions with elaborate
 behavior and many cases, one does not primarily need permissiveness,
 but rather powerful and descriptive organizing principles.
 
+\subsection{Data representation}
+
+Two major approaches:
+static language: complex and rigid but efficient memory layout
+dyn language: simple but flexible (all pointers)
+
+It's reasonable to guess that these would trade off about equally;
+if you want run-time flexibility then it's not worth using complex
+specialized data representations.
+But this turns out not to be true! It's worth using efficient
+memory layouts even if the layout is not known in advance, and you
+need an extra dispatch to handle accessing an array (storage strategies).
+
+% ``storage strategies'' is simultaneously a great idea, and also a crack
+% in the armor of typical dynamic languages big enough to tear them apart.
+
 \subsection{Vectorization}
 
 The vectorized style has the following touted benefits:
@@ -307,7 +323,7 @@ drastically rearranging computations in a way that would be difficult to do
 by examining one scalar operation at a time.
 \end{enumerate}
 
-Under closer inspection, this argument breaks down at every level.
+Under closer inspection, this argument begins to break down.
 
 An equivocation takes place between being \emph{able} to write a loop
 as \texttt{sin(x)} and being \emph{required} to.
@@ -319,6 +335,7 @@ Fortran cannot also support more compact, high-level notation.
 
 Studies reveal that many real-world applications written in vectorization
 languages actually do not spend most of their time in libraries. % TODO cite
+\cite{evaluatingR}
 It is perfectly possible for an interpreter to be so slow that it cancels
 the advantage of optimized kernels for a range of realistic data sizes.
 
@@ -330,6 +347,74 @@ graph comparing operation rate of saxpy, polynomial evaluation, etc. in 3
 cases: (1) vectorized with separate loops, (2) vectorized with fused loops,
 (3) looping with no arrays.
 
+\begin{figure}
+
+\begin{tikzpicture}
+\begin{semilogxaxis}[
+    %title=Vectorization Performance,
+    xlabel={Vector Size},
+    ylabel={GFlops},
+    legend entries={Vectorized (naive), Vectorized (fused), Scalar},
+    legend style={at={(0.98,0.8)}},
+]
+\addplot+[color=black,mark=*,mark options={fill=black}] coordinates {
+%(10, 0.0192)
+%(100, 0.1547)
+%(1000, 0.4921)
+%(10000, 0.6890)
+%(100000, 0.5958)
+%(1000000, 0.5380)
+%(10000000, 0.3741)
+(10, 0.0181)
+(100, 0.1390)
+(1000, 0.5001)
+(10000, 0.7263)
+(100000, 0.6714)
+(1000000, 0.4543)
+(10000000, 0.5208)
+
+};
+\addplot+[color=black,mark=*,mark options={fill=black},style=dotted] coordinates {
+%(10, 0.5970)
+%(100, 1.9327)
+%(1000, 1.1569)
+%(10000, 2.1719)
+%(100000, 2.1416)
+%(1000000, 1.4537)
+%(10000000, 1.2961)
+(10, 0.5778)
+(100, 1.5960)
+(1000, 1.2126)
+(10000, 2.4110)
+(100000, 2.3484)
+(1000000, 1.5835)
+(10000000, 1.7621)
+
+};
+\addplot+[color=black,mark=*,mark options={fill=black},style=dashed] coordinates {
+%(10, 2.6954)
+%(100, 3.4087)
+%(1000, 4.2119)
+%(10000, 4.3665)
+%(100000, 4.3804)
+%(1000000, 4.3789)
+%(10000000, 4.4510)
+(10, 2.8637)
+(100, 3.4693)
+(1000, 4.3138)
+(10000, 4.3934)
+(100000, 4.4404)
+(1000000, 4.4245)
+(10000000, 4.4061)
+
+};
+\end{semilogxaxis}
+\end{tikzpicture}
+\caption{
+  Performance of evaluating $x^2+x+1$ over a vector.
+}
+\label{vecperf}
+\end{figure}
 
 \subsection{Vandermonde matrix case study}
 

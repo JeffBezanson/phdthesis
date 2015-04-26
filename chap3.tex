@@ -31,9 +31,14 @@ rather sparsely populated. It has been generally believed that dynamic
 languages do not ``need'' types, or that there is no point in talking about
 types if they are not going to be checked at compile time. These views have
 some merit, but as a result the top-left corner of this design space has
-been seriously under-explored.
+been under-explored.
 
 \subsection{Classes vs.\ functions}
+
+in C++ to ``extend'' an existing type you have to use another mechanism,
+overloading.
+however then you also need to accept different semantics, static resolution.
+
 
 \subsection{Separate compilation vs.\ performance}
 
@@ -82,6 +87,15 @@ identity function. In contrast, programming with tagged data (e.g.
 symbolic expression systems, XML) permits code to work for any object
 because every object has the same structure, allowing meaningful
 operations.
+
+In theory, a parametrically-polymorphic function works on all data
+types.
+In practice, this can be achieved by forcing a uniform representation of
+data such as pointers, which can be handled by the same code regardless of
+what kind of data is pointed to.
+However this kind of representation is not the most efficient, and
+for good performance specialized code for different types must be
+generated.
 
 \subsection{Static checking vs.\ flexibility}
 
@@ -657,7 +671,6 @@ overlap. However if one substitutes ``symbolic expression'' for
 % coming up with examples where something needs to be done at
 % run time seems to be difficult. as soon as a concrete example
 % is raised, one immediately imagines doing it statically.
-
 
 
 %% it may be that the ``power'' of a language is equal to the complexity
