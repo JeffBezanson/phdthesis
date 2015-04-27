@@ -308,6 +308,8 @@ need an extra dispatch to handle accessing an array (storage strategies).
 
 \subsection{Vectorization}
 
+The attitude of vectorization proponents has been somewhat famously
+summarized as ``Life is too short to spend writing for loops.'' \cite{1998matlab}
 The vectorized style has the following touted benefits:
 
 \begin{enumerate}
@@ -327,44 +329,49 @@ Under closer inspection, this argument begins to break down.
 
 An equivocation takes place between being \emph{able} to write a loop
 as \texttt{sin(x)} and being \emph{required} to.
-% TODO cite ``life is too short to spend writing DO loops''
 The former is all we really want, and it is possible in any language that
 supports some form of function overloading.
 There is no inherent reason that a high-performance language like C++ or
 Fortran cannot also support more compact, high-level notation.
 
 Studies reveal that many real-world applications written in vectorization
-languages actually do not spend most of their time in libraries. % TODO cite
+languages actually do not spend most of their time in libraries.
 \cite{evaluatingR}
-It is perfectly possible for an interpreter to be so slow that it cancels
+It is possible for an interpreter to be so slow that it cancels
 the advantage of optimized kernels for a range of realistic data sizes.
 
 The final reason actually is compelling. However at a certain point a
 ``vectorization bottleneck'' is reached, where performance is limited by
 expressing computations in terms of in-memory arrays.
+Figure~\ref{fig:vecperf} compares the operation rate of three different
+algorithms for evaluating the polynomial $x^2+x-1$ over double precision
+vectors of varying size.
+The solid line describes a naive algorithm, where each operation allocates
+a new array and fills it with one intermediate result (a total of three
+arrays are needed for the full evaluation).
+The dotted line algorithm is similar in spirit, except the three operations
+are ``fused'' into a single loop.
+Only one pass is made over the data and one new array is allocated.
+Naturally performance is much better in this case, and advanced array
+programming environments like APL \cite{APL} and ZPL \cite{ZPL} implement
+this optimization.
 
-graph comparing operation rate of saxpy, polynomial evaluation, etc. in 3
-cases: (1) vectorized with separate loops, (2) vectorized with fused loops,
-(3) looping with no arrays.
-
-\begin{figure}
+\begin{figure}[!t]
 
 \begin{tikzpicture}
 \begin{semilogxaxis}[
     %title=Vectorization Performance,
     xlabel={Vector Size},
     ylabel={GFlops},
-    legend entries={Vectorized (naive), Vectorized (fused), Scalar},
-    legend style={at={(0.98,0.8)}},
+    legend entries={Vectorized, Fused, Summed, All scalar},
+    legend style={
+      %at={(0.98,0.84)},
+      legend pos = outer north east,
+      anchor = north west,
+      reverse legend=true
+    },
 ]
 \addplot+[color=black,mark=*,mark options={fill=black}] coordinates {
-%(10, 0.0192)
-%(100, 0.1547)
-%(1000, 0.4921)
-%(10000, 0.6890)
-%(100000, 0.5958)
-%(1000000, 0.5380)
-%(10000000, 0.3741)
 (10, 0.0181)
 (100, 0.1390)
 (1000, 0.5001)
@@ -375,13 +382,6 @@ cases: (1) vectorized with separate loops, (2) vectorized with fused loops,
 
 };
 \addplot+[color=black,mark=*,mark options={fill=black},style=dotted] coordinates {
-%(10, 0.5970)
-%(100, 1.9327)
-%(1000, 1.1569)
-%(10000, 2.1719)
-%(100000, 2.1416)
-%(1000000, 1.4537)
-%(10000000, 1.2961)
 (10, 0.5778)
 (100, 1.5960)
 (1000, 1.2126)
@@ -392,31 +392,91 @@ cases: (1) vectorized with separate loops, (2) vectorized with fused loops,
 
 };
 \addplot+[color=black,mark=*,mark options={fill=black},style=dashed] coordinates {
-%(10, 2.6954)
-%(100, 3.4087)
-%(1000, 4.2119)
-%(10000, 4.3665)
-%(100000, 4.3804)
-%(1000000, 4.3789)
-%(10000000, 4.4510)
-(10, 2.8637)
-(100, 3.4693)
-(1000, 4.3138)
-(10000, 4.3934)
-(100000, 4.4404)
-(1000000, 4.4245)
-(10000000, 4.4061)
+(10, 3.1693)
+(100, 3.8297)
+(1000, 3.8697)
+(10000, 3.8677)
+(100000, 3.6557)
+(1000000, 3.6670)
+(10000000, 3.7258)
+
+};
+\addplot+[color=black,mark=*,mark options={fill=black},style=dashdotted] coordinates {
+(10, 1.1202)
+(100, 3.8186)
+(1000, 4.6531)
+(10000, 4.8348)
+(100000, 4.8566)
+(1000000, 4.8585)
+(10000000, 4.8718)
 
 };
 \end{semilogxaxis}
 \end{tikzpicture}
 \caption{
-  Performance of evaluating $x^2+x+1$ over a vector.
+  Performance of evaluating $x^2+x-1$ over a double precision vector of length $n$.
+  Operations repeated $10^7/n$ times. (Core i7-3517U 1.9GHz, 4MB cache, 8GB RAM)
 }
-\label{vecperf}
+\label{fig:vecperf}
 \end{figure}
 
+However, this level of performance is not impressive compared to the
+dashed line, which describes the operation rate for computing the
+same results but summing them instead of storing them.
+Finally, the dash-dotted line uses no memory at all, instead computing
+input data points from a linear range.
+Of course a real use case might require data to be read from memory or stored,
+so this comparison is unfair (though not entirely, since many numerical
+environments have represented even simple objects like linear ranges using
+dense vectors \cite{matlabman:linspace}).
+Still the point should be clear: vectors are not necessarily a good abstraction
+for high performance.
+The observation that memory is a bottleneck is nothing new, but for our purposes
+the important point is that languages that only support vectorized syntax
+cannot express the code rearrangements and alternate algorithms that are often
+necessary to get the best performance.
+
+The performance model resulting from vectorized syntax can be difficult to
+understand, since it is difficult for users to predict which optimizations
+will be applied.
+A good example was discussed on the \texttt{julia-users} mailing list \cite{jasonmerrill}.
+Jason Merrill discovered a Mathematica \cite{mathematica} list discussion
+of the fastest way to count how many values fall within a given range.
+Of many proposed implementations, the fastest turned out to be
+
+\vspace{-3ex}
+
+\[ \texttt{Total@Unitize@Clip[data,{min,max},{0,0}]} \]
+
+\noindent
+Arguably, it is difficult to know that this will run faster than, for
+example,
+
+\vspace{-3ex}
+
+\[ \texttt{Count[data,~x\_/;~min<=x<=max]} \]
+
+%% \begin{singlespace}
+%% \begin{lstlisting}[language=julia]
+%% function count_range(data, min, max)
+%%     count = 0
+%%     for elt in data
+%%         if min < elt < max count += 1 end
+%%     end
+%%     count
+%% end
+%% \end{lstlisting}
+%% \end{singlespace}
+
 \subsection{Vandermonde matrix case study}
+
+To get a sense of how current high-level technical computing environments work,
+it is helpful to look at a full implementation example.
+NumPy~\cite{numpy} provides a function for generating Vandermonde matrices
+which, despite its simplicity, demonstrates most of the essential language
+characteristics this thesis addresses.
+The user-level \texttt{vander} function is implemented in Python (here
+lightly edited for presentation):
 
 \begin{singlespace}
 \begin{lstlisting}[language=python,style=ttcode]
@@ -436,6 +496,24 @@ def vander(x, N):
   return v
 \end{lstlisting}
 \end{singlespace}
+
+This code has many interesting features.
+Its overall structure consists of normalizing and checking arguments,
+allocating output, then calling the lower-level kernel \texttt{multiply.accumulate}
+(written in C) to run the inner loop.
+Even though most of the work is done in C, notice why this part of the
+code is written in Python.
+\texttt{vander} accepts nearly anything as its first argument, relying on
+\texttt{asarray} to convert it to an array.
+There is no need to write down requirements on argument \texttt{x}, allowing
+the set of supported inputs to grow easily over time.
+Next, an output array of the correct size is allocated.
+The key feature of this line of code is that the data type to use is
+\emph{computed} using the function \texttt{promote_types}.
+This kind of behavior is difficult to achieve in statically-typed languages.
+
+accumulate is 328 lines of C code
+inner loops generated by passing C code through a custom preprocessor
 
 
 \begin{singlespace}
