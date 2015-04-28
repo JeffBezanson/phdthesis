@@ -16,11 +16,9 @@ Mathematica~\cite{mathematica}, Octave~\cite{Octave},
 Python (with NumPy)~\cite{numpy}, and SciLab~\cite{scilab} have grown in popularity
 and fall under the general category
 known as { {\it dynamic languages} or {\it dynamically typed languages}.
-In these programming
-languages, programmers write simple, high-level code without any
-mention of types like \code{int}, \code{float} or \code{double} that
+In these programming languages, programmers write simple, high-level code without
+any mention of types like \code{int}, \code{float} or \code{double} that
 pervade statically typed languages such as C and Fortran.
-
 
 How should a computer scientist approach this space? We might try to
 maximize performance. Unfortunately,  is all to easy to make unfounded assumptions about
@@ -44,10 +42,13 @@ has evolved as a pile of features taken without what we consider
 a sufficiently critical argument.
 
 Some languages provide a ``convenient'' experience that is
-qualitatively different from ``inconvenient'' languages. We believe
-this can be made somewhat precise. A large part of ``convenience"  is  the reduction of the
-amount you need to know about any given piece of functionality in order
-to use it.
+qualitatively different from ``inconvenient'' languages.
+We believe this can be made somewhat precise.
+A large part of ``convenience'' is the reduction of the amount you need to know
+about any given piece of functionality in order to use it.
+This leads languages to adopt various forms of loose coupling,
+automation, and elision of software engineering distinctions that are
+considered important in other languages.
 
 These systems are function-oriented, typically providing a rather
 large number of functions and a much smaller number of data types.
@@ -68,34 +69,152 @@ following features:
 \end{enumerate}
 \end{singlespace}
 
-Language design choices affect the ability to provide this
-user experience (though the first two items are also related to
-library design). Informally, in order to provide
-the desired experience a language needs to be able to assign a
-meaning to a brief and isolated piece of code such as \texttt{sin(x)}.
+Language design choices affect the ability to provide this user experience
+(though the first two items are also related to library design).
+Informally, in order to provide the desired experience a language needs to be
+able to assign a meaning to a brief and isolated piece of code such as
+\texttt{sin(x)}.
 This leads directly to making declarations and annotations optional,
 eliding administrative tasks like memory management, and leaving
 information implicit (for example the definition scopes and types of the
 identifiers \texttt{sin} and \texttt{x}).
-These characteristics are strongly associated
-with the Lisp tradition of dynamically typed, garbage collected
-languages with interactive REPLs.
+These characteristics are strongly associated with the Lisp tradition of
+dynamically typed, garbage collected languages with interactive REPLs.
 
-However, there are subtle cultural differences. A case in point is the
-MATLAB \texttt{mldivide}, or backslash, operator \cite{matlabman:mldivide}.
+However, there are subtle cultural differences.
+A case in point is the MATLAB \texttt{mldivide}, or backslash, operator
+\cite{matlabman:mldivide}.
 By writing only \texttt{A\textbackslash B}, the user can solve square,
 over- or under-determined linear systems that are dense or sparse, for multiple
-data types. The arguments can even be scalars, in which case simple
-division is performed. In short, a rather large amount of linear algebra
-software is accessed via a single character! This contrasts with the
-software engineering tradition, where clarifying programmer intent would
-likely be considered more important. (TODO cite if possible?)
+data types.
+The arguments can even be scalars, in which case simple division is performed.
+In short, a large amount of linear algebra software is accessed via a
+single character!
+This contrasts with the software engineering tradition, where clarifying programmer
+intent would likely be considered more important. %(TODO cite if possible?)
 Even the Lisp tradition, which originated most of the convenience features
 enumerated above, has sought to separate functionality into small pieces.
 For example Scheme provides separate functions \texttt{list-ref} and
 \texttt{vector-ref} \cite{schemelang} for indexing lists and vectors.
 
+% now we will look at an example to motivate design discussion
 
+\subsection{Case study: Vandermonde matrices}
+
+To get a sense of how current technical computing environments work,
+it is helpful to look at a full implementation example.
+NumPy~\cite{numpy} provides a function for generating Vandermonde matrices
+which, despite its simplicity, demonstrates many of the essential language
+characteristics this thesis addresses.
+The user-level \texttt{vander} function is implemented in Python (here
+lightly edited for presentation):
+
+\begin{singlespace}
+\begin{lstlisting}[language=python,style=ttcode]
+def vander(x, N):
+  x = asarray(x)
+  if x.ndim != 1:
+    raise ValueError("x must be a one-dimensional array or sequence.")
+
+  v = empty((len(x), N), dtype=promote_types(x.dtype, int))
+
+  if N > 0:
+    v[:, 0] = 1
+  if N > 1:
+    v[:, 1:] = x[:, None]
+    multiply.accumulate(v[:, 1:], out=v[:, 1:], axis=1)
+
+  return v
+\end{lstlisting}
+\end{singlespace}
+
+This code has many interesting features.
+Its overall structure consists of normalizing and checking arguments,
+allocating output, and then calling the lower-level kernel \texttt{multiply.accumulate}
+(written in C) to run the inner loop.
+Even though most of the work is done in C, notice why this part of the
+code is written in Python.
+\texttt{vander} accepts nearly anything as its first argument, relying on
+\texttt{asarray} to convert it to an array.
+There is no need to write down requirements on argument \texttt{x}, allowing
+the set of supported inputs to grow easily over time.
+Next, an output array of the correct size is allocated.
+The key feature of this line of code is that the data type to use is
+\emph{computed} using the function \texttt{promote\_types}.
+This kind of behavior is difficult to achieve in statically-typed languages.
+
+The call to \texttt{multiply.accumulate} invokes a C function called
+\texttt{PyUFunc\_Accumulate}, which is over 300 lines long.
+The job of this function is to look up an appropriate computational
+kernel to use given the types of the input arguments and the operation
+being performed (\texttt{multiply}).
+In other words, it performs dynamic dispatch.
+This is notable because Python itself is already based on dynamic dispatch.
+However, Python's class-based dispatch system is not particularly helpful
+in this case, since the code needs to dispatch on multiple values.
+Therefore NumPy's C code implements a custom dispatch table.
+The targets of this dispatch are many compact, specialized
+loops generated by running C code through a custom preprocessor.
+
+The mechanism is complicated, but the results are appealing:
+NumPy code has full run-time flexibility, yet can still achieve
+good inner-loop performance.
+Notice that this result is obtained through a clever, if painstaking,
+mixture of binding times.
+Python performs some late-bound operations, then calls an early-bound
+C routine, which performs its own late-bound dispatch to a loop of
+early-bound operations.
+
+A central message of this thesis is that this kind of program behavior
+is useful, highly characteristic of technical computing,
+and can be provided automatically at the language level.
+Here is how the above dispatch scheme might be implemented in Julia
+(mirroring the structure of the Python code as much as possible to
+facilitate comparison):
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+function vander(x, N::Int)
+  x = convert(AbstractVector, x)
+  M = length(x)
+  v = Array(promote_type(eltype(x),Int), M, N)
+  if N > 0
+    v[:, 1] = 1
+  end
+  if N > 1
+    for i = 2:N; v[:, i] = x; end
+    accumulate(MulFun(), v, v)
+  end
+  return v
+end
+
+function accumulate(op, input, output)
+  M, N = size(input)
+  for i = 2:N
+    for j = 1:M
+      output[j,i] = op(input[j,i], input[j,i-1])
+    end
+  end
+end
+\end{lstlisting}
+\end{singlespace}
+
+\noindent
+This code implements the entire \texttt{vander} computation
+(with some details left out, for example it does not provide the
+\texttt{axis} argument of \texttt{multiply.accumulate}).
+The C component is replaced by a general type-based dispatch system that
+handles specializing and then invoking an efficient implementation of
+\texttt{accumulate} for each combination of argument types.
+
+% This code does not mention much about types or dispatch.
+% many behaviors are implicit. e.g. how does indexing work?
+% it's dispatch and specialization all the way down.
+
+%% How much of the past 30 years of handwritten Matlab internals can
+%% be autogenerated with a compiler? (A lot)
+
+% now we extrapolate some general trends from this example
 
 \section{Why dynamic typing?}
 
@@ -137,7 +256,6 @@ purposes (e.g. having different representations), but not others
 (e.g. different types of matrices can be returned from the same
 function).
 
-
 %% multiple common features underlie mathematical objects of different
 %% types (e.g. numbers, sets, matrices). in some cases it makes sense to
 %% consider numbers and matrices as the same kind of thing, and in other
@@ -155,7 +273,7 @@ function).
 %% be of disjoint types in most programming languages.
 
 
-\subsection{Operational reasoning}
+% \subsection{Operational reasoning}
 
 %% people tend to think about programs operationally, i.e. what it *does* when
 %% it runs. for example writing
@@ -174,19 +292,34 @@ function).
 %% any desired parameterization.
 
 
-\subsection{I/O}
+\subsection{I/O and data-oriented programming}
 
 Inevitably there is a need to refer to a datatype at run time.
-A good example is file I/O, where you might want to say ``read $n$ double-precision
+A good example is file I/O, where you might want to say ``read $n$ double precision
 numbers from this file''.
-In static languages the syntax and identifiers that
-specify such run time types are usually different from those used to specify
-ordinary types, which is an unnecessary distraction.
-A typical example is a constant like \texttt{MPI\_DOUBLE} \cite{snir1998mpi}.
-I/O examples are often used to motivate dynamic typing \cite{Abadi:1991:DTS:103135.103138}.
+In static languages the syntax and identifiers used to specify data types for
+these purposes are usually different from those used to specify ordinary types.
+A typical example is a constant like \texttt{MPI\_DOUBLE} \cite{snir1998mpi}, which
+is used to indicate the data type of an MPI message.
+Many libraries, especially those for tasks like interacting with databases and file
+formats, have their own set of such tags.
+Using more than one of these libraries together can result in lots of boilerplate
+code to map between tag systems.
+
+Polymorphic languages provide better interfaces in these cases.
+For example, C++ overloading can be used to provide the correct tag automatically
+based on the type of a function argument.
+However, these techniques only work for statically-known types.
+Code like that in the \texttt{vander} example that determines types using arbitrary
+computation is excluded.
+Dynamic typing provides a complete solution.
+Indeed, I/O examples are often used to motivate dynamic typing \cite{Abadi:1991:DTS:103135.103138}.
+With dynamic typing, a single set of names can be used to refer to all types
+regardless of binding time, and the user may write whatever code is convenient
+to handle classifying data moving in and out of a program.
 
 
-\subsection{Flat metadata hierarchy}
+%\subsection{Flat metadata hierarchy}
 
 %static types are approximations of dynamic types, so languages with static
 %types inevitably assign two types to a location (both a static type and a
@@ -198,23 +331,20 @@ I/O examples are often used to motivate dynamic typing \cite{Abadi:1991:DTS:1031
 
 
 
-\section{The software stack is too complex}
+%% \section{The software stack is too complex}
 
-Collapsing abstraction layers
+%% Collapsing abstraction layers
 
-\begin{itemize}
-\item for numerical debuggability in particular
-\item no time spent worrying about binding time
-\item you will build a dynamic dispatch layer anyway, so build it in
-\end{itemize}
+%% \begin{itemize}
+%% \item for numerical debuggability in particular
+%% \item no time spent worrying about binding time
+%% \item you will build a dynamic dispatch layer anyway, so build it in
+%% \end{itemize}
 
-How much of the past 30 years of handwritten Matlab internals can
-be autogenerated with a compiler? (A lot)
-
-language performance psychology:
-if your language doesn't directly support efficient machine data types,
-users will rewrite their code in C in order to get them, and then be
-happy with the result (though not with the process).
+%% language performance psychology:
+%% if your language doesn't directly support efficient machine data types,
+%% users will rewrite their code in C in order to get them, and then be
+%% happy with the result (though not with the process).
 
 
 \section{Code generation}
@@ -234,7 +364,7 @@ happy with the result (though not with the process).
 \cite{hopepython}
 
 
-\section{Bad tradeoffs in current designs}
+\section{Tradeoffs in current designs}
 
 ``Ducking'' the issue of typing is not really possible.
 
@@ -289,22 +419,6 @@ this is not always the kind of flexibility that is needed.
 When faced with the need to describe many functions with elaborate
 behavior and many cases, one does not primarily need permissiveness,
 but rather powerful and descriptive organizing principles.
-
-\subsection{Data representation}
-
-Two major approaches:
-static language: complex and rigid but efficient memory layout
-dyn language: simple but flexible (all pointers)
-
-It's reasonable to guess that these would trade off about equally;
-if you want run-time flexibility then it's not worth using complex
-specialized data representations.
-But this turns out not to be true! It's worth using efficient
-memory layouts even if the layout is not known in advance, and you
-need an extra dispatch to handle accessing an array (storage strategies).
-
-% ``storage strategies'' is simultaneously a great idea, and also a crack
-% in the armor of typical dynamic languages big enough to tear them apart.
 
 \subsection{Vectorization}
 
@@ -470,109 +584,21 @@ example,
 %% \end{lstlisting}
 %% \end{singlespace}
 
-\subsection{Vandermonde matrix case study}
+\subsection{Data representation}
 
-To get a sense of how current technical computing environments work,
-it is helpful to look at a full implementation example.
-NumPy~\cite{numpy} provides a function for generating Vandermonde matrices
-which, despite its simplicity, demonstrates many of the essential language
-characteristics this thesis addresses.
-The user-level \texttt{vander} function is implemented in Python (here
-lightly edited for presentation):
+Two major approaches:
+static language: complex and rigid but efficient memory layout
+dyn language: simple but flexible (all pointers)
 
-\begin{singlespace}
-\begin{lstlisting}[language=python,style=ttcode]
-def vander(x, N):
-  x = asarray(x)
-  if x.ndim != 1:
-    raise ValueError("x must be a one-dimensional array or sequence.")
+It's reasonable to guess that these would trade off about equally;
+if you want run-time flexibility then it's not worth using complex
+specialized data representations.
+But this turns out not to be true! It's worth using efficient
+memory layouts even if the layout is not known in advance, and you
+need an extra dispatch to handle accessing an array (storage strategies).
 
-  v = empty((len(x), N), dtype=promote_types(x.dtype, int))
-
-  if N > 0:
-    v[:, 0] = 1
-  if N > 1:
-    v[:, 1:] = x[:, None]
-    multiply.accumulate(v[:, 1:], out=v[:, 1:], axis=1)
-
-  return v
-\end{lstlisting}
-\end{singlespace}
-
-This code has many interesting features.
-Its overall structure consists of normalizing and checking arguments,
-allocating output, and then calling the lower-level kernel \texttt{multiply.accumulate}
-(written in C) to run the inner loop.
-Even though most of the work is done in C, notice why this part of the
-code is written in Python.
-\texttt{vander} accepts nearly anything as its first argument, relying on
-\texttt{asarray} to convert it to an array.
-There is no need to write down requirements on argument \texttt{x}, allowing
-the set of supported inputs to grow easily over time.
-Next, an output array of the correct size is allocated.
-The key feature of this line of code is that the data type to use is
-\emph{computed} using the function \texttt{promote\_types}.
-This kind of behavior is difficult to achieve in statically-typed languages.
-
-The call to \texttt{multiply.accumulate} invokes a C function called
-\texttt{PyUFunc\_Accumulate}, which is over 300 lines long.
-The job of this function is to look up an appropriate computational
-kernel to use given the types of the input arguments and the operation
-being performed (\texttt{multiply}).
-In other words, it performs dynamic dispatch.
-This is notable because Python itself is already based on dynamic dispatch.
-However, Python's class-based dispatch system is not particularly helpful
-in this case, since the code needs to dispatch on multiple values.
-Therefore NumPy's C code implements a custom dispatch table.
-The targets of this dispatch are many compact, specialized
-loops generated by running C code through a custom preprocessor.
-
-The mechanism is complicated, but the results are appealing:
-NumPy code has full run-time flexibility, yet can still achieve
-good inner-loop performance.
-Notice that this result is obtained through a clever, if painstaking,
-mixture of binding times.
-Python performs some late-bound operations, then calls an early-bound
-C routine, which performs its own late-bound dispatch to a loop of
-early-bound operations.
-
-A central message of this thesis is that this kind of program behavior
-is useful, and can be provided automatically at the language level.
-Here is how the above dispatch scheme might be implemented in Julia
-(mirroring the structure of the Python code as much as possible to
-facilitate comparison):
-
-\begin{singlespace}
-\begin{lstlisting}[language=julia]
-function vander(x, N::Int)
-  x = convert(AbstractVector, x)
-  M = length(x)
-  v = Array(promote_type(eltype(x),Int), M, N)
-  if N > 0
-    v[:, 1] = 1
-  end
-  if N > 1
-    for i = 2:N; v[:, i] = x; end
-    accumulate(MulFun(), v, v)
-  end
-  return v
-end
-
-function accumulate(op, input, output)
-  M, N = size(input)
-  for i = 2:N
-    for j = 1:M
-      output[j,i] = op(input[j,i], input[j,i-1])
-    end
-  end
-end
-\end{lstlisting}
-\end{singlespace}
-
-\noindent
-This code implements the entire \texttt{vander} computation
-(with some details left out, for example it does not provide the
-\texttt{axis} argument of \texttt{multiply.accumulate}).
+% ``storage strategies'' is simultaneously a great idea, and also a crack
+% in the armor of typical dynamic languages big enough to tear them apart.
 
 
 \subsection{What needs to be built in?}
@@ -593,7 +619,7 @@ languages have done a large amount of (2) while justifying it with point (1).
 
 
 While a large part of our motivation is to move more decisions and functionality
-into libraries, it is equally important to identify what {\it  must} be part of a
+into libraries, it is equally important to identify what {\it must} be part of a
 language for the system to be successful. We believe that large amounts of
 functionality can be provided by add-ons, but that certain key features
 cannot be. Past failures to properly classify features this way have
@@ -603,9 +629,7 @@ First, performance cannot be an add-on. If some users have a fast version of
 a language and others have a slow version (with the difference being an
 order of magnitude or more), library writers cannot be sure whether users
 will find their code fast enough to be useful. How are we to teach people to
-program in the language? Courses on MATLAB programming emphasize vectorized code,
-but if not all implementations had this performance characteristic,
-presumably curricula would need to change.\todo{Comment, I do not think they all do and curricula therefore must change}
+program in the language?
 
 Psychologically, it may be difficult to accept a ``non standard'' extension
 that changes a language so fundamentally. There is a nagging, though perhaps
@@ -634,13 +658,14 @@ will not be composable.
 \section{Social phenomena}
 
 Programming languages are observed to have strong network effects, and the
-difficulty of getting new languages adopted is well known. However based on
-\cite{meyerovich2012socio} we believe this doesn't have to be the case.
-The formula
-of improving or redesigning general-purposes languages to be more appealing to
-domain experts might solve the problem. That way the new system has immediate
-appeal for at least some users, without the worry that a different tool will
-be needed as soon as requirements change slightly.
+difficulty of getting new languages adopted is well known.
+However based on \cite{meyerovich2012socio} we believe this doesn't have to
+be the case.
+The formula of improving or redesigning general-purposes languages to be more
+appealing to domain experts might solve the problem.
+That way the new system has immediate appeal for at least some users, without
+the worry that a different tool will be needed as soon as requirements change
+slightly.
 
 Barriers to contributing.
 
@@ -650,3 +675,10 @@ Barriers to contributing.
 %has, but it can't obey every invariant.
 
 %PackedQR
+
+decisions about what to reflect at the type level should be less consequential
+somebody might write a c++ library seeking max performance and so
+might make array rank a static value.
+(we will discuss this further in section~\ref{sec:ndindexing})
+somebody else who wants dynamic flexibility might have to write an entirely
+separate package.

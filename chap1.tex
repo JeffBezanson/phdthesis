@@ -94,46 +94,48 @@ abstracting, with a new language.
 %f affairs we have described.
 %Of course, a language is not the only thing the world of technical
 %computing needs.
-Compiler \todo{see comment that follows}
-techniques, library design, high-performance
-computational kernels, new algorithms, and approaches to parallelism may
-ultimately be more important than language design.
+Compiler techniques, library design, high-performance
+computational kernels, new algorithms, and approaches to parallelism are
+all important to technical computing.
+%ultimately be more important than language design.
 However these sorts of technologies can usually be applied to multiple
 languages, as has happened in the C and Fortran language families.
 However in conjunction with a new language, these technologies can flourish.
+Indeed, we believe that language design
+has reached a level of importance that even (perhaps temporarily) supersedes
+the traditional focus of cache utilization and the use of matrix operations.
 
 %So in our view languages targeting this space need to dig deeper,
 %at least temporarily forgetting about matrices and cache utilization,
 %and look for bigger patterns.
 
-\todo[inline]{{\it Please consider if this is even more true: }\newline
-Technical computing  can benefit from many technologies.
-Some of these include compiler techniques, library design, high-performance
-computational kernels, new algorithms, and new approaches to parallelism.
-These sorts of technologies can usually be applied to multiple
-languages, as has happened in the C and Fortran language families.
-They do not by themselves insist that a new language be developed.
-However in conjunction with a new language, these technologies can flourish.
-Indeed, we believe that language design
-has reached a level of importance that even (perhaps temporarily) supersedes
-the traditional focus of cache utilization and the use of matrix operations.
-}
+%\todo[inline]{{\it Please consider if this is even more true: }\newline
+%Technical computing  can benefit from many technologies.
+%Some of these include compiler techniques, library design, high-performance
+%computational kernels, new algorithms, and new approaches to parallelism.
+%These sorts of technologies can usually be applied to multiple
+%languages, as has happened in the C and Fortran language families.
+%They do not by themselves insist that a new language be developed.
+%However in conjunction with a new language, these technologies can flourish.
+%}
 
 In brief, our idea is to \emph{integrate code selection and specialization}.
 The aforementioned flexibility requirement can be explained as
 a sufficiently powerful means for \emph{selecting} which piece of code
-to run. This notion subsumes method dispatch, function overloading,
-and potentially even branches. When such mechanisms are used in
-technical computing, there is nearly always a corresponding need to
-\emph{specialize} code for specific cases to obtain performance.
+to run.
+This notion subsumes method dispatch, function overloading,
+and potentially even branches.
+When such mechanisms are used in technical computing, there is nearly
+always a corresponding need to \emph{specialize} code for specific cases
+to obtain performance.
 Polymorphic languages sometimes support forms of specialization,
 but often only through a designated mechanism (e.g. templates), or
 deployed rather conservatively out of resource concerns.
-We intend to show that an equilibrium point in the design
-space can be found by combining selection and specialization
-into a single dynamic multiple dispatch mechanism.
-The specific design is identified via
-subtyping theories and closure under data-flow operations.
+We intend to show that an equilibrium point in the design space can be found
+by combining selection and specialization into a single dynamic type-based
+dispatch mechanism.
+The specific design is identified via subtyping theories and closure under
+data-flow operations.
 
 %what does this system achieve?
 %-
@@ -348,7 +350,7 @@ evaluations can be done: generating code without type checks, removing
 branches, type-specializing the storage of variables, and compile time
 method lookup are all valuable and yield large real-world gains.
 
- For example,
+For example,
 if method calls are dispatched on the first argument, but the types of all
 arguments can be inferred, some power has been ``left on the table'' ---
 we could have had multi-methods for little extra cost. In fact, method-at-a-time
@@ -467,7 +469,7 @@ If code needs to be generated based on run time information, then a
 staged library might need to implement its own dispatch mechanism
 for invoking its generated code.
 
-We find that our particular style of dynamic multiple dispatch provides
+We find that our particular style of dynamic type-based dispatch provides
 an unusually good substrate for staged programming.
 The reason is that the language, though semantically dynamically typed,
 has a canonical (and not optional!) type analysis stage.
@@ -534,7 +536,7 @@ Our approach is closely related to exotypes
 Our first contribution is a discussion of the nature of technical computing
 that suggests which language-level abstractions might best support real use
 cases.
-Simply put technical computing has by and large happened 
+Simply put technical computing has by and large happened
 without sufficient probing and analysis as to what it is.
 Our looking at the space in this manner has lead to a novel design.
 The success of this design is resonating with users worldwide.
@@ -545,6 +547,8 @@ operators and particular combinations of binding time behavior.
 % NUMBER ONE
 
 To our knowledge, the first technical computing system written in a single language.
+Past systems have applied specialization to a set of user-level routines.
+We show that it can be used for an entire system.
 
 %sort of language would form a good base for it. it should emphasize
 %complex operators and code generation/specialization.
@@ -558,8 +562,16 @@ Second, we introduce the idea of integrated code selection and specialization.
 %This leads to easy-to-use polymorphism, prioritizing
 %flexibility and performance over nearly all else.
 
+Using data flow types to drive the design leads to novel dispatch features:
+- diagonal dispatch
+- unifying variadic methods with regular types
+
 % Something about dispatch for performance. Given a performance kernel, it takes
 % a lot of info to describe when it is applicable.
+
+% dispatch on everything, not just classes
+
+% more types lets you break up functions into more methods
 
 % Instead of ``running dynamic code faster'', it's ``find the static part automatically''
 
@@ -569,6 +581,13 @@ Easy polymorphism
 
 - library writers can decide what to put at the type level without affecting users
 - a single mechanism to cover overloading, dispatch, and specialization
+%- using types, but mostly for dispatch, where they can be used gradually
+- specialize by default (makes static polymorphism less of a black art)
+
+Evan Miller expressed this well as ``getting disparate groups of
+programmers to code in the same language...With Julia, it's the domain experts
+and the speed freaks.'' \cite{evanmiller}
+
 
 % NUMBER FOUR
 
