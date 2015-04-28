@@ -423,6 +423,29 @@ of such systems.
 
 % TODO: insert actual example of numpy
 
+% C++ approach, from Boost
+\begin{verbatim}
+template <int NumRanges, int NumDims>
+struct index_gen {
+index_gen<NumRanges+1,NumDims+1> operator[](const range& r) const
+    { ... }
+
+index_gen<NumRanges+1,NumDims> operator[](index idx) const
+    { ... }
+}
+\end{verbatim}
+
+
+% the same code from Haskell, Repa
+\begin{verbatim}
+instance Slice sl => Slice (sl :. Int) where
+        sliceOfFull (fsl :. _) (ssl :. _) = sliceOfFull fsl ssl
+
+instance Slice sl => Slice (sl :. All) where
+        sliceOfFull (fsl :. All) (ssl :. s) = sliceOfFull fsl ssl :. s
+\end{verbatim}
+
+
 Our dispatch mechanism permits a novel solution \cite{Bezanson2014}.
 If a multiple dispatch
 system supports variadic functions and argument ``splicing'' (the ability

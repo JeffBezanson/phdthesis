@@ -386,6 +386,22 @@ template system to handle other kinds of parameterization.
 Our type system makes it easy to match the expressive features of
 templates using dispatch.
 
+%template <typename T>
+%class Foo<T> { int method1(T x); }
+
+% becomes
+
+% method1{T}(this::Foo{T}, x::T) = …
+
+
+%template <>
+%class Foo<int> { int method1(int x) { … } }
+
+% becomes
+
+% method1(this::Foo{Int}, x::Int) = …
+
+
 
 \subsection{Subtyping}
 
@@ -467,12 +483,14 @@ templates using dispatch.
     \end{tabular}
   \end{center}
   \caption{
+\small{
     Subtyping algorithm for \texttt{UnionAll} ($\exists$) and variables.
     $X$ and $Y$ are variables, $A$, $B$, $T$, and $S$ are types.
     $_A^BX$ means $X$ has lower bound $A$ and upper bound $B$.
     %$^R$ and $^L$ are used to track whether a variable originated on
     %the right or on the left.
     % TODO: maybe clarify that types can also be variables.
+}
   }
   \label{subtvars}
 \end{figure}
