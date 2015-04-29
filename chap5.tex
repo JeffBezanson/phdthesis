@@ -149,6 +149,7 @@ idiomatically single-dispatch.
 
 
 \subsubsection{Implementing type embeddings}
+\label{sec:promotion}
 
 Most functions are naturally implemented in the value domain, but some are
 actually easier to implement in the type domain. One reason is that there
@@ -609,6 +610,139 @@ branch.
 
 \section{Units}
 
+Despite their enormous importance in science, unit quantities have
+not reached widespread use in programming.
+This is not surprising, considering the technical difficulties involved:
+units are symbolic objects, so attaching them to numbers can bring
+significant overhead.
+To restore peak performance, units need to be ``lifted'' into a type
+system of some kind, to move their overhead to compile time.
+However at that point we encounter a tradeoff similar to that present
+in multi-dimensional arrays.
+Will it be possible to have an array of numbers with different units?
+What if a program wants to return different units based on criteria
+the compiler cannot resolve?
+Julia's automatic blending of binding times is again helpful.
+
+The SIUnits package by Keno Fischer~\cite{Fischer:2014si} implements
+Julia types for SI units and unit quantities:
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+  immutable SIUnit{m,kg,s,A,K,mol,cd} <: Number
+  end
+
+  immutable SIQuantity{T<:Number,m,kg,s,A,K,mol,cd} <: Number
+    val::T
+  end
+\end{lstlisting}
+\end{singlespace}
+
+\noindent
+This implementation uses a type parameter to store the exponent (an integer,
+or perhaps in the near future a rational number) of each base unit associated
+with a value.
+An \texttt{SIUnit} has only the symbolic part, and can be used to mention
+units without committing to a representation.
+Its size, as a data type, is zero.
+An \texttt{SIQuantity} contains the same symbolic information, but wraps a
+number used to represent the scalar part of the unit quantity.
+Definitions like the following are used to provide convenient names for units:
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+  const Meter    = SIUnit{1,0,0,0,0,0,0}()
+  const KiloGram = SIUnit{0,1,0,0,0,0,0}()
+\end{lstlisting}
+\end{singlespace}
+
+\noindent
+The approach described in section~\ref{sec:promotion} is used to combine
+numbers with units.
+Arithmetic is implemented as follows:
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+function +{T,S,m,kg,s,A,K,mol,cd}(x::SIQuantity{T,m,kg,s,A,K,mol,cd},
+                                  y::SIQuantity{S,m,kg,s,A,K,mol,cd})
+  val = x.val+y.val
+  SIQuantity{typeof(val),m,kg,s,A,K,mol,cd}(val)
+end
+
+function +(x::SIQuantity, y::SIQuantity)
+  error("Unit mismatch.")
+end
+\end{lstlisting}
+\end{singlespace}
+
+\noindent
+In the first definition, the representation types of the two
+arguments do not have to match, but the units do (checked via diagonal
+dispatch).
+Any combination of \texttt{SIQuantity}s that is not otherwise implemented
+is a unit mismatch error.
+
+When storing unit quantities in arrays, the array constructor in Julia's
+standard library is able to automatically select an appropriate type.
+If all elements have the same units, the symbolic unit information is
+stored only once in the array's type tag, and the array data uses a
+compact representation:
+
+\begin{singlespace}
+\begin{verbatim}
+julia> a = [1m,2m,3m]
+3-element Array{SIQuantity{Int64,1,0,0,0,0,0,0},1}:
+ 1 m
+ 2 m
+ 3 m
+
+julia> reinterpret(Int,a)
+3-element Array{Int64,1}:
+ 1
+ 2
+ 3
+\end{verbatim}
+\end{singlespace}
+
+\noindent
+If different units are present, a wider type is chosen via the array
+constructor invoking \texttt{promote\_type}:
+
+\begin{singlespace}
+\begin{verbatim}
+julia> a = [1m,2s]
+2-element Array{SIQuantity{Int64,m,kg,s,A,K,mol,cd},1}:
+ 1 m
+ 2 s
+\end{verbatim}
+\end{singlespace}
+
+Unit quantities are different from most number types in that they are not
+closed under multiplication.
+Nevertheless, generic functions behave as expected.
+Consider a generic \texttt{prod} function that multiplies elements of a
+collection.
+With units, its result type can depend on the size of the collection:
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+julia> prod([2m,3m]), typeof(prod([2m,3m]))
+(6 m~$^2$~, SIQuantity{Int64,2,0,0,0,0,0,0})
+
+julia> prod([2m,3m,4m]), typeof(prod([2m,3m,4m]))
+(24 m~$^3$~, SIQuantity{Int64,3,0,0,0,0,0,0})
+\end{lstlisting}
+\end{singlespace}
+
+\noindent
+For simple uses of units, Julia's compiler will generally be able to
+infer result types.
+For more complex cases like \texttt{prod} it may not be able to, but
+this will only result in a loss of performance.
+This is the tradeoff a Julia programmer accepts.
+
+
+
 \section{Dates}
 \label{sec:dates}
 
@@ -871,6 +1005,30 @@ variables and coefficients are extended.
 Given two variables, a quadratic term is added.
 With this structure, new kinds of terms can be added with minimal code,
 without needing to update the more complicated syntax transformation code.
+
+
+\begin{figure}[!t]
+\begin{center}
+\begin{tabular}{|l|r|r|r|r|}\hline
+\textbf{$L$} & \textbf{JuMP/Julia} & \textbf{AMPL} & \textbf{Gurobi/C++} & \textbf{Pulp/PyPy} \\
+\hline \hline
+1000    & 1.0 & 0.7 & 0.8 & 4.8 \\
+\hline
+5000    & 4.2 & 3.3 & 3.9 & 26.4 \\
+\hline
+10000   & 8.9 & 6.7 & 8.3 & 50.6 \\
+\hline
+50000   & 48.3 & 35.0 & 39.3 & 225.6 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{
+Performance (time in seconds) of several linear programming tools for
+generating models in MPS format (excerpted from \cite{LubinDunningIJOC}).
+$L$ is the number of locations included in an area-coverage model.
+}
+\label{jumpperf}
+\end{figure}
 
 
 \section{Computational geometry}

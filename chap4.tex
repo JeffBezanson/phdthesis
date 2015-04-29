@@ -405,7 +405,7 @@ templates using dispatch.
 
 \subsection{Subtyping}
 
-\begin{figure}
+\begin{figure}[!t]
   \begin{center}
     \def\arraystretch{2}
     \begin{tabular}{|c|}\hline
@@ -485,11 +485,10 @@ templates using dispatch.
   \caption{
 \small{
     Subtyping algorithm for \texttt{UnionAll} ($\exists$) and variables.
-    $X$ and $Y$ are variables, $A$, $B$, $T$, and $S$ are types.
+    $X$ and $Y$ are variables, $A$, $B$, $T$, and $S$ are types or variables.
     $_A^BX$ means $X$ has lower bound $A$ and upper bound $B$.
-    %$^R$ and $^L$ are used to track whether a variable originated on
-    %the right or on the left.
-    % TODO: maybe clarify that types can also be variables.
+    $^R$ and $^L$ track whether a variable originated on the right or on the left of
+    $\leq$.
 }
   }
   \label{subtvars}
@@ -613,6 +612,8 @@ of subtyping:
 
 
 \section{Dispatch mechanism}
+
+\subsection{Type and method caches}
 
 \subsection{Ambiguities}
 

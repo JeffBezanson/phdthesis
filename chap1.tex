@@ -239,25 +239,27 @@ data-flow operations.
 \end{figure}
 \end{singlespace}
 
-Figure~\ref{PLpriorities} compares the general design priorities of mainstream programming
-languages to those of technical computing languages. The priorities in each row are not
-necessarily opposites or even mutually exclusive, but rather are a matter of emphasis.
+Figure~\ref{PLpriorities} compares the general design priorities of mainstream
+programming languages to those of technical computing languages.
+The priorities in each row are not necessarily opposites or even mutually exclusive,
+but rather are a matter of emphasis.
 It is certainly possible to have both parametric and ad-hoc polymorphism within
-the same language, but syntax, recommended idioms, and the design of the standard library will
-tend to emphasize one or the other. Of course, the features on the left side can
-also be useful for technical computing; we exaggerate to help make the point.
+the same language, but syntax, recommended idioms, and the design of the standard
+library will tend to emphasize one or the other.
+Of course, the features on the left side can also be useful for technical computing;
+we exaggerate to help make the point.
 
-It is striking how different these priorities are. We believe these technical factors have
-contributed significantly to the persistence of specialized environments in this area.
-Imagine you want just the features on the left. Then there are many good
-languages available: Haskell, ML, Java, C\#, perhaps C++.
-Getting everything on the right, by comparison, always seems to be awkward.
+It is striking how different these priorities are.
+We believe these technical factors have contributed significantly to the persistence
+of specialized environments in this area.
+Imagine you want just the features on the left.
+Then there are many good languages available: Haskell, ML, Java, C\#, perhaps C++.
+Getting everything on the right, by comparison, seems to be awkward.
 The most popular approach is to use multiple languages, as in e.g. NumPy~\cite{numpy},
-with a high-level productivity language layered on top of a large library
-written in lower-level languages. Seeking a similar tradeoff,
-others have gone as far as writing a C++ interpreter \cite{vasilev2012cling}.
-
-
+with a high-level productivity language layered on top of libraries
+written in lower-level languages.
+Seeking a similar tradeoff, others have gone as far as writing a C++
+interpreter \cite{vasilev2012cling}.
 
 %technical computing systems have an unusually large amount of
 %``failure of abstraction'' --- manual duplication of facts
@@ -275,12 +277,13 @@ others have gone as far as writing a C++ interpreter \cite{vasilev2012cling}.
 \section{Solution space}
 
 It is clear that any future scientific computing language will need to be able to
-match the performance of C, C++, and Fortran. To do that, it is almost certain
-that speculative optimizations such as tracing \cite{tracingjit} will not be sufficient ---
+match the performance of C, C++, and Fortran.
+To do that, it is almost certain that speculative optimizations such as tracing
+\cite{tracingjit} will not be sufficient ---
 the language will need to be able to \emph{prove} facts about types, or at least
-let the user request specific types. It is also clear that such a language must
-strive for maximum convenience, or else the split between performance languages
-and productivity languages will persist.
+let the user request specific types.
+It is also clear that such a language must strive for maximum convenience, or else
+the split between performance languages and productivity languages will persist.
 
 It is fair to say that two approaches to this problem are being tried: one is
 to design better statically-typed languages, and the other is to apply
@@ -290,20 +293,19 @@ of flexibility (as in Fortress \cite{fortresspec} or Polyduce \cite{polyduce1},
 for instance), but it is still too early to call a winner between these two
 approaches (if, indeed, there even needs to be a winner).
 
-Here we will use a dynamically typed approach, with approximate
-type inference
+Here we will use a dynamically typed approach, with approximate type inference
+% TODO make a bigger deal out of Kell
 (for an excellent discussion of the many meanings of the word ``type''
 see \cite{Kell2014}).
 There are several reasons for this.
-First, we want to emphasize that insufficient static
-checking is most likely not the current limiting factor in scientific
-computing productivity. Second, some idioms in this domain appear to be
-inherently, or at least naturally, dynamically typed (as we will explore in
-later \todo{Put in a ref to these chapters by number  please.} chapters).  Third, there has been a sense that ``dynamic'' or
-``scripting'' language users do not want to hear about types: they are 
-thought of as a distraction and 
-associated with verbosity and nuisance compiler errors. We hope to
-contribute an example of a language where types are useful and not
+First, insufficient static checking is most likely not the current limiting
+factor in scientific computing productivity.
+Second, some idioms in this domain appear to be inherently, or at least naturally,
+dynamically typed (as we will explore in chapter~\ref{chap:2}).
+Third, there has been a sense that ``dynamic'' or ``scripting'' language users do
+not want to hear about types: they are thought of as a distraction and
+associated with verbosity and nuisance compiler errors.
+We hope to contribute an example of a language where types are useful and not
 burdensome.
 
 %Finally, it is often the case that a seemingly-minor
@@ -336,6 +338,9 @@ burdensome.
 % there is a kind of arms race between those who want more expressiveness
 % and those trying to analyze and optimize programs. we propose a truce.
 
+% one of our main innovations is a way to deftly navigate between two
+% problems
+
 \subsection{The excess power problem}
 
 We claim that the amount of information that can be statically inferred
@@ -344,21 +349,22 @@ Much work has been done on program analysis and optimization techniques
 for dynamically typed languages.
 When static analyses (often incorporating run time information) are applied
 to dynamically typed programs, it is typically possible to recover a
-significant amount of type information (TODO cite). \todo{cite} What, then, can one
-do with this information? If the goal is performance, various partial
-evaluations can be done: generating code without type checks, removing
-branches, type-specializing the storage of variables, and compile time
-method lookup are all valuable and yield large real-world gains.
+significant amount of type information (TODO cite). \todo{cite}
+What, then, can one do with this information?
+If the goal is performance, various partial evaluations can be done:
+generating code without type checks, removing branches, type-specializing
+the storage of variables, and compile time method lookup are all valuable
+and yield large real-world gains.
 
 For example,
 if method calls are dispatched on the first argument, but the types of all
 arguments can be inferred, some power has been ``left on the table'' ---
 we could have had multi-methods for little extra cost. In fact, method-at-a-time
-JIT compilers (TODO cite) \todo{cite}  can specialize method bodies on all arguments,
+JIT compilers (TODO cite) \todo{cite} can specialize method bodies on all arguments,
 and might use multiple dispatch \emph{internally} to select implementations
-at run time (TODO \todo{cite} cite a system that did this). This argument does not
-apply equally to statically-typed languages, since they cannot simply
-``switch'' their functions to generic functions without significant
+at run time (TODO \todo{cite} cite a system that did this).
+This argument does not apply equally to statically-typed languages, since they
+cannot simply ``switch'' their functions to generic functions without significant
 consequences for type checking.
 
 This ``excess power'' problem applies to data structures as well.
@@ -373,12 +379,12 @@ let programmers request them?
 %mechanism
 
 Some levels of performance are difficult to reach with implicitly
-specialized code and data. Given the knowledge that
-an array contains only \texttt{Int32} data, we might want to go
-beyond essential optimizations like storing intermediate values in
-registers, and actually use different algorithms. For example,
-in Miller-Rabin primality testing, checking three ``witness'' values
-suffices for all 32-bit arguments, but up to seven values might be
+specialized code and data.
+Given the knowledge that an array contains only \texttt{Int32} data,
+we might want to go beyond essential optimizations like storing intermediate
+values in registers, and actually use different algorithms.
+For example, in Miller-Rabin primality testing, checking three ``witness''
+values suffices for all 32-bit arguments, but up to seven values might be
 needed for 64-bit arguments .\todo{cite} (TODO cite)
 In cryptographic applications, exploiting this difference in an inner loop
 could bring significant benefits.
@@ -389,9 +395,24 @@ could bring significant benefits.
 Another problem that occurs when analyzing programs with complex
 type behavior is divergence: the analysis is likely to infer an
 overly-large result from failing to eliminate enough possible
-behaviors. Narrowing the inferred types requires some extra source
-of type information. Multi-method signatures work well for this
-purpose.
+behaviors.
+Narrowing the inferred types requires some extra source of type
+information.
+Multi-method signatures work well for this purpose.
+
+past approaches include: optional user annotations, or a built-in
+database of function type behavior, determined empirically or
+analytically.
+to solve the problem in general, library behavior should not be
+built-in to the compiler.
+however, when functions that are both highly complex and performance
+critical are implemented at the library level it can be difficult
+to ensure they are sufficiently optimized.
+% specializer must decide when to widen, when to stop going around
+% loops, etc.
+% this is an opaque process.
+% there is an essential divide between what it will statically
+% evaluated, and what it won't.
 
 However the divergence problem also places a limit on what
 kinds of dispatch specifications are useful to program analyses:
@@ -446,10 +467,11 @@ than others.
 
 In demanding applications, selecting the right algorithm might not
 be enough, and we might need to automatically \emph{generate} code
-to handle different situations. While these cases are relatively rare
-in most kinds of programming, they are remarkably common in technical
-computing. Code generation, also known as \emph{staged programming},
-raises several complexities:
+to handle different situations.
+While these cases are relatively rare in most kinds of programming,
+they are remarkably common in technical computing.
+Code generation, also known as \emph{staged programming}, raises
+several complexities:
 
 \vspace{-3ex}
 \begin{singlespace}

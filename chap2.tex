@@ -1,4 +1,5 @@
 \chapter{Problems in technical computing}
+\label{chap:2}
 
 The original numerical computing language was Fortran, short for
 ``Formula Translating System'', released in 1957.  Since those
@@ -347,23 +348,6 @@ to handle classifying data moving in and out of a program.
 %% happy with the result (though not with the process).
 
 
-\section{Code generation}
-
-\begin{itemize}
-\item tensor contraction engine
-\item Firedrake, pyop2 (vs. c++ libmesh)
-\item JuMP vs. python puLP and pyomo
-  (want to be able to pass functions, not C++ code as strings)
-\item FFTW
-\item pochoir
-%\item erfinv and horner
-\end{itemize}
-
-\subsection{A compiler for every problem}
-
-\cite{hopepython}
-
-
 \section{Tradeoffs in current designs}
 
 ``Ducking'' the issue of typing is not really possible.
@@ -653,6 +637,23 @@ every program makes decisions at run time, and so implements its own
 ``dispatch'' to some extent. But these behaviors are inextensible; if
 language users do not agree on a reusable dispatch framework their code
 will not be composable.
+
+
+\section{Code generation}
+
+\begin{itemize}
+\item tensor contraction engine
+\item Firedrake, pyop2 (vs. c++ libmesh)
+\item JuMP vs. python puLP and pyomo
+  (want to be able to pass functions, not C++ code as strings)
+\item FFTW
+\item pochoir
+%\item erfinv and horner
+\end{itemize}
+
+\subsection{A compiler for every problem}
+
+\cite{hopepython}
 
 
 \section{Social phenomena}
