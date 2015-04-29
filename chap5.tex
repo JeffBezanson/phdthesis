@@ -544,9 +544,6 @@ end up invoking a widening operator instead).
 %% repeatedly analyze full representations of the meanings of such ubiquitous constructs.
 
 
-\section{Units}
-
-
 \section{Array views}
 
 tim holy in issue 8839:
@@ -610,6 +607,12 @@ compiler could in fact determine the type of each call site.
 It just happens to be convenient to specify this behavior with a
 branch.
 
+\section{Units}
+
+\section{Dates}
+\label{sec:dates}
+
+compare to python DateTime, compare code length
 
 \section{Boundary-element method}
 \label{sec:BEM}
@@ -722,15 +725,108 @@ A prototype implementation of this approach follows.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Dates}
-\label{sec:dates}
 
-compare to python DateTime, compare code length
+\section{Algebraic modeling with JuMP}
 
+An entire subfield of technical computing is devoted to solving optimization
+problems.
+Linear programming, the problem of finding variable values that maximize a
+linear function subject to linear constraints, is especially important and
+widely used, for example in operations research.
 
-\section{JUMP}
+Real-world problem instances can be quite large, requiring many variables
+and constraints.
+Simply writing down a large linear program is challenging enough to
+require automation.
+Specialized languages known as Algebraic Modeling Languages (AMLs)
+have been developed for this purpose.
+One popular AML is AMPL~\cite{fourer1993ampl}, which allows users to
+specify problems using a high-level mathematical syntax.
+Here is an example model of a ``knapsack'' problem (from~\cite{LubinDunningIJOC})
+in AMPL syntax:
 
-Metaprogramming tools reused for symbolic algebra
+\vspace{-3ex}
+\begin{singlespace}
+\begin{verbatim}
+var x{j in 1..N} >= 0.0, <= 1.0;
+
+maximize Obj:
+  sum {j in 1..N} profit[j] * x[j];
+
+subject to CapacityCon:
+  sum {j in 1..N} weight[j] * x[j] <= capacity;
+\end{verbatim}
+\end{singlespace}
+
+\noindent
+This syntax is ``compiled'' to a dense numerical representation that can
+be consumed by standard solver libraries.
+Although solving the problem can take a significant amount of time,
+the time spent building the problem representation is often a bottleneck.
+AMPL is highly specialized to this task and offers good performance.
+
+Providing the same level of performance and convenience for linear programming
+within a general purpose language has proven difficult.
+However many users would prefer this, since it would make it easier to
+provide data to the model and use the results within a larger system.
+Using Julia, Miles Lubin and Iain Dunning solved this problem, creating the
+first embedded AML, JuMP~\cite{LubinDunningIJOC}, to match both the performance
+and notational advantages of specialized tools.
+
+The solution is a multi-stage program: first the input syntax is converted to
+conventional loops and function calls with a macro, then the types of
+arguments are used to decide how to update the model, and finally code
+specialized for the structure of the input problem runs.
+The second stage is handled by a combination of generic functions and
+Julia's standard specialization process.
+Model parameters can refer to variables in the surrounding Julia program,
+without JuMP needing to understand the entire context.
+
+Lubin and Dunning provide an example of how this works.
+The input
+
+\vspace{-3ex}
+\[ \texttt{@addConstraint(m, sum{weight[j]*x[j], j=1:N} + s == capacity)} \]
+
+is lowered to (lightly edited):
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+aff = AffExpr()
+for i = 1:N
+  addToExpression(aff, 1.0*weight[i], x[i])
+end
+addToExpression(aff, 1.0, s)
+addToExpression(aff, -1.0, capacity)
+addConstraint(m, Constraint(aff,"=="))
+\end{lstlisting}
+\end{singlespace}
+
+\noindent
+\texttt{addToExpression} includes the following methods (plus others):
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+addToExpression(ex::Number,   c::Number,   x::Number)
+addToExpression(ex::Number,   c::Number,   x::Variable)
+addToExpression(ex::Number,   c::Number,   x::AffExpr)
+addToExpression(ex::Number,   c::Variable, x::Variable)
+addToExpression(ex::Number,   c::AffExpr,  x::AffExpr)
+addToExpression(aff::AffExpr, c::Number,   x::Number)
+addToExpression(aff::AffExpr, c::Number,   x::Variable)
+addToExpression(aff::AffExpr, c::Variable, x::Variable)
+addToExpression(aff::AffExpr, c::Number,   x::AffExpr)
+addToExpression(aff::AffExpr, c::Number,   x::QuadExpr)
+\end{lstlisting}
+\end{singlespace}
+
+When the arguments are all numbers, \texttt{ex + c*x} is computed directly.
+Or, given an \texttt{AffExpr} and a variable, the \texttt{AffExpr}'s lists of
+variables and coefficients are extended.
+Given two variables, a quadratic constraint is added.
+With this structure, new kinds of terms can be added with minimal
+code, without needing to update the more complicated syntax transformation
+code.
 
 
 \section{Computational geometry}
