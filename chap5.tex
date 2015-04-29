@@ -651,13 +651,54 @@ the problem.
 
 \subsection{Galerkin matrix assembly for singular kernels}
 
-A typical problem in computational science is to form a discrete approximation of some infinite-dimensional linear operator $\mathcal{L}$ with some finite set of basis functions $\{ b_m \}$ via a Galerkin approach [refs], which leads to a matrix $L$ with entries $L_{mn} = \langle b_m, \mathcal{L} b_n \rangle = \langle b_m, b_n \rangle_\mathcal{L}$ where $\langle \cdot, \cdot \rangle$ denotes some inner product (e.g. $\langle u, v \rangle = \int u v$ is typical) and  $\langle \cdot, \cdot \rangle_\mathcal{L}$ is the \emph{bilinear form} of the problem.  Computing these matrix elements is known as the matrix \emph{assembly} step, and its performance is a crucial concern for solving partial differential equations (PDEs) and integral equations (IEs).
+A typical problem in computational science is to form a discrete approximation
+of some infinite-dimensional linear operator $\mathcal{L}$ with some finite set of
+basis functions $\{ b_m \}$ via a Galerkin approach [TODO refs], which leads to a
+matrix $L$ with entries
+$L_{mn} = \langle b_m, \mathcal{L} b_n \rangle = \langle b_m, b_n \rangle_\mathcal{L}$
+where $\langle \cdot, \cdot \rangle$ denotes some inner product
+(e.g. $\langle u, v \rangle = \int u v$ is typical) and
+$\langle \cdot, \cdot \rangle_\mathcal{L}$ is the \emph{bilinear form} of the problem.
+Computing these matrix elements is known as the matrix \emph{assembly} step, and its
+performance is a crucial concern for solving partial differential equations (PDEs) and
+integral equations (IEs).
 
 \subsubsection{The ``easy'' case: nonsingular assembly}
 
-For example, in the finite-element method (FEM) [refs], the basis functions $b_m$ are typically low-order polynomials defined piecewise over geometric elements (typically triangles or tetrahedra), and $\mathcal{L}$ is typically a differential operator like $-\nabla \cdot c(x) \nabla$ for some coefficients $c(x)$, which leads to a bilinear form  $\langle b_m, b_n \rangle_\mathcal{L} = \int \nabla b_m \cdot c(x) \nabla b_n$ (after integration by parts).   Because the basis functions are localized and $\mathcal{L}$ consists of local operations, the matrix $L$ is sparse and $L_{mn}$ need only be computed for $m$ and $n$ corresponding to neighboring elements. Moreover, these integrals are straightforward to evaluate by standard cubature schemes because the integrands are \emph{nonsingular}: they typically have no divergences or discontinuities. In particular, because the functions $b_m$ and $c$ are usually smooth within a single element, one can use a fixed low-order cubature rule: you evaluate the integrand at a handful of precomputed points within each element, multiply by precomputed weights, and sum to obtain the approximate integral.
+For example, in the finite-element method (FEM) [TODO refs], the basis functions $b_m$
+are typically low-order polynomials defined piecewise over geometric elements
+(typically triangles or tetrahedra), and $\mathcal{L}$ is typically a differential
+operator like $-\nabla \cdot c(x) \nabla$ for some coefficients $c(x)$, which leads to
+a bilinear form
+$\langle b_m, b_n \rangle_\mathcal{L} = \int \nabla b_m \cdot c(x) \nabla b_n$
+(after integration by parts).
+Because the basis functions are localized and $\mathcal{L}$ consists of local operations,
+the matrix $L$ is sparse and $L_{mn}$ need only be computed for $m$ and $n$ corresponding
+to neighboring elements.
+Moreover, these integrals are straightforward to evaluate by standard cubature schemes
+because the integrands are \emph{nonsingular}: they typically have no divergences or
+discontinuities.
+In particular, because the functions $b_m$ and $c$ are usually smooth within a single
+element, one can use a fixed low-order cubature rule: you evaluate the integrand at a
+handful of precomputed points within each element, multiply by precomputed weights, and
+sum to obtain the approximate integral.
 
-Even so, the basis functions and the coefficient function $c(x)$ may need to be evaluated tens of millions of times for even a moderate-size mesh in three dimensions, so production FEM implementations in traditional high-level dynamic languages such as Matlab and Python are forced to offload matrix assembly to external C and C++ code.  For example, the popular FEniCS [ref] and Firedrake [ref] FEM packages for Python both implement domain-specific compilers: a symbolic expression for the bilinear form is combined with fragments of user-specified C++ code to define functions like $c(x)$, compiled to C++ code, and then compiled to object code which is dynamically loaded. In Julia, we believe this could be simplified considerably because functions like $c(x)$ could be defined directly in Julia and code generation/compilation could be performed entirely within Julia without a C++ intermediary.  Indeed, preliminary experiments with pure Julia FEM implementations [ref http://www.codeproject.com/Articles/579983/Finite-Element-programming-in-Julia] have demonstrated performance comparable to sophisticated solutions like FEniCS in Python and FreeFem++ in C++ [ref]
+Even so, the basis functions and the coefficient function $c(x)$ may need to be
+evaluated tens of millions of times for even a moderate-size mesh in three dimensions,
+so production FEM implementations in traditional high-level dynamic languages such as
+Matlab and Python are forced to offload matrix assembly to external C and C++ code.
+For example, the popular FEniCS [TODO ref] and Firedrake [TODO ref] FEM packages for
+Python both implement domain-specific compilers: a symbolic expression for the bilinear
+form is combined with fragments of user-specified C++ code to define functions like
+$c(x)$, compiled to C++ code, and then compiled to object code which is dynamically
+loaded.
+In Julia, we believe this could be simplified considerably because functions like
+$c(x)$ could be defined directly in Julia and code generation/compilation could be
+performed entirely within Julia without a C++ intermediary.
+Indeed, preliminary experiments with pure Julia FEM implementations
+[TODO ref http://www.codeproject.com/Articles/579983/Finite-Element-programming-in-Julia]
+have demonstrated performance comparable to sophisticated solutions like FEniCS in
+Python and FreeFem++ in C++ [TODO ref].
 
 \subsubsection{Singular assembly for integral operators}
 
@@ -665,36 +706,38 @@ A much more challenging case of Galerkin matrix assembly arises for
 singular \emph{integral} operators $\mathcal{L}$, which act by
 convolving their operand against a singular ``kernel'' function
 $K(x)$: $u = \mathcal{L} v$ means that $u(x) = \int K(x - x') v(x')
-dx'$.  For example, in electrostatics and other Poisson problems, the
+dx'$.
+For example, in electrostatics and other Poisson problems, the
 kernel is $K(x) = 1/|x|$ in three dimensions and $\ln |x|$ in two
 dimensions, while in scalar Helmholtz (wave) problems it is
 $e^{ik|x|}/|x|$ in three dimensions and a Hankel function
-$H^{(1)}_0(k|x|)$ in two dimensions.  Formally, Galerkin
-discretizations lead to matrix assembly problems similar to those
-above: $L_{mn} =: \langle b_m, \mathcal{L} b_n \rangle = \int b_m(x)
-K(x - x') b_n(x') dx\,dx'$.  However, there are several important
-differences from FEM:
+$H^{(1)}_0(k|x|)$ in two dimensions.
+Formally, Galerkin discretizations lead to matrix assembly problems
+similar to those above:
+$L_{mn} =: \langle b_m, \mathcal{L} b_n \rangle = \int b_m(x) K(x - x') b_n(x') dx\,dx'$.
+However, there are several important differences from FEM:
 
 \begin{itemize}
-
-\item The kernel $K(x)$ nearly always diverges for $|x|=0$, which means that generic cubature schemes are either unacceptably inaccurate (for low-order schemes) or unacceptably costly (for adaptive high-order schemes, which require huge numbers of cubature points around the singularity), or both.
+\item The kernel $K(x)$ nearly always diverges for $|x|=0$, which means that generic
+cubature schemes are either unacceptably inaccurate (for low-order schemes) or
+unacceptably costly (for adaptive high-order schemes, which require huge numbers
+of cubature points around the singularity), or both.
 
 \item Integral operators typically arise for \emph{surface} integral
-  equations (SIEs) [ref], and involve unknowns on a surface.  The
-  analogue of the FEM discretization is then a boundary element method
-  (BEM) [ref], which discretizes a surface into elements
-  (e.g. triangles), with basis functions that are low-order
-  polynomials defiend piecewise in the elements.  However, there are
-  also volume integral equations (VIEs) which have FEM-like volumetric
-  meshes and basis functions.
+equations (SIEs) [TODO ref], and involve unknowns on a surface.
+The analogue of the FEM discretization is then a boundary element method
+(BEM) [TODO ref], which discretizes a surface into elements
+(e.g. triangles), with basis functions that are low-order
+polynomials defiend piecewise in the elements.
+However, there are also volume integral equations (VIEs) which have FEM-like
+volumetric meshes and basis functions.
 
-\item The matrix $L$ is typically dense, since $K$ is long-range.  For
-  large problems, $L$ is often stored and applied implicitly via
-  fast-multipole methods [refs] and similar schemes, but even in this
-  case the diagonal $L_{mm}$ and the entries $L_{mn}$ for adjacent
-  elements must typically be computed explicitly.  (Moreover, these
-  are the integrals in which the $K$ singularity is present.)
-
+\item The matrix $L$ is typically dense, since $K$ is long-range.
+For large problems, $L$ is often stored and applied implicitly via
+fast-multipole methods [TODO refs] and similar schemes, but even in this
+case the diagonal $L_{mm}$ and the entries $L_{mn}$ for adjacent
+elements must typically be computed explicitly.
+(Moreover, these are the integrals in which the $K$ singularity is present.)
 \end{itemize}
 
 These difficulties are part of the reason why there is currently \emph{no}
@@ -708,16 +751,18 @@ We believe that Julia should be an ideal platform on which to attack this
 problem:
 
 \begin{itemize}
-
-\item Multiple dispatch allows the cubature scheme to be selected at compile time based on the dimensionality, the degree of the singularity, the degree of the polynomial basis, and so on, and allows specialized schemes to be added easily for particular problems with no run time penalty.
+\item Multiple dispatch allows the cubature scheme to be selected at compile
+time based on the dimensionality, the degree of the singularity, the degree of
+the polynomial basis, and so on, and allows specialized schemes to be added
+easily for particular problems with no run time penalty.
 
 \item Staged functions allow computer algebra systems to be invoked at
-  compile time to generate specialized cubature schemes for particular
-  kernels.  New developments in BEM integration schemes \cite{ReidWhJo14} have
-  provided efficient cubature-generation algorithms of this sort, but it
-  has not yet been practical to integrate them with run time code in
-  a completely automated way.
-
+compile time to generate specialized cubature schemes for particular
+kernels.
+New developments in BEM integration schemes \cite{ReidWhJo14} have
+provided efficient cubature-generation algorithms of this sort, but it
+has not yet been practical to integrate them with run time code in
+a completely automated way.
 \end{itemize}
 
 A prototype implementation of this approach follows.
@@ -823,10 +868,9 @@ addToExpression(aff::AffExpr, c::Number,   x::QuadExpr)
 When the arguments are all numbers, \texttt{ex + c*x} is computed directly.
 Or, given an \texttt{AffExpr} and a variable, the \texttt{AffExpr}'s lists of
 variables and coefficients are extended.
-Given two variables, a quadratic constraint is added.
-With this structure, new kinds of terms can be added with minimal
-code, without needing to update the more complicated syntax transformation
-code.
+Given two variables, a quadratic term is added.
+With this structure, new kinds of terms can be added with minimal code,
+without needing to update the more complicated syntax transformation code.
 
 
 \section{Computational geometry}
