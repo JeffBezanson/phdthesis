@@ -11,12 +11,13 @@ tagged data values, and mutable cells.
 \begin{align*}
   e\ ::=\ &\ x                 & \textrm{(variable)} \\
         &\ |\ 0\ |\ 1\ |\ \cdots     & \textrm{(constant)} \\
+        &\ |\ x = e          & \textrm{(assignment)} \\
+        &\ |\ e_1; e_2       & \textrm{(sequencing)} \\
+        &\ |\ e_1(e_2)       & \textrm{(application)} \\
+        &\ |\ \texttt{if}\ e_1\ e_2\ e_3 & \textrm{(conditional)} \\
         &\ |\ \texttt{new}(e_{tag}, e_1, e_2, \cdots) & \textrm{(data constructor)} \\
         &\ |\ e_1.e_2        & \textrm{(projection)} \\
-        &\ |\ e_1.e_2 = e_3  & \textrm{(assignment)} \\
-        &\ |\ \texttt{if}\ e_1\ e_2\ e_3 & \textrm{(conditional)} \\
-        &\ |\ e_1(e_2)       & \textrm{(application)} \\
-        &\ |\ e_1; e_2       & \textrm{(sequencing)} \\
+        &\ |\ e_1.e_2 = e_3  & \textrm{(mutation)} \\
 %        &\ |\ (e)          & \textrm{(grouping)} \\
         &\ |\ \texttt{function}\ x_{name}\ e_{type}\ (x_1, x_2, \cdots)\ e_{body} & \textrm{(method definition)}
 \end{align*}
@@ -44,7 +45,8 @@ available only within the code block that defines the type.
 This provides some measure of data abstraction, since it is not possible
 for user code to construct arbitrary instances.
 However, tags themselves (the first argument to \texttt{new}) can be
-constructed anywhere using nested applications of the syntax \texttt{T\{}$\cdots$\texttt{\}}.
+constructed anywhere using nested applications of the syntax
+\texttt{T\{}$\cdots$\texttt{\}}.
 Tags are a specific subset of data values whose tag is the built-in value
 \texttt{Tag}.
 Once so constructed, a tag can be passed to a constructor (which is just
@@ -116,7 +118,6 @@ names are bound to corresponding elements of the argument tuple. If the
 specializer is a vararg type, then the last argument name is bound to a
 tuple of all trailing arguments.
 
-
 % (TODO describe restrictions)
 
 The equivalent of ordinary lambda expressions can be obtained by introducing
@@ -124,6 +125,9 @@ a unique local name and defining a single method on it.
 
 Mutable lexical bindings are provided by the usual translation to operations
 on mutable cells.
+
+The all-important array type is written as \texttt{Array\{T,N\}} where
+\texttt{T} is an element type and \texttt{N} is a number of dimensions.
 
 %\subsection{A note on static typing}
 
@@ -142,7 +146,6 @@ on mutable cells.
 % one reason we skip static checking is to reverse this process:
 % first see what kinds of type behavior technical users want in their
 % programs, then identify and quantify any regularities later.
-
 
 \section{Type system}
 
@@ -377,31 +380,6 @@ where \texttt{Array$^\prime$} refers to a hidden, internal type constructor.
 The \texttt{\{ \}} syntax can then be used to instantiate a \texttt{UnionAll}
 type at a particular parameter value.
 
-\subsection{Associated types and type computation}
-
-Multiple dispatch systems have often only dispatched on the classes of
-arguments.
-This makes it appear necessary to introduce a separate
-template system to handle other kinds of parameterization.
-Our type system makes it easy to match the expressive features of
-templates using dispatch.
-
-%template <typename T>
-%class Foo<T> { int method1(T x); }
-
-% becomes
-
-% method1{T}(this::Foo{T}, x::T) = …
-
-
-%template <>
-%class Foo<int> { int method1(int x) { … } }
-
-% becomes
-
-% method1(this::Foo{Int}, x::Int) = …
-
-
 
 \subsection{Subtyping}
 
@@ -579,6 +557,70 @@ convincing. $\Pi_2^{\textrm{P}}$ is only the most obvious
 reduction to try; it is possible our system equals PSPACE or even greater,
 as has often been the case for subtyping systems like ours.
 
+\subsubsection{Example deductions}
+
+We will briefly demonstrate the power of this algorithm through examples of
+type relationships it can determine.
+
+\noindent
+The algorithm can determine that a type matches constraints specified by another:
+
+\vspace{-5ex}
+\[
+\texttt{Tuple}\{\texttt{Array}\{\texttt{Integer},1\}, \texttt{Int}\}\ \leq\ 
+  (\exists\ T<:\texttt{Integer}\ .\ \exists\ S<:T\ .\ \texttt{Tuple}\{\texttt{Array}\{T,1\},S\})
+\]
+
+\vspace{-1ex}
+\noindent
+It is not fooled by redundant type variables:
+
+\vspace{-2ex}
+\[
+\texttt{Array}\{\texttt{Int},1\}\ =\ 
+  \texttt{Array}\{(\exists\ T<:\texttt{Int}\ .\ T), 1\} \]
+
+\noindent
+Variables can have non-trivial bounds that refer to other variables:
+
+\vspace{-3ex}
+\begin{singlespace}
+\begin{align*}
+&\texttt{Tuple}\{\texttt{Float32},\texttt{Array}\{\texttt{Float32},1\}\}\ \leq\ \\
+&\hspace{4ex}\exists\ T<:\texttt{Real}\ .\ \exists\ S<:\texttt{AbstractArray}\{T,1\}\ .\ \texttt{Tuple}\{T,S\}
+\end{align*}
+\end{singlespace}
+
+%  @test !issub(Ty((Float32,Array{Float64,1})),
+%               @UnionAll T<:Ty(Real) @UnionAll S<:inst(AbstractArrayT,T,1) tupletype(T,S))
+
+\noindent
+In general, if a variable appears multiple times its type is more constrained
+than a type where variables appear only once:
+
+\vspace{-3ex}
+\[
+\exists T\ .\ \texttt{Pair}\{T,T\}\ <\ \exists\ T\ .\ \exists\ S\ .\ \texttt{Pair}\{T,S\}
+\]
+
+\noindent
+However with sufficiently strong bounds that relationship no longer holds:
+
+\vspace{-3ex}
+\[
+\exists\ x<:T<:x\ .\ \exists\ x<:S<:x\ .\ \texttt{Pair}\{T,S\}\ <\ \exists\ T\ .\ \texttt{Pair}\{T,T\}
+\]
+
+%    @test issub_strict((@UnionAll T @UnionAll S<:T inst(PairT,T,S)),
+%                       (@UnionAll T @UnionAll S    inst(PairT,T,S)))
+
+\noindent
+And the algorithm understands that tuples distribute over unions:
+
+\vspace{-3ex}
+\[
+\texttt{Tuple\{Union\{A,B\},C\}}\ =\ \texttt{Union\{Tuple\{A,C\},Tuple\{B,C\}\}}
+\]
 
 \subsection{Type system variants}
 
@@ -591,7 +633,7 @@ The following features would probably be fairly straightforward to add:
 \begin{itemize}
 \item Structurally-subtyped records
 \item $\mu$-recursive types (regular trees)
-\item Regular types (allowing \texttt{...} in more places)
+\item Regular types (allowing \texttt{...} in any position)
 \end{itemize}
 \end{singlespace}
 
@@ -606,6 +648,7 @@ of subtyping:
 \item Negations
 \item Intersections, multiple inheritance
 \item Universal quantifiers
+\item Contravariance
 %\item arbitrary predicates, theory of natural numbers, etc.
 \end{itemize}
 \end{singlespace}
@@ -615,9 +658,96 @@ of subtyping:
 
 \subsection{Type and method caches}
 
+The majority of types that occur in practice are \emph{simple}.
+A simple type is a tag, tuple, or abstract type, all of whose parameters
+are simple types or non-type values.
+Structural equality of simple types is equivalent to type equality,
+so simple types are easy to compare.
+
+
+\subsection{Specificity}
+
+tuples: if an elt of a is more specific than its corresponding elt in b,
+and no elt of b is more specific than its corresponding elt in a.
+
+this is essentially the same specificity rule used by Dylan~\cite{dylanlang}
+for argument lists.
+Julia generalizes this to tuple types; it is applied
+recursively for tuple types wherever they occur.
+
+a vararg type is less specific if its corresponding type is equal
+
+Union a is more specific than b if some element of a is
+more specific than b, and b is not more specific than any
+element of a.
+
+non-union a is more specific than union b if it is more specific than
+some element
+
+a tag type is more specific than a tag type strictly above it in the
+hierarchy regardless of parameters
+(this embeds a moderate amount of ``class based'' dispatch, compatible
+with programmer intuition)
+
+a non-variable is more specific than a variable
+
 \subsection{Ambiguities}
 
+our experience: there are lots.
+e.g. Images and DataFrames
+
 \subsection{Constructors}
+
+\subsection{Generic programming}
+
+Modern object-oriented languages often have special support for ``generic''
+programming, which allows classes, methods, and functions to be reused
+for a wider variety of types.
+This capability is powerful, but has some usability cost as extra
+syntax and additional rules must be learned.
+We have found that the combination of our type system and generic functions
+subsumes most uses of generic programming features.
+
+For example, consider this C++ snippet, which shows how a template
+parameter can be used to vary the arguments accepted by methods:
+
+\begin{singlespace}
+\begin{lstlisting}[language=c++]
+template <typename T>
+class Foo<T> { int method1(T x); }
+\end{lstlisting}
+\end{singlespace}
+
+\noindent
+The method \texttt{method1} will only accept \texttt{int} when applied to
+a \texttt{Foo<int>}, and so on.
+This pattern can be expressed in Julia as follows:
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+method1{T}(this::Foo{T}, x::T) = ...
+\end{lstlisting}
+\end{singlespace}
+
+%template <>
+%class Foo<int> { int method1(int x) { … } }
+% becomes
+% method1(this::Foo{Int}, x::Int) = …
+
+%Multiple dispatch systems have often only dispatched on the classes of
+%arguments.
+%This makes it appear necessary to introduce a separate
+%template system to handle other kinds of parameterization.
+%Our type system makes it easy to match the expressive features of
+%templates using dispatch.
+
+\subsubsection{Associated types}
+
+When dealing with a particular type in a generic program, it is often
+necessary to mention other types related in some standard way.
+For example, given a collection type the programmer will want to
+refer to its element type, or given a numeric type one might want to
+know the next ``larger'' numeric type.
 
 
 \section{Higher-order programming}
@@ -789,10 +919,12 @@ arguments and return types &  241 (0.043\%)  &   85        &          0.23 \\
 \end{tabular}
 \end{center}
   \caption{
+\small{
     Number and percentage of pairs of functions with matching arguments, or
     matching arguments and return types. The second column gives the number of
     functions that have matches. The third column gives the
     mean number of matches per function.
+}
   }
   \label{fig:matchingfuncs}
 \end{figure}
@@ -1009,3 +1141,46 @@ than what is usually studied in the context of those languages.
 % \section{Separate compilation}
 % Technically julia does not support it, but that's never stopped anybody
 % from doing it anyway. e.g. C++
+
+
+
+\begin{figure}
+\begin{center}
+\begin{tabular}{|l|r|r|r|}\hline
+\textbf{Language} & \textbf{DR} & \textbf{CR} & \textbf{DoS} \\
+\hline \hline
+Gwydion    & 1.74 & 18.27 & 2.14 \\
+\hline
+OpenDylan  & 2.51 & 43.84 & 1.23 \\
+\hline
+CMUCL      & 2.03 &  6.34 & 1.17 \\
+\hline
+SBCL       & 2.37 & 26.57 & 1.11 \\
+\hline
+McCLIM     & 2.32 & 15.43 & 1.17 \\
+\hline
+Vortex     & 2.33 & 63.30 & 1.06 \\
+\hline
+Whirlwind  & 2.07 & 31.65 & 0.71 \\
+\hline
+NiceC      & 1.36 &  3.46 & 0.33 \\
+\hline
+LocStack   & 1.50 &  8.92 & 1.02 \\
+\hline
+Julia      & 5.86 & 51.44 & 1.54 \\
+\hline
+Julia Operators & 28.13 & 78.06 & 2.01 \\
+\hline
+\end{tabular}
+\end{center}
+\caption{
+\small{
+Comparison of Julia (1208 functions exported from the \texttt{Base} library)
+to other languages with multiple dispatch, based on dispatch ratio (DR),
+choice ratio (CR), and degree of specialization (DoS) \cite{multipledispatch}.
+The ``Julia Operators'' row describes 47 functions with special syntax
+(binary operators, indexing, and concatenation).
+}
+}
+\label{dispatchratios}
+\end{figure}

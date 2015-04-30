@@ -1,11 +1,9 @@
 \chapter{Case studies}
 
-\section{Explication through elimination}
-
-This section will illustrate how we implement key features of technical computing
+This chapter will illustrate how we implement key features of technical computing
 systems using our methodology.
 
-\subsection{Conversion and comparison}
+\section{Conversion and comparison}
 
 Type conversion provides a classic example of a binary method. Multiple
 dispatch allows us to avoid deciding whether the converted-to type or the
@@ -98,7 +96,7 @@ of this to implement ``automatic'' type promotion.
 %cmp, lexcmp, vs isless, <
 
 
-\subsection{Numeric types and embeddings}
+\section{Numeric types and embeddings}
 
 We might prefer ``number'' to be a single,
 concrete concept, but the history of mathematics has seen the concept
@@ -134,7 +132,7 @@ types (e.g. ``can be embedded in'' in addition to ``is a'').
 % ex: generic sum function accumulating result in at least
 % double precision. just using +::T->T->T doesn't work.
 
-\subsubsection{Current approaches}
+% \subsection{Current approaches}
 
 Numbers tend to be among the most
 complex features of a language. Numeric types usually need to be a special
@@ -287,21 +285,23 @@ This example shows that it is not always sufficient to have a built-in set of
 ``promoting operators''. Library functions like this \texttt{colon} need more
 control.
 
-\subsubsection{Diversity of number and number-like types in practice}
+\subsubsection{Number-like types in practice}
 
 Originally, our reasons for implementing all numeric types at the library
-level were not entirely practical. We had a principled opposition to
-including such definitions in a compiler, and guessed that being able to
-define numeric types would help ensure the language was ``powerful enough''.
+level were not entirely practical.
+We had a principled opposition to including such definitions in a compiler,
+and guessed that being able to define numeric types would help ensure the
+language was powerful enough.
 However, defining numeric and number-like types and their interactions turns
-out to be surprisingly useful. Once such types are easy to obtain,
-people find more and more uses for them.
+out to be surprisingly useful.
+Once such types are easy to obtain, people find more and more uses for them.
 
-Even among basic types that might reasonably be ``built in'', there is enough
-complexity to require an organizational strategy. We might have
+Even among basic types that might reasonably be built in, there is enough
+complexity to require an organizational strategy.
+We might have
 
 \begin{itemize}
-  \item Ordinal types \texttt{Pointer}, \texttt{Char}
+  \item Ordinal types \texttt{Pointer}, \texttt{Char}, \texttt{Enum}
 
   \item Integer types \texttt{Bool}, \texttt{Int8}, \texttt{Int16}, \texttt{Int32}, \texttt{Int64}, \texttt{Int128}, \texttt{UInt8}, \texttt{UInt16}, \texttt{UInt32}, \texttt{UInt64}, \texttt{UInt128}, \texttt{BigInt}
 
@@ -321,24 +321,25 @@ This has been implemented in a package as \texttt{Fixed32\{b\}}, where
 the number of fraction bits is a parameter.
 
 A problem in the design of image processing libraries was solved by
-defining a new kind of fixed-point type \cite{ufixed}. The problem
-is that image scientists often want to work with fractional pixel values in the
-interval $[0,1]$, but most graphics libraries (and memory
+defining a new kind of fixed-point type \cite{ufixed}.
+The problem is that image scientists often want to work with fractional
+pixel values in the interval $[0,1]$, but most graphics libraries (and memory
 efficiency concerns) require 8-bit integer pixel components with
-values in the interval $[0,255]$. The solution is a \texttt{Ufixed8}
-type that uses an unsigned 8-bit integer as its representation, but
-behaves like a fraction over $255$.
+values in the interval $[0,255]$.
+The solution is a \texttt{Ufixed8} type that uses an unsigned 8-bit integer
+as its representation, but behaves like a fraction over $255$.
 
 Many real-world quantities are not numbers exactly, but benefit from the
-same mechanisms in their implementation. Examples include colors (which form
-a vector space, and where many different useful bases have been standardized),
-physical units, and DNA nucleotides. Date and time arithmetic is especially
-intricate and irregular (more on this in section~\ref{sec:dates}).
+same mechanisms in their implementation.
+Examples include colors (which form a vector space, and where many different
+useful bases have been standardized), physical units, and DNA nucleotides.
+Date and time arithmetic is especially intricate and irregular.
+% (more on this in section~\ref{sec:dates}).
 % dates: different cardinal and ordinal behavior
 % musical notes
 
 
-\subsection{Multidimensional array indexing}
+\section{Multidimensional array indexing}
 \label{sec:ndindexing}
 
 One-dimensional arrays are a simple and essential data structure found in
@@ -743,10 +744,12 @@ This is the tradeoff a Julia programmer accepts.
 
 
 
-\section{Dates}
-\label{sec:dates}
+%\section{Dates}
+%\label{sec:dates}
 
-compare to python DateTime, compare code length
+%compare to python DateTime, compare code length
+
+
 
 \section{Boundary-element method}
 \label{sec:BEM}
@@ -783,7 +786,7 @@ interface, adding yet another layer of complexity.
 Thanks to Professor Steven Johnson for providing the following section describing
 the problem.
 
-\subsection{Galerkin matrix assembly for singular kernels}
+\subsubsection{Galerkin matrix assembly for singular kernels}
 
 A typical problem in computational science is to form a discrete approximation
 of some infinite-dimensional linear operator $\mathcal{L}$ with some finite set of
@@ -1023,9 +1026,11 @@ without needing to update the more complicated syntax transformation code.
 \end{tabular}
 \end{center}
 \caption{
+\small{
 Performance (time in seconds) of several linear programming tools for
 generating models in MPS format (excerpted from \cite{LubinDunningIJOC}).
 $L$ is the number of locations included in an area-coverage model.
+}
 }
 \label{jumpperf}
 \end{figure}

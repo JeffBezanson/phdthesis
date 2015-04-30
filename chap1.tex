@@ -48,7 +48,9 @@ to their limits in unusual ways.
     \end{tabular}
   \end{center}
   \caption{
+\small{
     49 technical computing languages classified as primarily designed for productivity or performance
+}
   }
   \label{gangof40}
 \end{figure}
@@ -232,8 +234,10 @@ data-flow operations.
     \end{tabular}
   \end{center}
   \caption{
+\small{
     Priorities of mainstream object-oriented and functional programming language research and
     implementation compared to those of the technical computing domain.
+}
   }
   \label{PLpriorities}
 \end{figure}
@@ -587,6 +591,7 @@ Second, we introduce the idea of integrated code selection and specialization.
 Using data flow types to drive the design leads to novel dispatch features:
 - diagonal dispatch
 - unifying variadic methods with regular types
+- predictable performance without giving up flexibility
 
 % Something about dispatch for performance. Given a performance kernel, it takes
 % a lot of info to describe when it is applicable.
@@ -637,3 +642,6 @@ An additional contribution of this thesis is the application of this approach to
 of technical computing environments that have not been subject to such analysis
 before.
 % showing our language is able to ``explain'' ...
+
+% hopefully will provide useful examples for evaluating future dispatch
+% systems, object systems, and type systems
