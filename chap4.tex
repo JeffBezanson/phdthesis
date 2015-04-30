@@ -460,7 +460,7 @@ type at a particular parameter value.
       \hline
     \end{tabular}
   \end{center}
-  \caption{
+  \caption[Subtyping algorithm]{
 \small{
     Subtyping algorithm for \texttt{UnionAll} ($\exists$) and variables.
     $X$ and $Y$ are variables, $A$, $B$, $T$, and $S$ are types or variables.
@@ -896,7 +896,7 @@ share the same set of signatures.
 This question can be answered empirically.
 Studying the Julia \texttt{Base} library as of this writing, there are 1059
 generic functions. We examined all 560211 pairs of functions; summary
-statistics are shown in figure~\ref{fig:matchingfuncs}.
+statistics are shown in table~\ref{tab:matchingfuncs}.
 Overall, it is rare for functions to share type signatures.
 Many of the 85 functions with matches (meaning there exists some other function
 with the same type) are predicates, which all have types similar to
@@ -907,7 +907,7 @@ The return types compared here depend on our heuristic type inference algorithm,
 so it useful to exclude them in order to get an upper bound.
 If we do that, and only consider arguments, the mean number of matches rises to 1.73.
 
-\begin{figure}
+\begin{table}
   \begin{center}
     \begin{tabular}{|l|r|r|r|}\hline
     &  \textbf{matching pairs} & \textbf{GFs with matches} & \textbf{mean} \\
@@ -918,7 +918,7 @@ arguments and return types &  241 (0.043\%)  &   85        &          0.23 \\
 \hline
 \end{tabular}
 \end{center}
-  \caption{
+  \caption[Degree of reuse of function types]{
 \small{
     Number and percentage of pairs of functions with matching arguments, or
     matching arguments and return types. The second column gives the number of
@@ -926,8 +926,8 @@ arguments and return types &  241 (0.043\%)  &   85        &          0.23 \\
     mean number of matches per function.
 }
   }
-  \label{fig:matchingfuncs}
-\end{figure}
+  \label{tab:matchingfuncs}
+\end{table}
 
 The specific example of the \texttt{sin} and \texttt{cos} functions provides
 some intuition for why there are so few matches.
@@ -1064,7 +1064,7 @@ function map(f, A::Array)
     return dest
 end
 \end{lstlisting}
-  \caption{
+  \caption[An implementation of \texttt{map}]{
   }
   \label{fig:mapimpl}
 \end{figure}
@@ -1142,9 +1142,12 @@ than what is usually studied in the context of those languages.
 % Technically julia does not support it, but that's never stopped anybody
 % from doing it anyway. e.g. C++
 
+it might be thought that julia achieves performance through a clever
+compiler that uses ``every trick in the book''.
+at risk of being overly self-deprecating, this is not the case.
 
 
-\begin{figure}
+\begin{table}
 \begin{center}
 \begin{tabular}{|l|r|r|r|}\hline
 \textbf{Language} & \textbf{DR} & \textbf{CR} & \textbf{DoS} \\
@@ -1173,7 +1176,7 @@ Julia Operators & 28.13 & 78.06 & 2.01 \\
 \hline
 \end{tabular}
 \end{center}
-\caption{
+\caption[Multiple dispatch use statistics]{
 \small{
 Comparison of Julia (1208 functions exported from the \texttt{Base} library)
 to other languages with multiple dispatch, based on dispatch ratio (DR),
@@ -1183,4 +1186,4 @@ The ``Julia Operators'' row describes 47 functions with special syntax
 }
 }
 \label{dispatchratios}
-\end{figure}
+\end{table}

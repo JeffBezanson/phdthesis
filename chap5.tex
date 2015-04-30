@@ -440,6 +440,7 @@ index_gen<NumRanges+1,NumDims> operator[](index idx) const
 
 
 % the same code from Haskell, Repa
+Repa~\cite{Keller:2010rs}
 \begin{verbatim}
 instance Slice sl => Slice (sl :. Int) where
         sliceOfFull (fsl :. _) (ssl :. _) = sliceOfFull fsl ssl
@@ -1010,7 +1011,7 @@ With this structure, new kinds of terms can be added with minimal code,
 without needing to update the more complicated syntax transformation code.
 
 
-\begin{figure}[!t]
+\begin{table}[!t]
 \begin{center}
 \begin{tabular}{|l|r|r|r|r|}\hline
 \textbf{$L$} & \textbf{JuMP/Julia} & \textbf{AMPL} & \textbf{Gurobi/C++} & \textbf{Pulp/PyPy} \\
@@ -1025,7 +1026,7 @@ without needing to update the more complicated syntax transformation code.
 \hline
 \end{tabular}
 \end{center}
-\caption{
+\caption[Performance of linear programming tools]{
 \small{
 Performance (time in seconds) of several linear programming tools for
 generating models in MPS format (excerpted from \cite{LubinDunningIJOC}).
@@ -1033,7 +1034,7 @@ $L$ is the number of locations included in an area-coverage model.
 }
 }
 \label{jumpperf}
-\end{figure}
+\end{table}
 
 
 \section{Computational geometry}

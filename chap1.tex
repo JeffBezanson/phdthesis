@@ -47,7 +47,7 @@ to their limits in unusual ways.
       \hline
     \end{tabular}
   \end{center}
-  \caption{
+  \caption[49 technical computing languages]{
 \small{
     49 technical computing languages classified as primarily designed for productivity or performance
 }
@@ -210,7 +210,7 @@ data-flow operations.
 \section{The technical computing problem}
 
 \begin{singlespace}
-\begin{figure}
+\begin{table}
   \begin{center}
     \def\arraystretch{1.25}
     \begin{tabular}{|l|l|}\hline
@@ -233,17 +233,17 @@ data-flow operations.
       \hline
     \end{tabular}
   \end{center}
-  \caption{
+  \caption[Programming language priorities]{
 \small{
-    Priorities of mainstream object-oriented and functional programming language research and
-    implementation compared to those of the technical computing domain.
+Priorities of mainstream object-oriented and functional programming language research and
+implementation compared to those of the technical computing domain.
 }
   }
   \label{PLpriorities}
-\end{figure}
+\end{table}
 \end{singlespace}
 
-Figure~\ref{PLpriorities} compares the general design priorities of mainstream
+Table~\ref{PLpriorities} compares the general design priorities of mainstream
 programming languages to those of technical computing languages.
 The priorities in each row are not necessarily opposites or even mutually exclusive,
 but rather are a matter of emphasis.
@@ -424,8 +424,23 @@ some sets of values tend to be more robust under execution
 than others.
 
 \todo[inline]{Would love an example if possible}
-%Dispatch expressiveness can always be increased
-%(e.g. including arbitrary predicates), but
+
+
+Why do we prefer method signatures to imperative logic?
+
+- it's extensible
+- its declarative style is more compact
+- allows writing functions in small pieces
+  the more descriptive the types, the smaller the pieces
+  might make compiler more efficient; removes large bits of code from
+  consideration just from looking at types. don't need to analyze a
+  large function just to discover that only a small part of it
+  remains.
+- clearer performance model. it's hard for programmer to guess
+  when the compiler will statically evaluate an arbitrary expression
+- allows defining semantics about things that are optimized, but
+  *not* compile-time constants.
+  method table can be (ab)used as a mutable lookup table structure.
 
 % TODO:
 % claim dispatch works better on approximate type info than branches
@@ -466,6 +481,7 @@ than others.
 % same thing yet again tends to happen with multiple dispatch:
 % it feels very useful overall, but many particular cases can be
 % explained away as something single dispatch could handle.
+
 
 \subsection{Staged programming}
 
