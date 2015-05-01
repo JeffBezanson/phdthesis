@@ -31,6 +31,8 @@ expression.
 %  (personal communication with Jean Yang, 2014). Others contend that this
 %  terminology is not sensible.
 %}
+% TODO: say something about: it seems cumbersome to need to compute 2 parts
+% for every value, but in practice it is easy to abstract away.
 Why? The flippant answer is that we are already giving up decidable
 type checking, so we might as well.
 But what this really means is that constructing types is part of programming.
@@ -656,6 +658,20 @@ of subtyping:
 
 \section{Dispatch mechanism}
 
+Julia's dispatch system strongly resembles the multi-method systems
+found in some object-oriented languages.
+However we prefer the term type-based dispatch, since our system
+actually works by dispatching a \emph{single} tuple type of arguments.
+The difference is subtle and in many cases not noticeable, but has
+important conceptual implications.
+It means that methods are not necessarily restricted to specifying
+a type for each argument ``slot''.
+For example a method signature could be
+\texttt{Union}\{\texttt{Tuple}\{\texttt{Any},\texttt{Int}\}, \texttt{Tuple}\{\texttt{Int},\texttt{Any}\}\},
+which matches calls where either, but not necessarily both, of two
+arguments is an \texttt{Int}.
+
+
 \subsection{Type and method caches}
 
 The majority of types that occur in practice are \emph{simple}.
@@ -698,7 +714,7 @@ e.g. Images and DataFrames
 
 \subsection{Constructors}
 
-\subsection{Generic programming}
+\section{Generic programming}
 
 Modern object-oriented languages often have special support for ``generic''
 programming, which allows classes, methods, and functions to be reused
@@ -749,6 +765,9 @@ For example, given a collection type the programmer will want to
 refer to its element type, or given a numeric type one might want to
 know the next ``larger'' numeric type.
 
+
+\section{Staged programming}
+\label{sec:stagedprogramming}
 
 \section{Higher-order programming}
 
@@ -1108,7 +1127,7 @@ not much worse than a typical dynamically typed language manipulating
 heterogeneous arrays.
 
 Overall, the resulting behavior is quite similar to a dynamic
-language that uses \emph{storage strategies} \cite{Bolz2013} for its
+language that uses storage strategies \cite{Bolz2013} for its
 collections.
 The main difference is that the behavior is implemented at the
 library level, rather than inside the runtime system.

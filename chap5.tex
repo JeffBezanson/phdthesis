@@ -825,7 +825,8 @@ Even so, the basis functions and the coefficient function $c(x)$ may need to be
 evaluated tens of millions of times for even a moderate-size mesh in three dimensions,
 so production FEM implementations in traditional high-level dynamic languages such as
 Matlab and Python are forced to offload matrix assembly to external C and C++ code.
-For example, the popular FEniCS [TODO ref] and Firedrake [TODO ref] FEM packages for
+For example, the popular FEniCS~\cite{LoggOlgaardEtAl2012a} and
+Firedrake~\cite{Rathgeber2015} FEM packages for
 Python both implement domain-specific compilers: a symbolic expression for the bilinear
 form is combined with fragments of user-specified C++ code to define functions like
 $c(x)$, compiled to C++ code, and then compiled to object code which is dynamically
@@ -910,6 +911,7 @@ A prototype implementation of this approach follows.
 
 
 \section{Algebraic modeling with JuMP}
+\label{sec:jump}
 
 An entire subfield of technical computing is devoted to solving optimization
 problems.
