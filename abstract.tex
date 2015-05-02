@@ -19,7 +19,7 @@ Although the libraries perform well, it is widely believed that scripting in the
 languages is necessarily slow, and that only heroic feats of engineering can at
 best partially ameliorate this problem.
 
-This thesis  argues that what is really needed is a more coherent
+This thesis argues that what is really needed is a more coherent
 structure for this functionality.
 To find one, we must ask what technical computing is really about.
 This thesis suggests that this kind of programming is characterized by an emphasis on operator
@@ -29,13 +29,15 @@ better fit these requirements.
 The key idea is to integrate code \emph{selection} with code \emph{specialization},
 using generic functions and data-flow type inference.
 Systems like these can suffer from inefficient compilation, or from
-uncertainty about what exactly to specialize on.
-We show that dispatch on structured type tags helps address these problems.
+uncertainty about what to specialize on.
+We show that sufficiently powerful type-based dispatch addresses these problems.
 The resulting language, Julia, achieves a Quine-style
 ``explication by elimination'' of many of the productive features
 technical computing users expect.
 
-
+% thesis stmt: integrating code selection and specialization with
+% type-based dynamic dispatch captures both the performance and
+% productivity requirements of technical computing.
 
 %For this role I propose an abstraction based on an extended version of
 %generic functions.

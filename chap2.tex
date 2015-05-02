@@ -25,6 +25,19 @@ pervade statically typed languages such as C and Fortran.
 %How should a computer scientist approach this space?
 %We might try to maximize performance.
 
+% so what should a future TC lang be?
+% we cant just immitate and maximize the properties of existing
+% systems.
+% we have to look at the entire problem, and ask what can be
+% fundamentally changed.
+
+% these systems have many incidental features that have been
+% criticized, but you can't solve the problem just by
+% going through the design and fixing a few mistakes.
+% once a system is basically the right thing, users will
+% overlook flaws.
+
+
 %Unfortunately,  is all to easy to make unfounded assumptions about
 %what users want. But instead we should study the real world, see
 %what is happening and figure out how to steer it in a better direction.
@@ -408,6 +421,10 @@ to handle classifying data moving in and out of a program.
 
 \section{Tradeoffs in current designs}
 
+Current systems accept certain design tradeoffs to obtain flexibility.
+% TODO MORE
+
+\iffalse
 %``Ducking'' the issue of typing is not really possible.
 
 NumPy essentially adds an extra type system to Python (the
@@ -452,13 +469,14 @@ or other ``under the hood'' scientific libraries.
 In many cases it creates more work, through the need to write wrappers and
 interfaces for native code.
 
-Merely being ``dynamic'' (e.g. Python) should not be considered
-the gold standard of flexibility.
+%Merely being ``dynamic'' (e.g. Python) should not be considered
+%the gold standard of flexibility.
 Although these systems permit tricks that can solve otherwise difficult
 programming problems, this is not always the kind of flexibility that is needed.
 When faced with the need to describe many functions with elaborate
 behavior and many cases, one does not primarily need permissiveness,
 but rather powerful and descriptive organizing principles.
+\fi
 
 \subsection{Vectorization}
 
@@ -479,7 +497,7 @@ drastically rearranging computations in a way that would be difficult to do
 by examining one scalar operation at a time.
 \end{enumerate}
 
-Under closer inspection, this argument begins to break down.
+Under close inspection, this argument begins to break down.
 
 An equivocation takes place between being \emph{able} to write a loop
 as \texttt{sin(x)} and being \emph{required} to.
@@ -489,8 +507,8 @@ There is no inherent reason that a high-performance language like C++ or
 Fortran cannot also support more compact, high-level notation.
 
 Studies reveal that many real-world applications written in vectorization
-languages actually do not spend most of their time in libraries.
-\cite{evaluatingR}
+languages actually do not spend most of their time in libraries
+\cite{evaluatingR}.
 It is possible for an interpreter to be so slow that it cancels
 the advantage of optimized kernels for a range of realistic data sizes.
 
@@ -624,48 +642,12 @@ example,
 %% \end{lstlisting}
 %% \end{singlespace}
 
-\subsection{Data representation}
-
-There are two broad categories of programming language data models.
-The first, favored by static languages, provides structures that are
-complex and rigid but efficient.
-Specific data types can be grouped and stored together with known
-offsets and alignments.
-Most data is stored directly, and pointer indirection must be
-explicitly requested.
-The second kind of data model, favored by dynamic languages,
-prioritizes flexibility and simplicity.
-Most data consists of pointers to tagged objects.
-Indirection is the default.
-
-It's reasonable to guess that these models would trade off about equally.
-If you want the flexibility to substitute any kind of value in
-any location at run time, making everything a pointer is the best
-you can do.
-The data layouts used by static languages require a significant
-amount of metadata to describe, and manipulating this metadata
-at run time could have significant overhead.
-In the ``dynamic'' data model, even though everything is a pointer,
-at least the code \emph{knows} that everything is a pointer, and so
-does not waste time switching between different representations.
-
-Interestingly, this intuition turns out not to be entirely true.
-As memory performance becomes a larger bottleneck, using less
-space and avoiding indirection becomes more important.
-Furthermore, most data in dynamic language programs is not as
-dynamic as its authors might think, with homogeneous arrays
-being quite common.
-Good evidence for this claim was documented as part of work on
-\emph{storage strategies}~\cite{Bolz2013}, a technique for
-adapting dynamic languages to use more efficient representations.
-
-% ``storage strategies'' is simultaneously a great idea, and also a crack
-% in the armor of typical dynamic languages big enough to tear them apart.
-
-
+\iffalse
 \subsection{What needs to be built in?}
 
-On``built-in", why built-in is bad.
+It is often said that part of the usefulness of technical computing
+environments comes from having many functions, and important abstractions
+like matrices, ``built in''.
 
 Built-in-ness often conflates two aspects:
 
@@ -678,7 +660,6 @@ Built-in-ness often conflates two aspects:
 interesting item, since the other can be addressed e.g.\  just by including
 a library in the standard software distribution. Many technical computing
 languages have done a large amount of (2) while justifying it with point (1).
-
 
 While a large part of our motivation is to move more decisions and functionality
 into libraries, it is equally important to identify what {\it must} be part of a
@@ -715,6 +696,53 @@ every program makes decisions at run time, and so implements its own
 ``dispatch'' to some extent. But these behaviors are inextensible; if
 language users do not agree on a reusable dispatch framework their code
 will not be composable.
+\fi
+
+\subsection{Data representation}
+
+There are two broad categories of programming language data models.
+The first, favored by static languages, provides structures that are
+complex and rigid but efficient.
+Specific data types can be grouped and stored together with known
+offsets and alignments.
+Most data is stored directly, and pointer indirection must be
+explicitly requested.
+The second kind of data model, favored by dynamic languages,
+prioritizes flexibility and simplicity.
+Most data consists of pointers to tagged objects.
+Indirection is the default.
+
+It's reasonable to guess that these models would trade off about equally.
+If you want the flexibility to substitute any kind of value in
+any location at run time, making everything a pointer is the best
+you can do.
+The data layouts used by static languages require some
+amount of metadata to describe, and manipulating this metadata
+at run time could have significant overhead.
+In the ``dynamic'' data model, even though everything is a pointer,
+at least the code \emph{knows} that everything is a pointer, and so
+does not waste time switching between different representations.
+
+Interestingly, this intuition turns out not to be entirely true.
+As memory performance becomes a larger bottleneck, using less
+space and avoiding indirection becomes more important.
+Furthermore, most data in dynamic language programs is not as
+dynamic as its authors might think, with homogeneous arrays
+being quite common.
+Good evidence for this claim was documented as part of work on
+\emph{storage strategies}~\cite{Bolz2013}, a technique for
+adapting dynamic languages to use more efficient representations.
+The authors found that it was worthwhile to represent an array
+as a wrapper providing a heterogeneous array interface on top of
+a homogeneous array of varying type, even at the expense of
+extra dispatch and occasionally changing the representation.
+
+% ``storage strategies'' is simultaneously a great idea, and also a crack
+% in the armor of typical dynamic languages big enough to tear them apart.
+
+In some sense, our work takes this idea to its logical conclusion:
+why not support a range of data representations from the beginning,
+managed by a single sufficiently powerful dispatch system?
 
 
 \section{A compiler for every problem}
@@ -768,27 +796,58 @@ This will be discussed further in section~\ref{sec:stagedprogramming}.
 
 In the open source world, the architecture of a system can have social
 implications.
-
-Barriers to contributing.
-
+Maintaining code in multiple languages, plus interface glue between them,
+raises barriers to contribution.
+Making the high-level language fast helps tremendously here, but there
+are also cultural differences between programmers who understand
+machine details and want more control, and those who are happy to use
+defaults chosen by somebody else.
+We will argue that Julia's ``easy polymorphism'' design naturally
+blends these two styles, creating an effective compromise between the
+two camps.
 Evan Miller expressed this well as ``getting disparate groups of
 programmers to code in the same language...With Julia, it's the domain experts
 and the speed freaks.'' \cite{evanmiller}
 
-decisions about what to reflect at the type level should be less consequential
-somebody might write a c++ library seeking max performance and so
-might make array rank a static value.
-(we will discuss this further in section~\ref{sec:ndindexing})
-somebody else who wants dynamic flexibility might have to write an entirely
-separate package.
+This cultural difference often appears in the
+form of a decision about what to express at the type level.
+For example, imagine a user has linear algebra code that decides whether
+to use the QR factorization or the LU factorization to solve a system:
 
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+if condition
+    M = qr(A)
+else
+    M = lu(A)
+end
+solve(M, x)
+\end{lstlisting}
+\end{singlespace}
 
-Programming languages are observed to have strong network effects, and the
-difficulty of getting new languages adopted is well known.
-However based on \cite{meyerovich2012socio} we believe this doesn't have to
-be the case.
-The formula of improving or redesigning general-purposes languages to be more
-appealing to domain experts might solve the problem.
-That way the new system has immediate appeal for at least some users, without
-the worry that a different tool will be needed as soon as requirements change
-slightly.
+\noindent
+Initially, \texttt{qr} and \texttt{lu} might both return pairs of matrices.
+Later, linear algebra library developers might decide that each function
+should return a specialized type to store its factorization in a more
+efficient format, and to provide dispatch to more efficient algorithms.
+This decision should not break the user's intuition that either object
+can be used in certain contexts.
+We will discuss more extensive examples of such situations in
+chapter~\ref{chap:casestudies}.
+
+%% decisions about what to reflect at the type level should be less consequential
+%% somebody might write a c++ library seeking max performance and so
+%% might make array rank a static value.
+%% (we will discuss this further in section~\ref{sec:ndindexing})
+%% somebody else who wants dynamic flexibility might have to write an entirely
+%% separate package.
+
+%% Programming languages are observed to have strong network effects, and the
+%% difficulty of getting new languages adopted is well known.
+%% However based on \cite{meyerovich2012socio} we believe this doesn't have to
+%% be the case.
+%% The formula of improving or redesigning general-purposes languages to be more
+%% appealing to domain experts might solve the problem.
+%% That way the new system has immediate appeal for at least some users, without
+%% the worry that a different tool will be needed as soon as requirements change
+%% slightly.

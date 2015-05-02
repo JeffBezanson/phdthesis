@@ -769,6 +769,59 @@ know the next ``larger'' numeric type.
 \section{Staged programming}
 \label{sec:stagedprogramming}
 
+An especially fruitful use of types in Julia is as input to code that
+generates other code, in a so-called ``staged'' program.
+This feature is accessed simply by annotating a method definition
+with a macro called \texttt{@generated}.
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+@generated function getindex{T,N}(a::Array{T,N}, I...)
+    expr = 0
+    for i = N:-1:1
+        expr = :( (I[$i]-1) + size(a,$i)*$expr )
+    end
+    :(linear_getindex(a, $expr + 1))
+end
+\end{lstlisting}
+\end{singlespace}
+
+The remarkable thing about this is how seamlessly it integrates into
+the language.
+The method is selected like any other; the only difference is that
+the method's expression-generating code is invoked on the argument types
+just before type inference.
+The optimized version of the generated code is then stored in the method
+cache, and can be selected in the future like any other specialization.
+The caller does not need to know anything about this, and the author
+of the function does not need to do any bookkeeping.
+
+One reason this works so well is that the amount of information
+available at this stage is just right.
+If, for example, only the \emph{classes} of arguments in a traditional
+object-oriented language were available, there would not be much
+to base the generated code on.
+If, on the other hand, details of the contents of values were needed,
+then it would be difficult to reuse the existing dispatch system.
+
+The types of arguments say something about their \emph{meaning},
+and so unlike syntax-based systems (macros) are independent of how
+the arguments are computed.
+A staged function of this kind is \emph{guaranteed} to produce the
+same results for \texttt{2+2} and \texttt{4}.
+
+Another advantage of this approach is that the expression-generating
+code is purely functional.
+Staged programming with \texttt{eval}, in contrast, requires arbitrary
+user code to be executed in all stages.
+This has its uses; one example mentioned in \cite{DeVito:2014:FRG:2594291.2594307}
+is reading a schema from a database in order to generate code for it.
+With \texttt{@generated}, code is a pure function of type information,
+so when possible it can be invoked once at compile time and then
+never again.
+This preserves the possibility of full static compilation.
+
+
 \section{Higher-order programming}
 
 Generic functions are first-class objects, and so can be passed as arguments
@@ -1044,6 +1097,8 @@ match.
 It is worth examining the differences and tradeoffs between nominal
 functions and ``real'' arrow types.
 
+% TODO: mention using this to automatically ``vectorize'' functions
+% like chapel does.
 
 % tradeoffs: arrows group all functions together, which is flexible,
 % but nominal functions let you make more distinctions.
@@ -1154,8 +1209,6 @@ than what is usually studied in the context of those languages.
 \subsection{Type inference}
 
 \subsection{Specialization}
-
-% ? \section{Staged programming}
 
 % \section{Separate compilation}
 % Technically julia does not support it, but that's never stopped anybody
