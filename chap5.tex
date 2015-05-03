@@ -757,21 +757,22 @@ This is the tradeoff a Julia programmer accepts.
 \label{sec:BEM}
 
 There are lots of general packages for FEM problems, but it is much more
-difficult to create such a package for BEM problems. The method requires
-integrating functions with singularities, many times in the inner loop
-of code that builds the problem matrix. Integrating such functions
-numerically on each iteration is much too slow. As a result, many
-special-purpose implementations have been written by hand for different
-problems.
+difficult to create such a package for BEM problems.
+The method requires integrating functions with singularities, many times
+in the inner loop of code that builds the problem matrix.
+Integrating such functions numerically on each iteration is much too slow.
+As a result, many special-purpose implementations have been written by hand
+for different problems.
 
-Some recent work \cite{ReidWhJo14} managed a more general solution,
-using Mathematica to generate C++ code for different cases. This worked
-well, but was difficult to implement and the resulting system is difficult
-to use. We see the familiar pattern of using multiple languages and
+Recent work \cite{ReidWhJo14} managed a more general solution,
+using Mathematica to generate C++ code for different cases.
+This worked well, but was difficult to implement and the resulting system
+is difficult to use.
+We see the familiar pattern of using multiple languages and
 code-generation techniques, with coordination of the overall process done
-either manually or with ad-hoc scripts. To polish the implementation for
-use as a practical library, a likely next step would be to add a Python
-interface, adding yet another layer of complexity.
+either manually or with ad-hoc scripts.
+To polish the implementation for use as a practical library, a likely next
+step would be to add a Python interface, adding yet another layer of complexity.
 
 %Features of julia this demonstrates:
 
@@ -802,6 +803,7 @@ Computing these matrix elements is known as the matrix \emph{assembly} step, and
 performance is a crucial concern for solving partial differential equations (PDEs) and
 integral equations (IEs).
 
+\iffalse
 \subsubsection{The ``easy'' case: nonsingular assembly}
 
 For example, in the finite-element method (FEM) [TODO refs], the basis functions $b_m$
@@ -839,11 +841,12 @@ Indeed, preliminary experiments with pure Julia FEM implementations
 [TODO ref http://www.codeproject.com/Articles/579983/Finite-Element-programming-in-Julia]
 have demonstrated performance comparable to sophisticated solutions like FEniCS in
 Python and FreeFem++ in C++ [TODO ref].
+\fi
 
 \subsubsection{Singular assembly for integral operators}
 
-A much more challenging case of Galerkin matrix assembly arises for
-singular \emph{integral} operators $\mathcal{L}$, which act by
+A challenging case of Galerkin matrix assembly arises for singular
+\emph{integral} operators $\mathcal{L}$, which act by
 convolving their operand against a singular ``kernel'' function
 $K(x)$: $u = \mathcal{L} v$ means that $u(x) = \int K(x - x') v(x')
 dx'$.
@@ -887,12 +890,12 @@ a specific class of basis functions arising in a particular physical problem.
 Changing anything about the kernel or the basis---for example, going
 from two- to three-dimensional problems---is a major undertaking.
 
-We believe that Julia should be an ideal platform on which to attack this
-problem:
+Julia's dispatch and specialization features make this problem
+significantly easier to address:
 
 \begin{itemize}
-\item Multiple dispatch allows the cubature scheme to be selected at compile
-time based on the dimensionality, the degree of the singularity, the degree of
+\item Dispatch on structured types allows the cubature scheme to be selected %at compile time
+based on the dimensionality, the degree of the singularity, the degree of
 the polynomial basis, and so on, and allows specialized schemes to be added
 easily for particular problems with no run time penalty.
 
@@ -906,6 +909,136 @@ a completely automated way.
 \end{itemize}
 
 A prototype implementation of this approach follows.
+First we define nominal function types that represent kernel functions:
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+abstract AbstractKernel
+
+# any kernel that decays as ~$r^p$~, p < 0
+abstract APowerLaw{p} <: AbstractKernel
+
+# ~$r^p$~ power law
+type PowerLaw{p} <: APowerLaw{p}; end
+\end{lstlisting}
+\end{singlespace}
+
+\noindent
+Next we add a type representing the integral
+$\mathcal{K}_n(X) = \int_0^1 w^n K(wX) dw$, and implement it for the
+case $K(x) = x^p$:
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+type FirstIntegral{K<:AbstractKernel,n}; end
+
+function call{p,n}(::FirstIntegral{PowerLaw{p},n}, X::Number)
+    return p >= 0 ? X^p / (1 + n + p) : inv(X^(-p) * (1 + n + p))
+end
+\end{lstlisting}
+\end{singlespace}
+
+Code for instances of this function is specialized for $p$ and $n$.
+Here is a sample session creating a function instance, and showing the
+LLVM~\cite{LLVM} code generated for it:
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+F = FirstIntegral{PowerLaw{-1}, 3}()
+
+@code_llvm F(2.5)
+
+define double @julia_call_90703(%jl_value_t*, double) {
+top:
+  %2 = fmul double %1, 3.000000e+00
+  %3 = fdiv double 1.000000e+00, %2
+  ret double %3
+}
+\end{lstlisting}
+\end{singlespace}
+
+Analytically-known special cases can be added for other kernels.
+Here are two more.
+Notice that a Helmholtz kernel is also a power law kernel:
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+type Helmholtz{k} <: APowerLaw{-1}; end  # ~$e^{ikr} / 4\pi r$~
+
+function call{k,n}(::FirstIntegral{Helmholtz{k},n}, X::Number)
+    ikX = im*k*X
+    return exp(ikX) * exprel(n, -ikX) / (4~$\pi$~*n*X)
+end
+
+# magnetic field integral equation
+type MFIE{k} <: AbstractKernel; end  # ~$(ikr - 1) * e^{ikr} / 4\pi r^3$~
+
+function call{k,n}(::FirstIntegral{MFIE{k},n}, X::Number)
+    ikX = im*k*X
+    return exp(ikX) * (im*k*exprel(n-1,-ikX)/((n-1)*X) -
+                       exprel(n-2,-ikX)/((n-2)*X^2)) / (4~$\pi$~*X)
+end
+\end{lstlisting}
+\end{singlespace}
+
+It is possible to implement \texttt{FirstIntegral} for the general
+case of any \texttt{APowerLaw}.
+However, each kernel requires a large amount of up-front work that cannot be done
+efficiently at run time.
+Julia's staged functions solve this problem.
+% TODO more
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+@generated function call{p,P<:APowerLaw{p},n}(K::FirstIntegral{P,n},
+                                              X::Real)
+    quote
+        X <= 0 && throw(DomainError())
+        t = ....
+        @evalpoly(t, ...coefs...)
+    end
+end
+\end{lstlisting}
+\end{singlespace}
+
+The method signature reflects the shape of the problem: the user might
+implement any kernel at all, but if it does not take the form of an
+\texttt{APowerLaw\{p\}} then this numerical procedure is not useful.
+\texttt{p} must be known, and cannot be easily extracted from an arbitrary
+opaque function.
+If the interface allowed an opaque function to be passed, the value of
+\texttt{p} would need to be passed separately, which de-couples the
+property from the function, and requires a custom lookup table for caching
+generated code.
+
+pseudocode for how this is used:
+
+%  # n depends on complicated stuff
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+# from paper figure 1
+Fct = [FirstIntegral{K,i}() for i=1:n]
+Pct = [some polynomials...]
+for trianglepair in mesh
+    i, j = indexes based on triangles
+    if common(trianglepair)
+        M[i,j] = integrate(y->sum([Fct[p](y)*Pct[p](y) for p=1:n]),
+                           0, 1)
+    elseif commonedge(trianglepair)
+        # a 2d integral
+    elseif commonvertex(trianglepair)
+        # a 3d integral
+    else
+        # separate triangles
+    end
+end
+\end{lstlisting}
+\end{singlespace}
+% common edge case
+% #M[i,j] = integrate((y1,y2)->sum([Fce[p](y1,y2) * Pce[p](y1,y2) for p=1:n_ce]), 0, 1)
+
+% common vertex case
+% #M[i,j] = integrate((y1,y2,y3)->sum([Fcv[p](y1,y2,y3) * Pcv[p](y1,y2,y3) for p=1:n_cv]), 0, 1)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -945,10 +1078,10 @@ subject to CapacityCon:
 \end{singlespace}
 
 \noindent
-This syntax is ``compiled'' to a dense numerical representation that can
+This syntax is ``compiled'' to a numeric matrix representation that can
 be consumed by standard solver libraries.
 Although solving the problem can take a significant amount of time,
-the time spent building the problem representation is often a bottleneck.
+building the problem representation is often the bottleneck.
 AMPL is highly specialized to this task and offers good performance.
 
 Providing the same level of performance and convenience for linear programming
@@ -1033,7 +1166,7 @@ without needing to update the more complicated syntax transformation code.
 \small{
 Performance (time in seconds) of several linear programming tools for
 generating models in MPS format (excerpted from \cite{LubinDunningIJOC}).
-$L$ is the number of locations included in an area-coverage model.
+$L$ is the number of locations solved for in a facility location problem.
 }
 }
 \label{jumpperf}

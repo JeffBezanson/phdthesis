@@ -251,7 +251,7 @@ general library function is not required.
 \begin{table}[!t]
 \begin{center}
 \begin{tabular}{|l|r|r|r|r|}\hline
-\textbf{Size} & \textbf{\# iter} & \textbf{NumPy} & \textbf{Julia} & \textbf{Julia dispatch} \\
+\textbf{Size} & \textbf{\# iter} & \textbf{NumPy} & \textbf{Julia} & \textbf{Julia with dispatch} \\
 \hline \hline
 $4\times 4$        & 250000 & 5.43 & 0.072 & 0.204 \\
 \hline
@@ -609,6 +609,8 @@ The observation that memory is a bottleneck is not new, but for our purposes
 the important point is that languages that only support vectorized syntax
 cannot express the code rearrangements and alternate algorithms that can be
 necessary to get the best performance.
+A good technical computing language needs a more general interface to
+performance.
 
 The performance model resulting from vectorized syntax can be difficult to
 understand, since it is difficult for users to predict which optimizations
@@ -620,7 +622,7 @@ Of many proposed implementations, the fastest turned out to be
 
 \vspace{-3ex}
 
-\[ \texttt{Total@Unitize@Clip[data,{min,max},{0,0}]} \]
+\[ \texttt{Total@Unitize@Clip[data,\{min,max\},\{0,0\}]} \]
 
 \noindent
 Arguably, it is difficult to know that this will run faster than, for

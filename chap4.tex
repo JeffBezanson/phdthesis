@@ -597,8 +597,8 @@ Variables can have non-trivial bounds that refer to other variables:
 %               @UnionAll T<:Ty(Real) @UnionAll S<:inst(AbstractArrayT,T,1) tupletype(T,S))
 
 \noindent
-In general, if a variable appears multiple times its type is more constrained
-than a type where variables appear only once:
+In general, if a variable appears multiple times then its enclosing type is
+more constrained than a type where variables appear only once:
 
 \vspace{-3ex}
 \[
@@ -606,7 +606,7 @@ than a type where variables appear only once:
 \]
 
 \noindent
-However with sufficiently strong bounds that relationship no longer holds:
+However with sufficiently tight bounds that relationship no longer holds:
 
 \vspace{-3ex}
 \[
@@ -661,7 +661,7 @@ of subtyping:
 Julia's dispatch system strongly resembles the multi-method systems
 found in some object-oriented languages.
 However we prefer the term type-based dispatch, since our system
-actually works by dispatching a \emph{single} tuple type of arguments.
+actually works by dispatching a \emph{single tuple type} of arguments.
 The difference is subtle and in many cases not noticeable, but has
 important conceptual implications.
 It means that methods are not necessarily restricted to specifying
@@ -670,6 +670,7 @@ For example a method signature could be
 \texttt{Union}\{\texttt{Tuple}\{\texttt{Any},\texttt{Int}\}, \texttt{Tuple}\{\texttt{Int},\texttt{Any}\}\},
 which matches calls where either, but not necessarily both, of two
 arguments is an \texttt{Int}.
+\footnote{Our implementation of Julia does not yet have syntax for such methods.}
 
 
 \subsection{Type and method caches}
@@ -678,8 +679,24 @@ The majority of types that occur in practice are \emph{simple}.
 A simple type is a tag, tuple, or abstract type, all of whose parameters
 are simple types or non-type values.
 Structural equality of simple types is equivalent to type equality,
-so simple types are easy to compare.
+so simple types are easy to compare, hash, and sort.
+Another important set of types is the \emph{concrete} types, which
+are the direct types of values.
+Concrete types are hash-consed in order to assign a unique integer
+identifier to each.
+These integer identifiers are used to look up methods efficiently
+in a hash table.
 
+Some types are concrete but not simple.
+The hash-consing process uses linear search for these types.
+Fortunately, such types tend to make up less than 10\% of the total
+type population.
+
+this can work especially well for tuple types.
+by writing (1, 2.0) you immediately obtain an efficient ``struct'' type.
+cases like protocol compilers require generating code in advance.
+this generates it on the fly, but can pick up and reuse any cached
+code that might happen to exist for a particular tuple type.
 
 \subsection{Specificity}
 
