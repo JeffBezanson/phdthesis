@@ -563,6 +563,8 @@ as has often been the case for subtyping systems like ours.
 
 We will briefly demonstrate the power of this algorithm through examples of
 type relationships it can determine.
+In these examples, note that $<$ means less than but not equal.
+\texttt{Pair} is assumed to be a tag type with two parameters.
 
 \noindent
 The algorithm can determine that a type matches constraints specified by another:
@@ -606,7 +608,8 @@ more constrained than a type where variables appear only once:
 \]
 
 \noindent
-However with sufficiently tight bounds that relationship no longer holds:
+However with sufficiently tight bounds that relationship no longer holds
+(here $x$ is any type):
 
 \vspace{-3ex}
 \[
@@ -745,7 +748,7 @@ For example, consider this C++ snippet, which shows how a template
 parameter can be used to vary the arguments accepted by methods:
 
 \begin{singlespace}
-\begin{lstlisting}[language=c++]
+\begin{lstlisting}[language=c++,style=ttcode]
 template <typename T>
 class Foo<T> { int method1(T x); }
 \end{lstlisting}
@@ -808,13 +811,13 @@ the language.
 The method is selected like any other; the only difference is that
 the method's expression-generating code is invoked on the argument types
 just before type inference.
-The optimized version of the generated code is then stored in the method
+The optimized version of the user-generated code is then stored in the method
 cache, and can be selected in the future like any other specialization.
 The caller does not need to know anything about this, and the author
 of the function does not need to do any bookkeeping.
 
 One reason this works so well is that the amount of information
-available at this stage is just right.
+available at this stage provides a good balance.
 If, for example, only the \emph{classes} of arguments in a traditional
 object-oriented language were available, there would not be much
 to base the generated code on.
@@ -919,7 +922,7 @@ often have a large number of definitions. For example, the \texttt{+}
 function in Julia v0.3.4 has 117 definitions, and in a more recent
 development version with more functionality, it has 150 methods. An
 intersection of 150 types would be unwieldy, even if only
-used when debugging the compiler.
+inspected when debugging the compiler.
 
 A slightly different approach we might try would be to immitate
 the types of higher-order functions in traditional
@@ -1041,7 +1044,7 @@ associated with it. For example, the type of \texttt{sin} would be
 \texttt{GenericFunction\{sin\}}. This type merely identifies the function
 in question, and says nothing more about its behavior. It is easy to read,
 and easily specific enough to avoid ambiguity and specialization
-problems. It does \emph{not} immediately solve the above problem of
+problems. It does \emph{not} solve the problem of
 determining the result type of \texttt{map}. However there are
 corresponding performance benefits, since specializing code for a
 specific function argument naturally lends itself to inlining.
@@ -1054,8 +1057,8 @@ specific function argument naturally lends itself to inlining.
 %nominal function types
 Another approach that is especially relevant to technical computing is to use
 nominal function types.
-In mathematics, the argument and return types of a function are often among its
-least interesting properties.
+In mathematics, the argument and return types of a function are often not
+its most interesting properties.
 In some domains, for example, all functions can implicitly be assumed
 $\mathbb{R}\rightarrow\mathbb{R}$, and the interesting property might be
 what order of integrable singularity is present (see section~\ref{sec:BEM} for
@@ -1076,7 +1079,7 @@ $R$:
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
 immutable Polynomial{N,R}
-    coeffs:Vector{R}
+    coeffs::Vector{R}
 end
 
 call{N}(p::Polynomial{N}, x) = sum([p.coeffs[i+1]*x^i for i=0:N])
@@ -1156,6 +1159,9 @@ function map(f, A::Array)
 end
 \end{lstlisting}
   \caption[An implementation of \texttt{map}]{
+    A Julia implementation of \texttt{map}.
+    The result type depends only on the actual values computed, made
+    efficient using an optimistic assumption.
   }
   \label{fig:mapimpl}
 \end{figure}
@@ -1234,6 +1240,9 @@ than what is usually studied in the context of those languages.
 it might be thought that julia achieves performance through a clever
 compiler that uses ``every trick in the book''.
 at risk of being overly self-deprecating, this is not the case.
+the performance we manage to get derives from the language design,
+which enables a style of library implementation such that applying straightforward,
+known optimizations yields good performance.
 
 
 \begin{table}
@@ -1276,3 +1285,28 @@ The ``Julia Operators'' row describes 47 functions with special syntax
 }
 \label{dispatchratios}
 \end{table}
+
+Multiple dispatch is used heavily throughout the Julia ecosystem. To quantify
+this statement, we use the following metrics for evaluating the extent of
+multiple dispatch \cite{multipledispatch}:
+
+\begin{enumerate}
+\item Dispatch ratio (DR): The average number of methods in a generic function.
+\item Choice ratio (CR): For each method, the total number of methods over all
+generic functions it belongs to, averaged over all methods. This is essentially
+the sum of the squares of the number of methods in each generic function, divided
+by the total number of methods. The intent of this statistic is to give more weight
+to functions with a large number of methods.
+\item Degree of specialization (DoS): The average number of type-specialized
+arguments per method.
+\end{enumerate}
+
+Table~\ref{dispatchratios} shows the mean of each metric over the entire Julia
+\code{Base} library, showing a high degree of multiple dispatch compared with
+corpora in other languages \cite{multipledispatch}.
+Compared to most multiple dispatch systems, Julia functions tend to have a large
+number of definitions. To see why this might be, it helps to compare results
+from a biased sample of only operators. These functions are the most obvious
+candidates for multiple dispatch, and as a result their statistics climb
+dramatically. Julia is focused on technical computing, and so is likely to
+have a large proportion of functions with this character.

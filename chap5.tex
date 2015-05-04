@@ -1,13 +1,18 @@
 \chapter{Case studies}
 \label{chap:casestudies}
 
-This chapter will illustrate how we implement key features of technical computing
-systems using our methodology.
+This chapter discusses several examples that illustrate the effectiveness of
+Julia's abstractions for technical computing.
+The first three sections provide an ``explication through elimination'' of
+core features (numbers and arrays) that have usually been built in to
+technical computing environments.
+The remaining sections introduce some libraries and real-world applications
+that benefit from Julia's design.
 
 \section{Conversion and comparison}
 
-Type conversion provides a classic example of a binary method. Multiple
-dispatch allows us to avoid deciding whether the converted-to type or the
+Type conversion provides a classic example of a binary method.
+Multiple dispatch allows us to avoid deciding whether the converted-to type or the
 converted-from type is responsible for defining the operation.
 Defining a specific conversion is straightforward, and might look like this
 in Julia syntax:
@@ -21,13 +26,14 @@ A call to this method would look like \texttt{convert(Float64, 1)}.
 
 Using conversion in generic code requires more sophisticated definitions.
 For example we might need to convert one value to the type of another,
-by writing \texttt{convert(typeof(y), x)}. What set of definitions must
-exist to make that call work in all reasonable cases? Clearly we cannot
-explicitly write all $O(n^2)$ possibilities. We need abstract definitions
-that cover many points in the dispatch matrix. One such family of points
-is particularly important: those that describe converting a value to a
-type it is already an instance of. In our system this can be handled by
-a single definition that performs ``triangular'' dispatch:
+by writing \texttt{convert(typeof(y), x)}.
+What set of definitions must exist to make that call work in all reasonable cases?
+Clearly we don't want to write all $O(n^2)$ possibilities.
+We need abstract definitions that cover many points in the dispatch matrix.
+One such family of points is particularly important: those that describe converting
+a value to a type it is already an instance of.
+In our system this can be handled by a single definition that performs ``triangular''
+dispatch:
 
 \begin{verbatim}
 convert{T,S<:T}(::Type{T}, x::S) = x
@@ -40,21 +46,25 @@ match values of any type less than it in the second argument slot.
 
 A similar trick is useful for defining equivalence relations.
 It is most likely unavoidable for programming languages to need multiple
-notions of equality. Two in particular are natural: an \emph{intensional}
+notions of equality.
+Two in particular are natural: an \emph{intensional}
 notion that equates objects that look identical, and an \emph{extensional}
 notion that equates objects that mean the same thing for some standard
-set of purposes. Intensional equality (\texttt{===} in Julia, mentioned
+set of purposes.
+Intensional equality (\texttt{===} in Julia, described
 in section~\ref{sec:corecalc}) lends itself to being implemented once
 by the language implementer, since it can work by directly comparing
-the representations of objects. Extensional equality (\texttt{==} in
-Julia), on the other hand, must be extensible to user-defined data types.
+the representations of objects.
+Extensional equality (\texttt{==} in Julia), on the other hand, must be
+extensible to user-defined data types.
 The latter function must call the former in order to have any basis for
 its comparisons.
 
 As with conversion, we would like to provide default definitions for
-\texttt{==} that cover families of cases. Numbers are a reasonable
-domain to pick, since all numbers should be equality-comparable to each
-other. We might try
+\texttt{==} that cover families of cases.
+Numbers are a reasonable domain to pick, since all numbers should be
+equality-comparable to each other.
+We might try
 
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
@@ -64,15 +74,16 @@ other. We might try
 
 \noindent
 meaning that number comparison can simply fall back to intensional
-equality. However this definition is rather dubious. It gets the wrong
-answer every time the arguments are different representations (e.g.
-integer and floating point) of the same quantity. We might hope that
-its behavior will be ``patched up'' later by more specific definitions
-for various concrete number types, but it still covers a dangerous
-amount of dispatch space. If later definitions somehow miss a particular
-combination of number types, we could get a silent wrong answer instead
-of an error. (Note that statically checking method exhaustiveness is no
-help here.)
+equality.
+However this definition is rather dubious.
+It gets the wrong answer every time the arguments are different representations
+(e.g. integer and floating point) of the same quantity.
+We might hope that its behavior will be ``patched up'' later by more specific
+definitions for various concrete number types, but it still covers a dangerous
+amount of dispatch space.
+If later definitions somehow miss a particular combination of number types,
+we could get a silent wrong answer instead of an error.
+(Note that statically checking method exhaustiveness is no help here.)
 
 ``Diagonal'' dispatch lets us improve the definition:
 
@@ -84,12 +95,12 @@ help here.)
 
 \noindent
 Now \texttt{===} will only be used on arguments of the same type,
-making it far more likely to give the right answer. Even better,
-any case where it does not give the right answer can be fixed with
+making it far more likely to give the right answer.
+Even better, any case where it does not give the right answer can be fixed with
 a single definition, i.e. \texttt{==(x::S, y::S)} for some
-concrete type \texttt{S}. The more general \texttt{(Number, Number)}
-case is left open, and in the next section we will take advantage
-of this to implement ``automatic'' type promotion.
+concrete type \texttt{S}.
+The more general \texttt{(Number, Number)} case is left open, and in the next
+section we will take advantage of this to implement ``automatic'' type promotion.
 
 %- The abstractions of equality and comparison. Different equivalence classes between
 %is/===, isequal and ==
@@ -99,28 +110,29 @@ of this to implement ``automatic'' type promotion.
 
 \section{Numeric types and embeddings}
 
-We might prefer ``number'' to be a single,
-concrete concept, but the history of mathematics has seen the concept
-extended many times, from integers to rationals to reals, and then to complex,
-quaternion, and more. These constructions tend to follow a pattern: a new set
-of numbers is constructed around a subset isomorphic to an existing set of
-numbers. For example, the reals are isomorphic to the complex numbers with
-zero imaginary part.
+We might prefer ``number'' to be a single, concrete concept, but the history of
+mathematics has seen the concept extended many times, from integers to rationals to
+reals, and then to complex, quaternion, and more.
+These constructions tend to follow a pattern: a new set of numbers is constructed
+around a subset isomorphic to an existing set of numbers.
+For example, the reals are isomorphic to the complex numbers with zero imaginary part.
 
 Human beings happen to be good at equating and moving between isomorphic sets,
 so it is easy to imagine that the reals and complexes with zero imaginary
-part are one and the same. But a computer forces us to be specific, and admit
-that a real number is not complex, and a complex number is not real. And yet
-the close relationship between them is too compelling not to model in a
-computer somehow. Here we have a numerical analog to the famous ``circle and
-ellipse'' problem in object-oriented programming: the set of circles is
+part are one and the same.
+But a computer forces us to be specific, and admit
+that a real number is not complex, and a complex number is not real.
+And yet the close relationship between them is too compelling not to model in a
+computer somehow.
+Here we have a numerical analog to the famous ``circle and ellipse'' problem in
+object-oriented programming~\cite{cline1995c++}: the set of circles is
 isomorphic to the set of ellipses with equal axes, yet neither ``is a''
-relationship in a class hierarchy seems fully correct. An ellipse is not
-a circle, and in general a circle cannot serve as an ellipse (for example,
-the set of circles is not closed under the same operations that the set of
-ellipses is, so a program written for ellipses might not work on circles).
+relationship in a class hierarchy seems fully correct.
+An ellipse is not a circle, and in general a circle cannot serve as an ellipse
+(for example, the set of circles is not closed under the same operations that the
+set of ellipses is, so a program written for ellipses might not work on circles).
 This problem implies that a single built-in type hierarchy is not
-sufficient: we want to model custom *kinds* of relationships between
+sufficient: we want to model custom \emph{kinds} of relationships between
 types (e.g. ``can be embedded in'' in addition to ``is a'').
 
 %% Two further problems should also be kept in mind. First, the natural isomorphisms
@@ -135,24 +147,24 @@ types (e.g. ``can be embedded in'' in addition to ``is a'').
 
 % \subsection{Current approaches}
 
-Numbers tend to be among the most
-complex features of a language. Numeric types usually need to be a special
-case: in a typical language with built-in numeric types, describing their
-behavior is beyond the expressive power of the language itself. For example,
-in C arithmetic operators like \texttt{+} accept multiple types of arguments
-(ints and floats), but no user-defined C function can do this (this situation
-is of course improved in C++). In Python, a special arrangement is made for
-\texttt{+} to call either an \texttt{\_\_add\_\_} or \texttt{\_\_radd\_\_} method,
+Numbers tend to be among the most complex features of a language.
+Numeric types usually need to be a special case: in a typical language with
+built-in numeric types, describing their behavior is beyond the expressive power
+of the language itself.
+For example, in C arithmetic operators like \texttt{+} accept multiple types of
+arguments (ints and floats), but no user-defined C function can do this (the situation
+is of course improved in C++).
+In Python, a special arrangement is made for \texttt{+} to call either an
+\texttt{\_\_add\_\_} or \texttt{\_\_radd\_\_} method,
 effectively providing double-dispatch for arithmetic in a language that is
 idiomatically single-dispatch.
-
 
 \subsubsection{Implementing type embeddings}
 \label{sec:promotion}
 
 Most functions are naturally implemented in the value domain, but some are
-actually easier to implement in the type domain. One reason is that there
-is a bottom element, which most data types lack.
+actually easier to implement in the type domain.
+One reason is that there is a bottom element, which most data types lack.
 
 It has been suggested on theoretical grounds \cite{categorytheoryoperators}
 that generic binary operators should have ``key variants'' where the
@@ -163,18 +175,18 @@ arguments are of the same type.
 +(x::Number, y::Number) = +(promote(x,y)...)
 
 +{T<:Number}(x::T, y::T) = no_op_err("+", T)
-
 \end{lstlisting}
 \end{singlespace}
 
-
-A full-featured promotion operator is a tall order. We would like
+\noindent
+A full-featured promotion operator is a tall order.
+We would like
 
 \begin{itemize}
-\item each combination of types only needs to be defined in one order
-\item it falls back to join
-\item must prevent promotion above a certain point to avoid circularity in
-  promoting fallback definitions of operators.
+\item Each combination of types only needs to be defined in one order
+\item It falls back to join
+\item It must prevent promotion above a certain point to avoid circularity
+%in promoting fallback definitions of operators.
 \end{itemize}
 
 \begin{singlespace}
@@ -188,30 +200,31 @@ promote_type{T,S}(::Type{T}, ::Type{S}) =
 promote_rule(T, S) = Bottom
 
 promote_result(t,s,T,S) = promote_type(T,S)
-# If no promote_rule is defined, both directions give Bottom. In that
-# case use typejoin on the original types instead.
-promote_result{T,S}(::Type{T},::Type{S},::Type{Bottom},::Type{Bottom}) = typejoin(T, S)
+# If no promote_rule is defined, both directions give Bottom.
+# In that case use typejoin on the original types instead.
+promote_result{T,S}(::Type{T}, ::Type{S},
+                   ::Type{Bottom}, ::Type{Bottom}) = typejoin(T, S)
 
 
 # Because of the promoting fallback definitions for Number, we need
 # a special case for undefined promote_rule on numeric types.
-# Otherwise, typejoin(T,S) is called (returning Number) so no conversion
-# happens, and +(promote(x,y)...) is called again, causing a stack
-# overflow.
-promote_result{T<:Number,S<:Number}(::Type{T},::Type{S},::Type{Bottom},::Type{Bottom}) =
-    promote_to_super(T, S, typejoin(T,S))
+# Otherwise, typejoin(T,S) is called (returning Number) so no
+# conversion happens, and +(promote(x,y)...) is called again, causing
+# a stack overflow.
+promote_result{T<:Number,S<:Number}(::Type{T}, ::Type{S},
+                                     ::Type{Bottom}, ::Type{Bottom}) =
+    promote_sup(T, S, typejoin(T,S))
 
 # promote numeric types T and S to typejoin(T,S) if T<:S or S<:T
 # for example this makes promote_type(Integer,Real) == Real without
 # promoting arbitrary pairs of numeric types to Number.
-promote_to_super{T<:Number          }(::Type{T}, ::Type{T}, ::Type{T}) = T
-promote_to_super{T<:Number,S<:Number}(::Type{T}, ::Type{S}, ::Type{T}) = T
-promote_to_super{T<:Number,S<:Number}(::Type{T}, ::Type{S}, ::Type{S}) = S
-promote_to_super{T<:Number,S<:Number}(::Type{T}, ::Type{S}, ::Type) =
+promote_sup{T<:Number          }(::Type{T},::Type{T},::Type{T}) = T
+promote_sup{T<:Number,S<:Number}(::Type{T},::Type{S},::Type{T}) = T
+promote_sup{T<:Number,S<:Number}(::Type{T},::Type{S},::Type{S}) = S
+promote_sup{T<:Number,S<:Number}(::Type{T},::Type{S},::Type) =
     error("no promotion exists for ", T, " and ", S)
 \end{lstlisting}
 \end{singlespace}
-
 
 
 \subsubsection{Application to ranges}
@@ -220,8 +233,9 @@ promote_to_super{T<:Number,S<:Number}(::Type{T}, ::Type{S}, ::Type) =
 A range data type, notated \texttt{a:s:b}, represents a sequence of values
 starting at \texttt{a} and ending at \texttt{b}, with a distance of \texttt{s}
 between elements (internally, this notation is translated to
-\texttt{colon(a, s, b)}). Ranges seem simple enough, but a reliable,
-efficient, and generic implementation is difficult to achieve.
+\texttt{colon(a, s, b)}).
+Ranges seem simple enough, but a reliable, efficient, and generic implementation
+is difficult to achieve.
 We propose the following requirements:
 
 \begin{itemize}
@@ -234,17 +248,18 @@ We propose the following requirements:
 \end{itemize}
 
 In the case of ordinal types, the step value is naturally of a different type
-than the elements of the range. For example, one may add 1 to a character to
-get the ``next'' encoded character, but it does not make sense to add two
-characters.
+than the elements of the range.
+For example, one may add 1 to a character to get the ``next'' encoded character,
+but it does not make sense to add two characters.
 
-It turns out that the desired behavior can be achieved with six definitions:
+It turns out that the desired behavior can be achieved with six definitions.
 
 First, given three floats of the same type we can construct a \texttt{FloatRange}
 right away:
 
 \begin{verbatim}
-colon{T<:FloatingPoint}(start::T, step::T, stop::T) = FloatRange{T}(start, step, stop)
+colon{T<:FloatingPoint}(start::T, step::T, stop::T) =
+    FloatRange{T}(start, step, stop)
 \end{verbatim}
 
 Next, if \texttt{a} and \texttt{b} are of the same type and there are no floats,
@@ -271,7 +286,8 @@ of a different type than \texttt{a} and \texttt{b} both definitions are
 equally applicable. We can add the following disambiguating definition:
 
 \begin{verbatim}
-colon{T<:FloatingPoint}(a::T, s::FloatingPoint, b::T) = colon(promote(a,s,b)...)
+colon{T<:FloatingPoint}(a::T, s::FloatingPoint, b::T) =
+    colon(promote(a,s,b)...)
 \end{verbatim}
 
 All of these five definitions require \texttt{a} and \texttt{b} to be of the
@@ -279,7 +295,8 @@ same type. If they are not, we must promote just those two arguments, and leave
 the step alone (in case we are dealing with ordinal types):
 
 \begin{verbatim}
-colon{A,B}(a::A, s, b::B) = colon(convert(promote_type(A,B),a), s, convert(promote_type(A,B),b))
+colon{A,B}(a::A, s, b::B) =
+    colon(convert(promote_type(A,B),a), s, convert(promote_type(A,B),b))
 \end{verbatim}
 
 This example shows that it is not always sufficient to have a built-in set of
@@ -344,91 +361,72 @@ Date and time arithmetic is especially intricate and irregular.
 \label{sec:ndindexing}
 
 One-dimensional arrays are a simple and essential data structure found in
-most programming languages. The multi-dimensional arrays required in
-scientific computing, however, are a different beast entirely. Allowing
-any number of dimensions entails a significant increase in complexity. Why?
+most programming languages.
+The multi-dimensional arrays required in scientific computing, however, are
+a different beast entirely.
+Allowing any number of dimensions entails a significant increase in complexity.
+Why?
 The essential reason is that core properties of the data structure no
-longer fit in a constant amount of space. The space needed to store the
-sizes of the dimensions (the array shape) is proportional to the number
-of dimensions. This does not seem so bad, but becomes a large problem
-due to three additional facts.
+longer fit in a constant amount of space.
+The space needed to store the sizes of the dimensions (the array shape) is
+proportional to the number of dimensions.
+This does not seem so bad, but becomes a large problem due to three additional
+facts:
 
-% TODO: break up using enumerate
-First, code that operates on the dimension
-sizes needs to be highly efficient. Typically the overhead of a loop is
-unacceptable, and such code needs to be fully unrolled. Second, in some
-code the number of dimensions is a \emph{dynamic} property --- it is
-only known at run time. Third, programs may wish to treat arrays with
-different numbers of dimensions very differently. A vector (1d) might
-have rather different behaviors than a matrix (2d) (for example, to
-compute a norm). This kind of
-behavior makes the number of dimensions a crucial part of program
+\begin{enumerate}
+\item Code that operates on the dimension sizes needs to be highly efficient.
+Typically the overhead of a loop is unacceptable, and such code needs to be fully
+unrolled.
+\item In some code the number of dimensions is a \emph{dynamic} property --- it is
+only known at run time.
+\item Programs may wish to treat arrays with different numbers of dimensions very
+differently.
+A vector (1d) might have rather different behaviors than a matrix (2d)
+(for example, when computing a norm).
+This kind of behavior makes the number of dimensions a crucial part of program
 semantics, preventing it from remaining a compiler implementation detail.
+\end{enumerate}
 
-% TODO: break up using enumerate
-These facts pull in different directions. The first fact asks for static
-analysis. The second fact asks for run time flexibility. The third fact asks
-for dimensionality to be part of the type system, but partly determined
-at run time (for example, via virtual method dispatch). Current approaches
-choose a compromise. In some systems, the number of dimensions has a strict
-limit (e.g. 3 or 4), so that separate classes for each case may be written
-out in full. Other systems choose flexibility, and just accept that most
-or all operations will be dynamically dispatched. Other systems might
-provide flexibility only at compile time, for example a template library
-where the number of dimensions must be statically known.
-
-%% TODO: insert example of limited power of C++ array libraries
-
+These facts pull in different directions.
+The first fact asks for static analysis.
+The second fact asks for run time flexibility.
+The third fact asks for dimensionality to be part of the type system, but
+partly determined at run time (for example, via virtual method dispatch).
+Current approaches choose a compromise.
+In some systems, the number of dimensions has a strict limit (e.g. 3 or 4),
 %% TODO: examples of systems limited to n==3
+so that separate classes for each case can be written out in full.
+Other systems choose flexibility, and just accept that most
+or all operations will be dynamically dispatched.
+Other systems might provide flexibility only at compile time, for example a
+template library where the number of dimensions must be statically known.
 
-Whatever decision is made, rules must be defined for how various operators
-act on dimensions. For now we will focus on indexing, since selecting
-parts of arrays has particularly rich behavior with respect to
-dimensionality. For example, if a single row or column of a matrix is
-selected, does the result have one or two dimensions? Array implementations
-prefer to invoke general rules to answer such questions. Such a rule might
-say ``dimensions indexed with scalars are dropped'', or ``trailing
+%Whatever decision is made, rules must be defined for how various operators
+%act on dimensions.
+Here we focus on indexing, since selecting parts of arrays has particularly
+rich behavior with respect to dimensionality.
+For example, if a single row or column of a matrix is
+selected, does the result have one or two dimensions?
+Array implementations prefer to invoke general rules to answer such questions.
+Such a rule might say ``dimensions indexed with scalars are dropped'', or ``trailing
 dimensions of size one are dropped'', or ``the rank of the result
 is the sum of the ranks of the indexes'' (as in APL).
 
-%%%
-Our goal here is a bit unusual: we are not concerned with which rules
-might work best, but merely with how they can be specified, so that
-domain experts can experiment.
-In fact different domains want different things. Working with images, each
-dimension might be quite different, e.g. representing time, space, or color,
-so you don't want to drop or rearrange dimensions very often.
-%%%
+C++ and Haskell are both examples of languages with sufficiently powerful
+static semantics to support defining efficient and reasonably flexible
+multi-dimensional arrays in libraries.
+In both languages, implementing these libraries is fairly difficult and
+places some limits on how indexing can behave.
+In C++, the popular Boost libraries include a multi-array
+type~\cite{garcia2005multiarray}.
+To index an array with this library, one builds up an \texttt{index\_gen}
+object by repeatedly applying the \texttt{[]} operator.
+On each application, if the argument is a \texttt{range} then the
+corresponding dimension is kept, and otherwise it is dropped.
+This is implemented with a template as follows:
 
-%Here are our ground rules:
-%\begin{enumerate}
-%\item You can't manually implement the behavior inside the compiler
-%\item The compiler must be able to reasonably understand the program
-%\item The code must be reasonably easy to write
-%\end{enumerate}
-
-
-How are such rules implemented? For a
-language with built-in multidimensional arrays, the compiler will
-analyze indexing expressions and determine an answer using hard-coded
-logic.
-% TODO: grab example from one of these compilers
-However, this approach is not satisfying: we would rather
-implement the behavior in libraries, so that different kinds of arrays
-may be defined, or so that rules of similar complexity may be
-defined for other kinds of objects. But these kinds of rules are
-unusually difficult to implement in libraries. If a library writes out
-its indexing logic using imperative code, the host language compiler
-is not likely to be able to analyze it. Using compile time abstracton
-(templates) would provide better performance, but such libraries tend
-to be difficult to write (and read), and the full complement of
-indexing behavior expected by technical users strains the capabilities
-of such systems.
-
-% TODO: insert actual example of numpy
-
-% C++ approach, from Boost
-\begin{verbatim}
+\begin{singlespace}
+\begin{lstlisting}[language=c++,style=ttcode]
 template <int NumRanges, int NumDims>
 struct index_gen {
 index_gen<NumRanges+1,NumDims+1> operator[](const range& r) const
@@ -437,23 +435,74 @@ index_gen<NumRanges+1,NumDims+1> operator[](const range& r) const
 index_gen<NumRanges+1,NumDims> operator[](index idx) const
     { ... }
 }
-\end{verbatim}
+\end{lstlisting}
+\end{singlespace}
 
+\noindent
+The number of dimensions in the result is determined by arithmetic
+on template parameters and static overloading.
+Handling arguments one at a time recursively is a common pattern
+for feeding more complex type information to compilers.
+In fact, the Haskell library Repa~\cite{Keller:2010rs} uses
+essentially the same approach as Boost multi-array:
 
-% the same code from Haskell, Repa
-Repa~\cite{Keller:2010rs}
-\begin{verbatim}
+\begin{singlespace}
+\begin{lstlisting}[language=haskell,style=ttcode]
 instance Slice sl => Slice (sl :. Int) where
-        sliceOfFull (fsl :. _) (ssl :. _) = sliceOfFull fsl ssl
+    sliceOfFull (fsl :. _) (ssl :. _) = sliceOfFull fsl ssl
 
 instance Slice sl => Slice (sl :. All) where
-        sliceOfFull (fsl :. All) (ssl :. s) = sliceOfFull fsl ssl :. s
-\end{verbatim}
+    sliceOfFull (fsl :. All) (ssl :. s) = sliceOfFull fsl ssl :. s
+\end{lstlisting}
+\end{singlespace}
 
+\noindent
+The first instance declaration says that given an \texttt{Int} index,
+the dimension corresponding to \texttt{\_} is dropped.
+The second declaration says that given an \texttt{All} index,
+dimension \texttt{s} is kept.
+
+\iffalse
+Our goal here is a bit unusual: we are not concerned with which rules
+might work best, but merely with how they can be specified, so that
+domain experts can experiment.
+In fact different domains want different things.
+Working with images, each dimension might be quite different, e.g. representing
+time, space, or color, so you don't want to drop or rearrange dimensions very often.
+\fi
+
+%Here are our ground rules:
+%\begin{enumerate}
+%\item You can't manually implement the behavior inside the compiler
+%\item The compiler must be able to reasonably understand the program
+%\item The code must be reasonably easy to write
+%\end{enumerate}
+
+\iffalse
+%How are such rules implemented?
+In a language with built-in multidimensional arrays, the compiler will
+analyze indexing expressions and determine an answer using hard-coded
+logic.
+% TODO: example from one of these compilers
+However, this approach is not satisfying: we would rather
+implement the behavior in libraries, so that different kinds of arrays
+may be defined, or so that rules of similar complexity may be
+defined for other kinds of objects.
+In fact different domains want different things.
+Working with images, each dimension might be quite different, e.g. representing
+time, space, or color, so you don't want to drop or rearrange dimensions very often.
+%But these kinds of rules are unusually difficult to implement in libraries.
+%If a library writes out its indexing logic using imperative code, the host
+%language compiler is not likely to be able to analyze it.
+Using compile time abstracton (templates) provides better performance, but
+such libraries tend to be difficult to write (and read), and the full
+complement of indexing behavior expected by technical users strains the
+capabilities of such systems.
+\fi
 
 Our dispatch mechanism permits a novel solution \cite{Bezanson2014}.
 If a multiple dispatch
-system supports variadic functions and argument ``splicing'' (the ability
+system supports variadic functions and argument ``splatting'' (the ability
 to pass a structure of $n$ values as $n$ separate arguments to a function),
 then indexing behavior can be defined as method signatures.
 
@@ -472,24 +521,30 @@ different domains might want:
 % object; it is not directly exposed to the user, but this is more
 % of an implementation detail.
 
+\begin{singlespace}
 \begin{verbatim}
 # drop dimensions indexed with scalars
 index_shape() = ()
 index_shape(i::Real, I...) = index_shape(I...)
 index_shape(i, I...) = tuple(length(i), index_shape(I...)...)
 \end{verbatim}
+\end{singlespace}
 
+\begin{singlespace}
 \begin{verbatim}
 # drop trailing dimensions indexed with scalars
 index_shape(i::Real...) = ()
 index_shape(i, I...) = tuple(length(i), index_shape(I...)...)
 \end{verbatim}
+\end{singlespace}
 
+\begin{singlespace}
 \begin{verbatim}
 # rank summing (APL)
 index_shape() = ()
 index_shape(i, I...) = tuple(size(i)..., index_shape(I...)...)
 \end{verbatim}
+\end{singlespace}
 
 Inferring the length of the result of \texttt{index\_shape} is sufficient
 to infer the rank of the result array.
@@ -506,25 +561,15 @@ compiler to understand fully using straightforward techniques.
 
 %% \begin{verbatim}
 %% index_shape(1:n, 1, 1:m) => tuple(length(::Range1)::Int, index_shape((::Int, ::Range1)...)...)
-
 %% index_shape((::Int, ::Range1)...) => index_shape(::Int, ::Range1)
-
 %% index_shape(::Int, ::Range1) => index_shape((::Range1,)...)
-
 %% index_shape((::Range1,)...) => index_shape(::Range1)
-
 %% index_shape(::Range1) => tuple(length(::Range1)::Int, index_shape(()...)...)
-
 %% index_shape(()...) => index_shape()::()
-
 %% back substitute => tuple(length(::Range1)::Int, index_shape(()...)::()...)::(Int,)
-
 %% back substitute => tuple(length(::Range1)::Int, ::(Int,)...)
-
 %% tuple(::Int, ::(Int,)...) => tuple(::Int, ::Int)
-
 %% ::(Int, Int)
-
 %% \end{verbatim}
 
 The result type is determined using only dataflow type inference, plus a
@@ -550,10 +595,11 @@ end up invoking a widening operator instead).
 
 \section{Array views}
 
+\iffalse
 tim holy in issue 8839:
 
 ``without staged functions in my initial post in 8235. The take-home message: generating all methods through dimension 8 resulted in more than 5000 separate methods, and required over 4 minutes of parsing \& lowering time (i.e., a 4-minute delay while compiling julia). By comparison, the stagedfunction implementation loads in a snap, and of course can go even beyond 8 dimensions.''
-
+\fi
 
 \section{Numerical linear algebra}
 \label{sec:linalg}
@@ -745,12 +791,10 @@ this will only result in a loss of performance.
 This is the tradeoff a Julia programmer accepts.
 
 
-
 %\section{Dates}
 %\label{sec:dates}
 
 %compare to python DateTime, compare code length
-
 
 
 \section{Boundary-element method}
@@ -889,6 +933,8 @@ all practical BEM code is written for a specific integral kernel and
 a specific class of basis functions arising in a particular physical problem.
 Changing anything about the kernel or the basis---for example, going
 from two- to three-dimensional problems---is a major undertaking.
+
+\subsubsection{Novel solution using Julia}
 
 Julia's dispatch and specialization features make this problem
 significantly easier to address:
@@ -1040,9 +1086,7 @@ end
 % common vertex case
 % #M[i,j] = integrate((y1,y2,y3)->sum([Fcv[p](y1,y2,y3) * Pcv[p](y1,y2,y3) for p=1:n_cv]), 0, 1)
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 \section{Algebraic modeling with JuMP}
 \label{sec:jump}
@@ -1173,10 +1217,10 @@ $L$ is the number of locations solved for in a facility location problem.
 \end{table}
 
 
-\section{Computational geometry}
+%\section{Computational geometry}
 
-robust predicates (dispatch over points, lines) and VoronoiDelaunay.jl
-benchmarked against CGAL
+%robust predicates (dispatch over points, lines) and VoronoiDelaunay.jl
+%benchmarked against CGAL
 
 
 \section{Beating the incumbents}
