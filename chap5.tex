@@ -303,6 +303,51 @@ This example shows that it is not always sufficient to have a built-in set of
 ``promoting operators''. Library functions like this \texttt{colon} need more
 control.
 
+\subsubsection{On implicit conversion}
+
+In order to facilitate the human style of thinking that equates
+isomorphic sets, many programming languages offer some flexibility
+in when types are required to match.
+%This often takes the form of implicit conversion.
+For example, a C function declared to accept type \texttt{float}
+can also be called with an \texttt{int}, and the compiler will
+insert a conversion automatically.
+We have found that most cases where this behavior is desirable
+are handled simply by method applicability, as shown in this and the
+previous section.
+Most of the remaining cases involve assignment.
+Julia has a notion of a \emph{typed location}, which is a variable
+or mutable object field with an associated type.
+The core language requires types to match (as determined by subtyping)
+on assignment.
+However, updating assignments that are syntactically identifiable
+(via use of \texttt{=}) cause the front-end to insert calls to
+\texttt{convert} to try to convert the assignment right-hand side
+to the type of the assigned location.
+Abstract data types can easily mimic this behavior by (optionally)
+calling \texttt{convert} in their implementations of mutating
+operations.
+In our experience, this arrangement provides the needed convenience
+without complicating the language.
+Program analyses consuming lowered syntax trees (or any lower level
+representation) do not need to know anything about conversion
+or coercion.
+
+Fortress~\cite{fortresspec} also provides powerful type conversion
+machinery.
+However, it does so through a special \texttt{coerce} feature.
+This allows conversions to happen during dispatch, so a method can
+become applicable if arguments can be converted to its declared type.
+There is also a built-in notion of type widening.
+This allows conversions to be inserted between nested operator
+applications, which can improve the accuracy of mixed-precision code.
+It is not possible to provide these features in Julia without doing
+violence to our ``everything is a method call'' semantics.
+We feel that it is worth giving up these features for a simpler
+mental model.
+We also believe that the ability to provide so much ``magic'' numeric
+type behavior only through method definitions is interesting and novel.
+
 \subsubsection{Number-like types in practice}
 
 Originally, our reasons for implementing all numeric types at the library
@@ -351,7 +396,8 @@ Many real-world quantities are not numbers exactly, but benefit from the
 same mechanisms in their implementation.
 Examples include colors (which form a vector space, and where many different
 useful bases have been standardized), physical units, and DNA nucleotides.
-Date and time arithmetic is especially intricate and irregular.
+Date and time arithmetic is especially intricate and irregular, and
+benefits from permissiveness in operator definitions.
 % (more on this in section~\ref{sec:dates}).
 % dates: different cardinal and ordinal behavior
 % musical notes
@@ -619,7 +665,7 @@ et.al. \cite{lawn181}:
                 and communication topologies
 (5)                for all programming interfaces
 (6)                   provide the best algorithm(s) available in terms of
-                      performance and accuracy (``algorithms" is plural
+                      performance and accuracy ("algorithms" is plural
                       because sometimes no single one is always best)
 \end{verbatim}
 \end{small}
@@ -628,6 +674,60 @@ et.al. \cite{lawn181}:
 Multiple dispatch on special matrices
 
 29 LAPACK types via composition of 9 types, issue 8240
+
+storage formats:
+Matrix
+Banded
+Packed
+RFP (rectangular full packed, LAWN 199)
+
+symmetry labels:
+Hermitian
+Hessenberg
+Symmetric
+Triangular
+Trapezoid
+
+Bidiagonal{T} <: AbstractMatrix{T}
+Diagonal{T} <: AbstractMatrix{T}
+SymmetricRFP{T<:BlasFloat} <: AbstractMatrix{T}
+TriangularRFP{T<:BlasFloat} <: AbstractMatrix{T}
+Symmetric{T,S<:AbstractMatrix} <: AbstractMatrix{T}
+Hermitian{T,S<:AbstractMatrix} <: AbstractMatrix{T}
+AbstractTriangular{T,S<:AbstractMatrix} <: AbstractMatrix{T}
+LowerTriangular{T,S<:AbstractMatrix} <: AbstractTriangular{T,S}
+UnitLowerTriangular{T,S<:AbstractMatrix} <: AbstractTriangular{T,S}
+UpperTriangular{T,S<:AbstractMatrix} <: AbstractTriangular{T,S}
+UnitUpperTriangular{T,S<:AbstractMatrix} <: AbstractTriangular{T,S}
+SymTridiagonal{T} <: AbstractMatrix{T}
+Tridiagonal{T} <: AbstractMatrix{T}
+UniformScaling{T<:Number}
+
+abstract Factorization{T}
+Cholesky{T,S<:AbstractMatrix} <: Factorization{T}
+CholeskyPivoted{T,S<:AbstractMatrix} <: Factorization{T}
+QR{T,S<:AbstractMatrix} <: Factorization{T}
+QRCompactWY{S,M<:AbstractMatrix} <: Factorization{S}
+QRPivoted{T,S<:AbstractMatrix} <: Factorization{T}
+QRPackedQ{T,S<:AbstractMatrix} <: AbstractMatrix{T}
+QRPackedWYQ{S,M<:AbstractMatrix} <: AbstractMatrix{S}
+QRCompactWYQ{S, M<:AbstractMatrix} <: AbstractMatrix{S}
+Hessenberg{T,S<:AbstractMatrix} <: Factorization{T}
+HessenbergQ{T,S<:AbstractMatrix} <: AbstractMatrix{T}
+Eigen{T,V,S<:AbstractMatrix,U<:AbstractVector} <: Factorization{T}
+GeneralizedEigen{T,V,S<:AbstractMatrix,U<:AbstractVector} <: Factorization{T}
+SVD{T<:BlasFloat,Tr,M<:AbstractArray} <: Factorization{T}
+Schur{Ty<:BlasFloat, S<:AbstractMatrix} <: Factorization{Ty}
+GeneralizedSchur{Ty<:BlasFloat, M<:AbstractMatrix} <: Factorization{Ty}
+LDLt{T,S<:AbstractMatrix} <: Factorization{T}
+LU{T,S<:AbstractMatrix} <: Factorization{T}
+CholeskyDenseRFP{T<:BlasFloat} <: Factorization{T}
+
+
+typealias BlasFloat Union(Float64,Float32,Complex128,Complex64)
+axpy!{T<:BlasFloat}(alpha::Number, x::Union(DenseArray{T},StridedVector{T}), y::Union(DenseArray{T},StridedVector{T}))
+
+
 
 QR factorization: want to support it on all input types, but many
 types (integer, rational) are not closed under the needed operations.
@@ -1027,6 +1127,8 @@ end
 \end{lstlisting}
 \end{singlespace}
 
+% TODO footnote on exprel
+
 It is possible to implement \texttt{FirstIntegral} for the general
 case of any \texttt{APowerLaw}.
 However, each kernel requires a large amount of up-front work that cannot be done
@@ -1057,18 +1159,33 @@ If the interface allowed an opaque function to be passed, the value of
 property from the function, and requires a custom lookup table for caching
 generated code.
 
+One might hope that with a sufficient amount of constant propagation and
+functional purity analysis, a compiler could automatically move
+computation of the Chebyshev coefficients to compile time.
+That does indeed seem possible.
+The point of \texttt{@generated}, then, is to make it \emph{so easy} to
+get the desired staging that one does not have to worry
+about what amazing feats the compiler might be capable of.
+Without it, one would face a difficult debugging challenge when the
+compiler, for whatever opaque reasons, did not perform the desired
+optimizations.
+% maybe:
+% this idea can be extended to a general philosophy of embracing
+% performance tweaking, and trying to make it as easy as possible.
+% another example is adding a single OpenMP #pragma to a loop instead of
+% hoping for an auto-parallelizing compiler.
+
 pseudocode for how this is used:
 
 %  # n depends on complicated stuff
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
 # from paper figure 1
-Fct = [FirstIntegral{K,i}() for i=1:n]
-Pct = [some polynomials...]
+FP = [(FirstIntegral{K,i}(), polynomial(i)) for i in N]
 for trianglepair in mesh
     i, j = indexes based on triangles
     if common(trianglepair)
-        M[i,j] = integrate(y->sum([Fct[p](y)*Pct[p](y) for p=1:n]),
+        M[i,j] = integrate(y->sum([F(y)*P(y) for (F,P) in FP]),
                            0, 1)
     elseif commonedge(trianglepair)
         # a 2d integral
@@ -1227,7 +1344,10 @@ $L$ is the number of locations solved for in a facility location problem.
 
 - erfinv and digamma using horner macro
 
-- randn beating matlab
+- randn beating matlab (any numpy)
+  can be split into a small number of operations that very rarely calls
+  a larger function.
+  the entire small part can be inlined.
 
 \texttt{@evalpoly} macro has separate cases for real and complex in order to
 automatically take advantage of a subtle algorithm \cite{knuth1969art}.
@@ -1241,7 +1361,7 @@ is welcome.)
 
 If nothing else, demonstrates that removing glue code overhead is worthwhile.
 
-grisu: 6kLOC to 1kLOC (PR 7291)
+grisu: 6kLOC to 1kLOC (PR 7291), less than factor of 2 slower than c++
 
 
 %\section{ACAS}

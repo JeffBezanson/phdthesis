@@ -48,7 +48,7 @@
 \DeclareMathOperator{\formals}{formals}
 \DeclareMathOperator{\superdecl}{super\_decl}
 
-\include{mainjp}
+\newcommand{\code}[1]{\texttt{#1}}
 
 \lstdefinelanguage{julia}{
   basicstyle=\small\ttfamily,
@@ -80,14 +80,17 @@
 \include{chap3}
 \include{chap4}
 \include{chap5}
-%\include{mainj}
 \include{chap6}
+
 \begin{appendices}
   \include{appa}
 \end{appendices}
+
 \newpage
+
 \begin{singlespace}
 \bibliographystyle{acm}
 \bibliography{main}
 \end{singlespace}
+
 \end{document}

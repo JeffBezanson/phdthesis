@@ -1188,7 +1188,7 @@ optimistic assumption that \texttt{f} is well-behaved.
 This is best illuminated by considering three cases.
 In the first case, imagine \texttt{f} always returns \texttt{Int},
 and that the compiler is able to infer that fact.
-Then the test \texttt{!(S <: T)} disappears by specialization,
+Then the test \texttt{!(S <:\ T)} disappears by specialization,
 and the code reduces to the same simple and efficient loop we
 might write by hand.
 In the second case, imagine \texttt{f} always returns \texttt{Int},
@@ -1231,6 +1231,10 @@ than what is usually studied in the context of those languages.
 
 \subsection{Type inference}
 
+\cite{kaplanullman}
+\cite{abstractinterp}
+\cite{graphfree}
+
 \subsection{Specialization}
 
 % \section{Separate compilation}
@@ -1245,7 +1249,7 @@ which enables a style of library implementation such that applying straightforwa
 known optimizations yields good performance.
 
 
-\begin{table}
+\begin{table}[!t]
 \begin{center}
 \begin{tabular}{|l|r|r|r|}\hline
 \textbf{Language} & \textbf{DR} & \textbf{CR} & \textbf{DoS} \\

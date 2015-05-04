@@ -25,7 +25,6 @@ Static & ML, Haskell, Scala & Fortran, Pascal, C\tabularnewline
 
 \vspace{3ex}
 
-
 The lower right corner tends to contain older languages. The upper right corner
 contains many popular ``dynamic'' languages. The lower left corner contains
 many modern languages resulting from research on static type systems.
@@ -48,10 +47,34 @@ however then you also need to accept different semantics, static resolution.
 \subsection{Separate compilation vs.\ performance}
 
 Writing the signature of a generic method that needs to be separately compiled,
-as in Java for example, can be a difficult exercise.
+as in Java, can be a difficult exercise.
 The programmer must use the type system to write down sufficient conditions on all
 arguments.
-(TODO example from \cite{Garcia:2003:CSL:949305.949317})
+The following example from a generic Java graph
+library~\cite{Garcia:2003:CSL:949305.949317} demonstrates the level of verbosity
+that can be required:
+
+\begin{singlespace}
+\begin{lstlisting}[language=java,style=ttcode]
+public class breadth_first_search {
+  public static<Vertex, Edge extends GraphEdge<Vertex>,
+                VertexIterator extends Iterator<Vertex>,
+                OutEdgeIterator extends Iterator<Edge>,
+                Visitor extends BFSVisitor,
+                ColorMap extends ReadWriteMap<Vertex, Integer>>
+  void go(VertexListAndIncidenceGraph<Vertex,Edge,
+            VertexIterator,VerticesSizeType,OutEdgeIterator,
+            DegreeSizeType> g,
+          Vertex s, ColorMap c, Visitor vis);
+}
+\end{lstlisting}
+\end{singlespace}
+
+(other problems: primitive types int and double cannot be used,
+static parameters can only be inferred directly from arguments,
+not from constraints of other parameters. our subtyping system
+does not have this problem)
+
 If, however, we are going to specialize the method, the compiler can analyze it
 using actual types from call sites, and see for itself whether the method works
 in each case (this is how C++ templates are type-checked; they are analyzed
@@ -60,10 +83,31 @@ again for each instantiation).
 It is quite interesting that performance and ease-of-use pull this design
 decision in the same direction.
 
-\subsection{Parametric vs.\  ad-hoc polymorphism}
+\subsection{Parametric vs.\ ad-hoc polymorphism}
 
-\todo[inline]{Can we have a definition of ad-hoc polymorphism and talk
-about its relation to multiple dispatch? and point to a technical computing example?}
+The term \emph{polymorphism} refers generally to reuse of code or data
+structures in different contexts.
+A further distinction is often made between \emph{parametric} polymorphism
+and \emph{ad-hoc} polymorphism.
+Parametric polymorphism refers to reusing the \emph{same} code for
+different purposes, while ad-hoc polymorphism refers to selecting
+\emph{different} code for different circumstances.
+
+Both forms occur frequently in technical computing.
+For example, a programmer intuitively expects that \texttt{A[i]} selects
+an element of an array regardless of what kind of array \texttt{A} is.
+\texttt{A} might contain integers or strings, it might be a local
+array or a distributed array, and so on.
+This is parametric polymorphism.
+However the ``parametric'' property only applies to the code \texttt{A[i]}
+itself.
+When we dig into how array indexing actually works, we will probably
+need to resort to ad-hoc polymorphism.
+For example, when \texttt{A} is a local array the code accesses local
+memory, and when \texttt{A} is distributed it might be necessary to
+send a network message instead.
+At a lower level, the machine code for \texttt{A[i]} needs to be
+different depending on the array's element type.
 
 The idea of specialization unites parametric and ad-hoc polymorphism.
 Beginning with a parametrically-polymorphic function, one can imagine
@@ -142,8 +186,6 @@ is less of a problem for technical computing, and in some cases even
 advantageous.
 
 \subsection{Dynamic dispatch is key}
-
-\todo[inline]{Comment: Really nice!}
 
 It would be unpleasant if every piece of every program we wrote were forced
 to do only one specific task. Every time we wanted to do something slightly
