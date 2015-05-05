@@ -490,7 +490,7 @@ on template parameters and static overloading.
 Handling arguments one at a time recursively is a common pattern
 for feeding more complex type information to compilers.
 In fact, the Haskell library Repa~\cite{Keller:2010rs} uses
-essentially the same approach as Boost multi-array:
+essentially the same approach:
 
 \begin{singlespace}
 \begin{lstlisting}[language=haskell,style=ttcode]
@@ -1268,6 +1268,7 @@ The input
 \vspace{-3ex}
 \[ \texttt{@addConstraint(m, sum{weight[j]*x[j], j=1:N} + s == capacity)} \]
 
+\noindent
 is lowered to (lightly edited):
 
 \begin{singlespace}

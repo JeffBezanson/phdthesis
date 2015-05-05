@@ -675,7 +675,6 @@ which matches calls where either, but not necessarily both, of two
 arguments is an \texttt{Int}.
 \footnote{Our implementation of Julia does not yet have syntax for such methods.}
 
-
 \subsection{Type and method caches}
 
 The majority of types that occur in practice are \emph{simple}.
@@ -703,36 +702,130 @@ code that might happen to exist for a particular tuple type.
 
 \subsection{Specificity}
 
-tuples: if an elt of a is more specific than its corresponding elt in b,
-and no elt of b is more specific than its corresponding elt in a.
+Sorting methods by specificity is a crucial feature of a generic
+function system.
+It is not obvious how to order types by specificity, and our
+rules for it have evolved with experience.
+The core of the algorithm is straightforward:
 
-this is essentially the same specificity rule used by Dylan~\cite{dylanlang}
+\begin{itemize}
+\item If $A$ is a strict subtype of $B$, then it is more specific than $B$.
+\item If $B\leq A$ then $A$ is not more specific than $B$.
+\item If some element of tuple type $A$ is more specific than its corresponding
+element in tuple type $B$, and no element of $B$ is more specific than its
+corresponding element in $A$, then $A$ is more specific.
+\end{itemize}
+
+%tuples: if an elt of a is more specific than its corresponding elt in b,
+%and no elt of b is more specific than its corresponding elt in a.
+
+This is essentially the same specificity rule used by Dylan~\cite{dylanlang}
 for argument lists.
-Julia generalizes this to tuple types; it is applied
-recursively for tuple types wherever they occur.
+Julia generalizes this to tuple types; it is applied recursively to tuple
+types wherever they occur.
+We then need several more rules to cover other features of the type system:
 
-a vararg type is less specific if its corresponding type is equal
+\begin{itemize}
+\item A vararg type is less specific than an otherwise equal non-vararg type.
+\item Union type $A$ is more specific than $B$ if some element of $A$ is
+more specific than $B$, and $B$ is not more specific than any
+element of $A$.
+\item Non-union type $A$ is more specific than union type $B$ if it is more specific
+than some element of $B$.
+\item A tag type is more specific than a tag type strictly above it in the
+hierarchy, regardless of parameters.
+%(this embeds a moderate amount of ``class based'' dispatch, compatible
+%with programmer intuition)
+\item A non-variable is more specific than a variable.
+\end{itemize}
 
-Union a is more specific than b if some element of a is
-more specific than b, and b is not more specific than any
-element of a.
 
-non-union a is more specific than union b if it is more specific than
-some element
+\subsection{Diagonal dispatch}
 
-a tag type is more specific than a tag type strictly above it in the
-hierarchy regardless of parameters
-(this embeds a moderate amount of ``class based'' dispatch, compatible
-with programmer intuition)
+\subsection{Constructors}
+\label{sec:constructors}
 
-a non-variable is more specific than a variable
+Generic function systems (such as Dylan's) often implement value
+constructors by allowing methods to be specialized for classes
+themselves, instead of just instances of classes.
+We extend this concept to our type system using a construct similar
+to singleton kinds~\cite{Stone:2000:DTE:325694.325724}:
+\texttt{Type\{T\}} is the type of any type equal to \texttt{T}.
+A constructor for a complex number type can then be written as follows:
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+call{T}(::Type{Complex{T}}, re::Real, im::Real) =
+    new(Complex{T}, re, im)
+\end{lstlisting}
+\end{singlespace}
+
+\noindent
+This requires a small adjustment to the evaluation rules: in the application
+syntax $e_1(e_2)$ when $e_1$ is not a function,
+evaluate $\texttt{call}(e_1,e_2)$ instead, where \texttt{call} is
+a particular generic function known to the system.
+
+Naturally, \texttt{Type} can be combined arbitrarily with other types,
+adding a lot of flexibility to constructor definitions.
+Most importantly, type parameters can be omitted in constructor calls
+as long as there is a \texttt{call} method for the ``unspecialized'' version
+of a type:
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+call{T<:Real}(::Type{Complex}, re::T, im::T) =
+    Complex{T}(re, im)
+\end{lstlisting}
+\end{singlespace}
+
+This definition allows the call \texttt{Complex(1.0,2.0)} to
+construct a \texttt{Complex\{Float64\}}.
+This mechanism subsumes and generalizes the ability to ``infer''
+type parameters found in some languages.
+It also makes it possible to add new parameters to types without
+changing client code.
 
 \subsection{Ambiguities}
 
-our experience: there are lots.
-e.g. Images and DataFrames
+As in any generic function system, method ambiguities are possible.
+Two method signatures are ambiguous if neither is more specific than
+the other, but their intersection is non-empty.
+For arguments that are a subtype of this intersection, it is not
+clear which method should be called.
 
-\subsection{Constructors}
+Some systems have avoided this problem by resolving method
+specificity left to right, i.e.\ giving more weight to the leftmost
+argument.
+With dispatch based on whole tuple types instead of sequences of
+types, this idea seems less defensible.
+One could extract a sequence of types by successively
+intersecting a method type with \texttt{UnionAll T Tuple\{T,Any...\}},
+then \texttt{UnionAll T Tuple\{Any,T,Any...\}}, etc. and taking the
+inferred \texttt{T} values.
+However our experience leads us to believe that the left to right
+approach is a bit too arbitrary, so we have stuck with ``symmetric''
+dispatch.
+
+In the Julia library ecosystem, method ambiguities are unfortunately
+common.
+Library authors have been forced to add many tedious and redundant
+disambiguating definitions.
+However most ambiguities have been mere nuisances rather than serious
+problems.
+A representative example is libraries that add new array-like
+containers.
+Two such libraries are Images and DataArray (an array designed to
+hold statistical data, supporting missing values).
+Each library wants to be able to interoperate with other array-like
+containers, and so defines e.g.\ \texttt{+(::Image, ::AbstractArray)}.
+This definition is ambiguous with \texttt{+(::AbstractArray, ::DataArray)}.
+However in practice Images and DataArrays are not used together, so
+worrying about this is a bit of a distraction.
+Giving a run time error forcing the programmer to clarify intent
+seems to be an acceptable solution (this is what Dylan does;
+currently Julia only prints a warning when the ambiguous definition
+is introduced).
 
 \section{Generic programming}
 
@@ -1068,10 +1161,8 @@ using a data object, and then allow that data object to be treated as a
 function, i.e. ``called''. Some object-oriented languages call such an object
 a \emph{functor}.
 
-Julia accomodates this approach with a small adjustment to the evaluation
-rules: in the application syntax $e_1(e_2)$ when $e_1$ is not a function,
-evaluate $\texttt{call}(e_1,e_2)$ instead, where \texttt{call} is
-a particular generic function known to the system.
+Julia accomodates this approach with the \texttt{call} mechanism used for
+constructors (see section \ref{sec:constructors}).
 
 As an example, we can define a type for polynomials of order $N$ over ring
 $R$:

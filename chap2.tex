@@ -286,12 +286,22 @@ where it can be extensively optimized.
 \section{Why dynamic typing?}
 
 Mathematical abstractions often frustrate our attempts to represent them
-on a computer. Mathematicians can move instinctively between
+on a computer.
+Mathematicians can move instinctively between
 isomorphic objects such as scalars and 1-by-1 matrices, but most programming
 languages would prefer to represent scalars and matrices quite differently.
 %A system might be able to convert automatically from one to the other, but
 %it cannot always know which one we \emph{meant}.
-
+Specifying interfaces precisely seems more rigorous, and therefore possibly
+of use in mathematics, but technical users have voted with their code
+not to use languages that do this.
+A perennial debate occurs, for example, around the exact relationship
+between the notions of \emph{array}, \emph{matrix}, and \emph{tensor}.
+Informal interfaces, e.g. as provided by ``duck typing'', are a viable
+way to share code among disciplines with different interpretations of
+key abstractions.
+It is not too surprising that dynamic typing is popular in the
+technical computing world.
 
 \subsection{Mismatches with mathematical abstractions}
 
@@ -322,6 +332,7 @@ to have matrices that are considered different types for some
 purposes (e.g. having different representations), but not others
 (e.g. different types of matrices can be returned from the same
 function).
+
 
 %Debates about what abstractions mean -- AbstractMatrix
 %we thought we knew what it meant, but what about something like
@@ -355,10 +366,8 @@ function).
 %% end
 %% the code does not "occur" and therefore does not need to be valid
 
-
 %% there is less to learn. with static languages you have to learn what happens
 %% at both compile time and run time, when only run time really matters.
-
 
 %% there is a desire to parameterize as much as possible. functions
 %% accept parameters, so function calling ought to be sufficient to express
@@ -745,6 +754,7 @@ extra dispatch and occasionally changing the representation.
 In some sense, our work takes this idea to its logical conclusion:
 why not support a range of data representations from the beginning,
 managed by a single sufficiently powerful dispatch system?
+% so you need some type system, might as well be a good one
 
 
 \section{A compiler for every problem}

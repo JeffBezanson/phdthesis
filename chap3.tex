@@ -2,6 +2,8 @@
 
 \section{The language design space}
 
+% ``technology transfer'' from PLT to TC
+
 It is helpful to begin with a rather coarse classification of programming
 languages, according to how expressive their type systems are, and whether
 their type systems are dynamic or static:
@@ -25,15 +27,17 @@ Static & ML, Haskell, Scala & Fortran, Pascal, C\tabularnewline
 
 \vspace{3ex}
 
-The lower right corner tends to contain older languages. The upper right corner
-contains many popular ``dynamic'' languages. The lower left corner contains
-many modern languages resulting from research on static type systems.
+The lower right corner tends to contain older languages.
+The upper right corner contains many popular ``dynamic'' languages.
+The lower left corner contains many modern languages resulting from research
+on static type systems.
 We are most interested in the upper left corner, which is notable for being
-rather sparsely populated. It has been generally believed that dynamic
-languages do not ``need'' types, or that there is no point in talking about
-types if they are not going to be checked at compile time. These views have
-some merit, but as a result the top-left corner of this design space has
-been under-explored.
+rather sparsely populated.
+It has been generally believed that dynamic languages do not ``need'' types,
+or that there is no point in talking about types if they are not going to be
+checked at compile time.
+These views have some merit, but as a result the top-left corner of this design
+space has been under-explored.
 
 \subsection{Classes vs.\ functions}
 
@@ -345,9 +349,10 @@ uses two lookups, first on the first argument and then on the
 second argument.
 
 This syntax might be considered a bit nicer, but the design
-clearly begs a question: why is $n=2$ special? It isn't, and we
-could clearly consider even more method arguments as part of
-dispatch. But at that point, why is the first argument special?
+clearly begs a question: why is $n=2$ special?
+It isn't, and we could clearly consider even more method arguments as part of
+dispatch.
+But at that point, why is the first argument special?
 Why separate methods in a special way based on the first argument?
 It seems arbitrary, and indeed we can remove the special treatment:
 
@@ -378,17 +383,18 @@ end
 \end{singlespace}
 
 Here we made two major changes: the methods have been moved ``outside''
-of any classes, and all arguments are listed explicitly. This change
-has fairly significant implications. Since methods no longer need to be
-``inside'' classes, there is no syntactic limit to where definitions
-may appear. Now it is easier to add new methods after a class has
-been defined. Methods also now naturally operate on combinations of
-objects, not single objects.
+of any classes, and all arguments are listed explicitly.
+This is sometimes called \emph{external dispatch}.
+This change has significant implications.
+Since methods no longer need to be ``inside'' classes, there is no syntactic
+limit to where definitions may appear.
+Now it is easier to add new methods after a class has been defined.
+Methods also now naturally operate on combinations of objects, not single objects.
 
-The shift to thinking about combinations of objects is fairly
-revolutionary. Many interesting properties only apply to combinations
-of objects, and not individuals. We are also now free to think of
-more exotic kinds of combinations.
+The shift to thinking about combinations of objects is fairly revolutionary.
+Many interesting properties only apply to combinations of objects, and not
+individuals.
+We are also now free to think of more exotic kinds of combinations.
 
 We can define a method on \emph{any number} of objects:
 
@@ -546,10 +552,11 @@ Predicate dispatch is a powerful object-oriented mechanism that allows
 methods to be selected based on arbitrary predicates \cite{ErnstKC98}.
 It is, in some
 sense, the most powerful \emph{possible} dispatch system, since any
-computation may be done as part of method selection. Since a predicate
-denotes a set (the set of values for which it is true), it also denotes
-a set-theoretic type. Some type systems of this kind, notably that of
-Common Lisp \cite{steele1990common:types}, have actually included predicates as types.
+computation may be done as part of method selection.
+Since a predicate denotes a set (the set of values for which it is true),
+it also denotes a set-theoretic type.
+Some type systems of this kind, notably that of Common
+Lisp~\cite{steele1990common:types}, have actually included predicates as types.
 However, such a type system is obviously undecidable, since it
 requires computing the predicates themselves or, even worse, computing
 predicate implication.\footnote{
@@ -568,25 +575,28 @@ that wish to prove that every call site has an applicable method.
 Even without evaluating predicates, one can prove that the available methods
 are exhaustive (e.g. methods for both $p$ and $\neg p$ exist).
 In contrast, and most relevant to this thesis, predicate types \emph{are} a
-problem for code \emph{specialization}. Static method lookup would require
-evaluating the predicates, and optimal code generation would require
-understanding something about what the predicates mean. One approach would
-be to include a list of satisfied predicates in a type. However, to the
-extent such a system is decidable, it is essentially equivalent to multiple
-inheritance. Another approach would be to separate predicates into a
-second ``level'' of the type system. The compiler would combine methods
-with the same ``first level'' type, and then generate branches to evaluate
-the predicates. Such a system would be very useful, and could be
+problem for code \emph{specialization}.
+Static method lookup would require evaluating the predicates, and optimal code
+generation would require understanding something about what the predicates mean.
+One approach would be to include a list of satisfied predicates in a type.
+However, to the extent such a system is decidable, it is essentially equivalent
+to multiple inheritance.
+Another approach would be to separate predicates into a second ``level'' of the
+type system.
+The compiler would combine methods with the same ``first level'' type, and then
+generate branches to evaluate the predicates.
+Such a system would be very useful, and could be
 % TODO cite, as this has probably been done
 combined with a language like Julia or, indeed, most object-oriented
-languages. However this comes at the expense of conceding that predicates
-are not ``real'' types.
+languages.
+However this comes at the expense of making predicates second-class
+citizens of the type system.
 
 In considering the problems of predicate dispatch for code specialization,
 we seem to be up against a fundamental obstacle: some sets of values are
-simply more robust under evaluation than others. Programs that map integers
-to integers abound, but programs that map, say, even integers to even
-integers are rare to the point of irrelevance.
+simply more robust under evaluation than others.
+Programs that map integers to integers abound, but programs that map, say,
+even integers to even integers are rare to the point of irrelevance.
 
 
 \section{Domain theory}
@@ -696,7 +706,7 @@ though it seems prohibitively difficult to actually implement.
 %$\lambda_\aleph$ was introduced a couple years after we began work on Julia
 We opt instead for a simpler approach where \texttt{Int} is
 interpreted as \texttt{Type\{Int\}} (in a near-borrowing of notation from
-\cite{Glew:2013:MLD:2502409.2502412} and \cite{cardelli1986polymorphic}),
+\cite{cardelli1986polymorphic} and \cite{Glew:2013:MLD:2502409.2502412}),
 and multi-valued terms exist only statically within a separate
 maximum-fixed-point evaluator.
 
