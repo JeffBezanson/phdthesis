@@ -10,6 +10,7 @@ The remaining sections introduce some libraries and real-world applications
 that benefit from Julia's design.
 
 \section{Conversion and comparison}
+\label{sec:conversion}
 
 Type conversion provides a classic example of a binary method.
 Multiple dispatch allows us to avoid deciding whether the converted-to type or the
@@ -618,7 +619,7 @@ compiler to understand fully using straightforward techniques.
 %% ::(Int, Int)
 %% \end{verbatim}
 
-The result type is determined using only dataflow type inference, plus a
+The result type is determined using only data flow type inference, plus a
 rule for splicing an immediate container (the type of \texttt{f((a,b)...)} is
 the type of \texttt{f(a,b)}). Argument list destructuring takes place inside
 the type intersection operator used to combine argument types with method
@@ -724,8 +725,15 @@ LU{T,S<:AbstractMatrix} <: Factorization{T}
 CholeskyDenseRFP{T<:BlasFloat} <: Factorization{T}
 
 
-typealias BlasFloat Union(Float64,Float32,Complex128,Complex64)
-axpy!{T<:BlasFloat}(alpha::Number, x::Union(DenseArray{T},StridedVector{T}), y::Union(DenseArray{T},StridedVector{T}))
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+const BlasFloat = Union(Float64,Float32,Complex128,Complex64)
+
+axpy!{T<:BlasFloat}(alpha::Number,
+                    x::Union(DenseArray{T},StridedVector{T}),
+                    y::Union(DenseArray{T},StridedVector{T}))
+\end{lstlisting}
+\end{singlespace}
 
 
 
@@ -895,6 +903,143 @@ This is the tradeoff a Julia programmer accepts.
 %\label{sec:dates}
 
 %compare to python DateTime, compare code length
+
+
+\section{Algebraic modeling with JuMP}
+\label{sec:jump}
+
+An entire subfield of technical computing is devoted to solving optimization
+problems.
+Linear programming, the problem of finding variable values that maximize a
+linear function subject to linear constraints, is especially important and
+widely used, for example in operations research.
+
+Real-world problem instances can be quite large, requiring many variables
+and constraints.
+Simply writing down a large linear program is challenging enough to
+require automation.
+Specialized languages known as Algebraic Modeling Languages (AMLs)
+have been developed for this purpose.
+One popular AML is AMPL~\cite{fourer1993ampl}, which allows users to
+specify problems using a high-level mathematical syntax.
+Here is an example model of a ``knapsack'' problem (from~\cite{LubinDunningIJOC})
+in AMPL syntax:
+
+\vspace{-3ex}
+\begin{singlespace}
+\begin{verbatim}
+var x{j in 1..N} >= 0.0, <= 1.0;
+
+maximize Obj:
+  sum {j in 1..N} profit[j] * x[j];
+
+subject to CapacityCon:
+  sum {j in 1..N} weight[j] * x[j] <= capacity;
+\end{verbatim}
+\end{singlespace}
+
+\noindent
+This syntax is ``compiled'' to a numeric matrix representation that can
+be consumed by standard solver libraries.
+Although solving the problem can take a significant amount of time,
+building the problem representation is often the bottleneck.
+AMPL is highly specialized to this task and offers good performance.
+
+Providing the same level of performance and convenience for linear programming
+within a general purpose language has proven difficult.
+However many users would prefer this, since it would make it easier to
+provide data to the model and use the results within a larger system.
+Using Julia, Miles Lubin and Iain Dunning solved this problem, creating the
+first embedded AML, JuMP~\cite{LubinDunningIJOC}, to match both the performance
+and notational advantages of specialized tools.
+
+The solution is a multi-stage program: first the input syntax is converted to
+conventional loops and function calls with a macro, then the types of
+arguments are used to decide how to update the model, and finally code
+specialized for the structure of the input problem runs.
+The second stage is handled by a combination of generic functions and
+Julia's standard specialization process.
+Model parameters can refer to variables in the surrounding Julia program,
+without JuMP needing to understand the entire context.
+
+Lubin and Dunning provide an example of how this works.
+The input
+
+\vspace{-3ex}
+\[ \texttt{@addConstraint(m, sum{weight[j]*x[j], j=1:N} + s == capacity)} \]
+
+\noindent
+is lowered to (lightly edited):
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+aff = AffExpr()
+for i = 1:N
+  addToExpression(aff, 1.0*weight[i], x[i])
+end
+addToExpression(aff, 1.0, s)
+addToExpression(aff, -1.0, capacity)
+addConstraint(m, Constraint(aff,"=="))
+\end{lstlisting}
+\end{singlespace}
+
+\noindent
+\texttt{addToExpression} includes the following methods (plus others):
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+addToExpression(ex::Number,   c::Number,   x::Number)
+addToExpression(ex::Number,   c::Number,   x::Variable)
+addToExpression(ex::Number,   c::Number,   x::AffExpr)
+addToExpression(ex::Number,   c::Variable, x::Variable)
+addToExpression(ex::Number,   c::AffExpr,  x::AffExpr)
+addToExpression(aff::AffExpr, c::Number,   x::Number)
+addToExpression(aff::AffExpr, c::Number,   x::Variable)
+addToExpression(aff::AffExpr, c::Variable, x::Variable)
+addToExpression(aff::AffExpr, c::Number,   x::AffExpr)
+addToExpression(aff::AffExpr, c::Number,   x::QuadExpr)
+\end{lstlisting}
+\end{singlespace}
+
+When the arguments are all numbers, \texttt{ex + c*x} is computed directly.
+Or, given an \texttt{AffExpr} and a variable, the \texttt{AffExpr}'s lists of
+variables and coefficients are extended.
+Given two variables, a quadratic term is added.
+With this structure, new kinds of terms can be added with minimal code,
+without needing to update the more complicated syntax transformation code.
+
+\begin{table}[!t]
+\begin{center}
+\begin{tabular}{|l|r|r|r|r|}\hline
+\textbf{$L$} & \textbf{JuMP/Julia} & \textbf{AMPL} & \textbf{Gurobi/C++} & \textbf{PuLP/PyPy} \\
+\hline \hline
+1000    & 1.0 & 0.7 & 0.8 & 4.8 \\
+\hline
+5000    & 4.2 & 3.3 & 3.9 & 26.4 \\
+\hline
+10000   & 8.9 & 6.7 & 8.3 & 50.6 \\
+\hline
+50000   & 48.3 & 35.0 & 39.3 & 225.6 \\
+\hline
+\end{tabular}
+\end{center}
+\caption[Performance of linear programming tools]{
+\small{
+Performance (time in seconds) of several linear programming tools for
+generating models in MPS format (excerpted from \cite{LubinDunningIJOC}).
+$L$ is the number of locations solved for in a facility location problem.
+}
+}
+\label{jumpperf}
+\end{table}
+
+Table~\ref{jumpperf} shows performance results.
+JuMP is only marginally slower than AMPL or direct use of the Gurobi solver's
+C++ API.
+The C++ implementation, unlike the other systems compared in the table,
+is not solver-independent and does not provide convenient high-level syntax.
+PuLP~\cite{mitchell2011pulp} is Python-based, and was benchmarked under the
+PyPy JIT compiler~\cite{pypyjit}.
 
 
 \section{Boundary-element method}
@@ -1204,136 +1349,6 @@ end
 % #M[i,j] = integrate((y1,y2,y3)->sum([Fcv[p](y1,y2,y3) * Pcv[p](y1,y2,y3) for p=1:n_cv]), 0, 1)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\section{Algebraic modeling with JuMP}
-\label{sec:jump}
-
-An entire subfield of technical computing is devoted to solving optimization
-problems.
-Linear programming, the problem of finding variable values that maximize a
-linear function subject to linear constraints, is especially important and
-widely used, for example in operations research.
-
-Real-world problem instances can be quite large, requiring many variables
-and constraints.
-Simply writing down a large linear program is challenging enough to
-require automation.
-Specialized languages known as Algebraic Modeling Languages (AMLs)
-have been developed for this purpose.
-One popular AML is AMPL~\cite{fourer1993ampl}, which allows users to
-specify problems using a high-level mathematical syntax.
-Here is an example model of a ``knapsack'' problem (from~\cite{LubinDunningIJOC})
-in AMPL syntax:
-
-\vspace{-3ex}
-\begin{singlespace}
-\begin{verbatim}
-var x{j in 1..N} >= 0.0, <= 1.0;
-
-maximize Obj:
-  sum {j in 1..N} profit[j] * x[j];
-
-subject to CapacityCon:
-  sum {j in 1..N} weight[j] * x[j] <= capacity;
-\end{verbatim}
-\end{singlespace}
-
-\noindent
-This syntax is ``compiled'' to a numeric matrix representation that can
-be consumed by standard solver libraries.
-Although solving the problem can take a significant amount of time,
-building the problem representation is often the bottleneck.
-AMPL is highly specialized to this task and offers good performance.
-
-Providing the same level of performance and convenience for linear programming
-within a general purpose language has proven difficult.
-However many users would prefer this, since it would make it easier to
-provide data to the model and use the results within a larger system.
-Using Julia, Miles Lubin and Iain Dunning solved this problem, creating the
-first embedded AML, JuMP~\cite{LubinDunningIJOC}, to match both the performance
-and notational advantages of specialized tools.
-
-The solution is a multi-stage program: first the input syntax is converted to
-conventional loops and function calls with a macro, then the types of
-arguments are used to decide how to update the model, and finally code
-specialized for the structure of the input problem runs.
-The second stage is handled by a combination of generic functions and
-Julia's standard specialization process.
-Model parameters can refer to variables in the surrounding Julia program,
-without JuMP needing to understand the entire context.
-
-Lubin and Dunning provide an example of how this works.
-The input
-
-\vspace{-3ex}
-\[ \texttt{@addConstraint(m, sum{weight[j]*x[j], j=1:N} + s == capacity)} \]
-
-\noindent
-is lowered to (lightly edited):
-
-\begin{singlespace}
-\begin{lstlisting}[language=julia]
-aff = AffExpr()
-for i = 1:N
-  addToExpression(aff, 1.0*weight[i], x[i])
-end
-addToExpression(aff, 1.0, s)
-addToExpression(aff, -1.0, capacity)
-addConstraint(m, Constraint(aff,"=="))
-\end{lstlisting}
-\end{singlespace}
-
-\noindent
-\texttt{addToExpression} includes the following methods (plus others):
-
-\begin{singlespace}
-\begin{lstlisting}[language=julia]
-addToExpression(ex::Number,   c::Number,   x::Number)
-addToExpression(ex::Number,   c::Number,   x::Variable)
-addToExpression(ex::Number,   c::Number,   x::AffExpr)
-addToExpression(ex::Number,   c::Variable, x::Variable)
-addToExpression(ex::Number,   c::AffExpr,  x::AffExpr)
-addToExpression(aff::AffExpr, c::Number,   x::Number)
-addToExpression(aff::AffExpr, c::Number,   x::Variable)
-addToExpression(aff::AffExpr, c::Variable, x::Variable)
-addToExpression(aff::AffExpr, c::Number,   x::AffExpr)
-addToExpression(aff::AffExpr, c::Number,   x::QuadExpr)
-\end{lstlisting}
-\end{singlespace}
-
-When the arguments are all numbers, \texttt{ex + c*x} is computed directly.
-Or, given an \texttt{AffExpr} and a variable, the \texttt{AffExpr}'s lists of
-variables and coefficients are extended.
-Given two variables, a quadratic term is added.
-With this structure, new kinds of terms can be added with minimal code,
-without needing to update the more complicated syntax transformation code.
-
-
-\begin{table}[!t]
-\begin{center}
-\begin{tabular}{|l|r|r|r|r|}\hline
-\textbf{$L$} & \textbf{JuMP/Julia} & \textbf{AMPL} & \textbf{Gurobi/C++} & \textbf{Pulp/PyPy} \\
-\hline \hline
-1000    & 1.0 & 0.7 & 0.8 & 4.8 \\
-\hline
-5000    & 4.2 & 3.3 & 3.9 & 26.4 \\
-\hline
-10000   & 8.9 & 6.7 & 8.3 & 50.6 \\
-\hline
-50000   & 48.3 & 35.0 & 39.3 & 225.6 \\
-\hline
-\end{tabular}
-\end{center}
-\caption[Performance of linear programming tools]{
-\small{
-Performance (time in seconds) of several linear programming tools for
-generating models in MPS format (excerpted from \cite{LubinDunningIJOC}).
-$L$ is the number of locations solved for in a facility location problem.
-}
-}
-\label{jumpperf}
-\end{table}
-
 
 %\section{Computational geometry}
 

@@ -170,7 +170,7 @@ A good slogan for this attitude might be ``evaluate softly and carry a big
 subtype relation!''
 
 To avoid the dual traps of ``excess power'' and divergence, the system we use
-must have a decidable subtype relation, and must be closed under data-flow operations
+must have a decidable subtype relation, and must be closed under data flow operations
 (meet, join, and widen). It must also lend itself to a reasonable definition of
 specificity, so that methods can be ordered automatically (a necessary property for
 composability). These requirements are fairly strict.
@@ -262,7 +262,7 @@ methods.
 
 The types introduced so far would be perfectly sufficient for many programs, and are
 roughly equal in power to several multiple dispatch systems that have been designed
-before. However, these types are not closed under data-flow operations. For example,
+before. However, these types are not closed under data flow operations. For example,
 when the two branches of a conditional expression yield different types, a program
 analysis must compute the union of those types to derive the type of the conditional.
 The above types are not closed under set union. We therefore add the following
@@ -293,11 +293,11 @@ This is one of a few reasons that union types are often considered undesirable.
 When used with type inference, such types can grow without bound, possibly leading
 to slow or even non-terminating compilation. Their occurrence also typically
 corresponds to cases that would fail most static type checkers. Yet from the
-perspectives of both data-flow analysis and method specialization, they are
+perspectives of both data flow analysis and method specialization, they are
 perfectly natural and even essential \cite{abstractinterp}
 \cite{Igarashi} \cite{Smith:2008:JTI:1449764.1449804}.
 
-The next problem we need to solve arises from data-flow analysis of
+The next problem we need to solve arises from data flow analysis of
 the \texttt{new} construct.
 When a type constructor \texttt{C} is applied to a type
 $S$ that is known only approximately at compile time, the type \texttt{C\{}$S$\texttt{\}}
@@ -329,7 +329,7 @@ the notion of ``there exists'' can be semantically misleading since it sounds li
 only a single $T$ value might be involved.
 
 %Conjecture: these types are intuitive to dispatch on because they correspond
-%to program behavior in the same way that dataflow analysis approximates program
+%to program behavior in the same way that data flow analysis approximates program
 %behavior.
 
 % $T=S \longleftrightarrow (T\leq S) \wedge (S\leq T)$.
@@ -559,6 +559,10 @@ convincing. $\Pi_2^{\textrm{P}}$ is only the most obvious
 reduction to try; it is possible our system equals PSPACE or even greater,
 as has often been the case for subtyping systems like ours.
 
+Appendix~\ref{appendix:subtyping} gives a Julia implementation of this
+algorithm.
+% TODO more
+
 \subsubsection{Example deductions}
 
 We will briefly demonstrate the power of this algorithm through examples of
@@ -659,7 +663,7 @@ of subtyping:
 \end{singlespace}
 
 
-\section{Dispatch mechanism}
+\section{Dispatch system}
 
 Julia's dispatch system strongly resembles the multi-method systems
 found in some object-oriented languages.
@@ -693,12 +697,13 @@ Some types are concrete but not simple.
 The hash-consing process uses linear search for these types.
 Fortunately, such types tend to make up less than 10\% of the total
 type population.
+On cache misses, method tables also use linear search.
 
-this can work especially well for tuple types.
-by writing (1, 2.0) you immediately obtain an efficient ``struct'' type.
-cases like protocol compilers require generating code in advance.
-this generates it on the fly, but can pick up and reuse any cached
-code that might happen to exist for a particular tuple type.
+%this can work especially well for tuple types.
+%by writing (1, 2.0) you immediately obtain an efficient ``struct'' type.
+%cases like protocol compilers require generating code in advance.
+%this generates it on the fly, but can pick up and reuse any cached
+%code that might happen to exist for a particular tuple type.
 
 \subsection{Specificity}
 
@@ -739,8 +744,48 @@ hierarchy, regardless of parameters.
 \item A non-variable is more specific than a variable.
 \end{itemize}
 
-
 \subsection{Diagonal dispatch}
+\label{sec:diagonal}
+
+We use the following syntax to express methods whose signatures
+are \texttt{UnionAll} types:
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+func{T<:Integer}(x::Array{T}) = ...
+\end{lstlisting}
+\end{singlespace}
+
+\noindent
+This feature largely overcomes the limitations of parametric invariance.
+
+\texttt{UnionAll} types can also express constraints between arguments.
+The following definition matches two arguments of the same concrete
+type:
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+func{T}(x::T, y::T) = ...
+\end{lstlisting}
+\end{singlespace}
+
+\noindent
+Section~\ref{sec:conversion} discusses an application.
+
+This feature is currently implemented only in the dispatch system;
+we have not yet formalized it as part of subtyping.
+For example, the subtyping algorithm presented here concludes that
+\texttt{Tuple\{Int,String\}} is a subtype of
+\texttt{UnionAll T Tuple\{T,T\}}, since \texttt{T} might equal
+\texttt{Any} or \texttt{Union(Int,String)}.
+We believe this hurts the accuracy of static type deductions, but
+not their soundness, as long as we are careful in the compiler to
+treat all types as over-estimates of run time types.
+In any case, we plan to fix this by allowing some type variables
+to be constrained to concrete types.
+This only affects type variables that occur only in covariant
+position; types such as \texttt{UnionAll T Tuple\{Array\{T\},T\}}
+are handled correctly.
 
 \subsection{Constructors}
 \label{sec:constructors}
@@ -765,6 +810,7 @@ This requires a small adjustment to the evaluation rules: in the application
 syntax $e_1(e_2)$ when $e_1$ is not a function,
 evaluate $\texttt{call}(e_1,e_2)$ instead, where \texttt{call} is
 a particular generic function known to the system.
+This constructor can then be invoked by writing e.g.\ \texttt{Complex\{Float64\}(x,y)}.
 
 Naturally, \texttt{Type} can be combined arbitrarily with other types,
 adding a lot of flexibility to constructor definitions.
@@ -835,7 +881,7 @@ for a wider variety of types.
 This capability is powerful, but has some usability cost as extra
 syntax and additional rules must be learned.
 We have found that the combination of our type system and generic functions
-subsumes most uses of generic programming features.
+subsumes many uses of generic programming features.
 
 For example, consider this C++ snippet, which shows how a template
 parameter can be used to vary the arguments accepted by methods:
@@ -873,10 +919,70 @@ method1{T}(this::Foo{T}, x::T) = ...
 \subsubsection{Associated types}
 
 When dealing with a particular type in a generic program, it is often
-necessary to mention other types related in some standard way.
+necessary to mention other types that are somehow related.
 For example, given a collection type the programmer will want to
 refer to its element type, or given a numeric type one might want to
 know the next ``larger'' numeric type.
+Such associated types can be implemented as generic functions:
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+eltype{T}(::AbstractArray{T}) = T
+
+widen(::Type{Int32}) = Int64
+\end{lstlisting}
+\end{singlespace}
+
+\subsubsection{Traits}
+
+It turns out that external multiple dispatch is sufficiently powerful
+to simulate a kind of multiple inheritance.
+At a certain point in the development of Julia's standard library,
+it become apparent that there were object properties that it would be
+useful to dispatch on, but that were not reflected in the type hierarchy.
+For example, the array type hierarchy distinguished dense and sparse
+arrays, but not arrays whose memory layout is fully contiguous.
+This is important for algorithms that run faster using a single
+integer index instead of a tuple of indexes to reference array elements.
+
+Tim Holy pointed out that new object properties can be added
+externally~\cite{timholytrait}, and proposed using it for this purpose:
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+abstract LinearIndexing
+
+immutable LinearFast <: LinearIndexing; end
+immutable LinearSlow <: LinearIndexing; end
+
+linearindexing(A::Array) = LinearFast()
+\end{lstlisting}
+\end{singlespace}
+
+\noindent
+An algorithm can consume this information as follows:
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+algorithm(a::AbstractArray) = _algorithm(a, linearindexing(a))
+
+function _algorithm(a, ::LinearFast)
+    # code assuming fast linear indexing
+end
+
+function _algorithm(a, ::LinearSlow)
+    # code assuming slow linear indexing
+end
+\end{lstlisting}
+\end{singlespace}
+
+\noindent
+The original author of a type like \texttt{Array} does not need to know
+about this property, unlike the situation with multiple inheritance or
+explicit interfaces.
+Adding such properties after the fact makes sense when new algorithms
+are developed whose performance is sensitive to distinctions not
+previously noticed.
 
 
 \section{Staged programming}
@@ -885,7 +991,7 @@ know the next ``larger'' numeric type.
 An especially fruitful use of types in Julia is as input to code that
 generates other code, in a so-called ``staged'' program.
 This feature is accessed simply by annotating a method definition
-with a macro called \texttt{@generated}.
+with a macro called \texttt{@generated}:
 
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
@@ -899,6 +1005,11 @@ end
 \end{lstlisting}
 \end{singlespace}
 
+\noindent
+This simple example implements indexing with \texttt{N} arguments
+in terms of linear indexing, by generating a fully-unrolled expression
+for the index of the element.
+
 The remarkable thing about this is how seamlessly it integrates into
 the language.
 The method is selected like any other; the only difference is that
@@ -910,7 +1021,7 @@ The caller does not need to know anything about this, and the author
 of the function does not need to do any bookkeeping.
 
 One reason this works so well is that the amount of information
-available at this stage provides a good balance.
+available at this stage is well balanced.
 If, for example, only the \emph{classes} of arguments in a traditional
 object-oriented language were available, there would not be much
 to base the generated code on.
@@ -921,7 +1032,7 @@ The types of arguments say something about their \emph{meaning},
 and so unlike syntax-based systems (macros) are independent of how
 the arguments are computed.
 A staged function of this kind is \emph{guaranteed} to produce the
-same results for \texttt{2+2} and \texttt{4}.
+same results for arguments \texttt{2+2} and \texttt{4}.
 
 Another advantage of this approach is that the expression-generating
 code is purely functional.
@@ -940,14 +1051,15 @@ This preserves the possibility of full static compilation.
 Generic functions are first-class objects, and so can be passed as arguments
 just as in any dynamically typed language with first-class functions.
 However, assigning useful type tags to generic functions and deciding how
-they should dispatch is not so simple. Past work has often described the
-types of generic functions using the ``intersection of arrows'' formalism
+they should dispatch is not so simple.
+Past work has often described the types of generic functions using the
+``intersection of arrows'' formalism
 \cite{RonchiDellaRocca:1988:PTS:55079.55086} \cite{Dunfield:2012:EIU:2364527.2364534}
-\cite{boundedquant} \cite{Castagna:1995:COF:203496.203510}. Since an ordinary
-function has an arrow type $A\rightarrow B$ describing how it maps arguments
-$A$ to results $B$, a function with multiple definitions can natually be
-considered to have multiple such types. For example, a \texttt{sin} function
-with the following two definitions:
+\cite{boundedquant} \cite{Castagna:1995:COF:203496.203510}.
+Since an ordinary function has an arrow type $A\rightarrow B$ describing how it
+maps arguments $A$ to results $B$, a function with multiple definitions can
+natually be considered to have multiple such types.
+For example, a \texttt{sin} function with the following two definitions:
 
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
@@ -957,7 +1069,8 @@ sin(v::Vector) = map(sin, v)
 \end{singlespace}
 
 \noindent
-could have the type $(\texttt{Float64}\rightarrow\texttt{Float64})\cap(\texttt{Vector}\rightarrow\texttt{Vector})$. The intuition is that this \texttt{sin} function can be
+could have the type $(\texttt{Float64}\rightarrow\texttt{Float64})\cap(\texttt{Vector}\rightarrow\texttt{Vector})$.
+The intuition is that this \texttt{sin} function can be
 used both where a $\texttt{Float64}\rightarrow\texttt{Float64}$ function
 is expected and where a $\texttt{Vector}\rightarrow\texttt{Vector}$ function is expected,
 and therefore its type is the intersection of these types.
@@ -1002,25 +1115,33 @@ it cannot be detected when the \texttt{integrate} methods are defined.
 
 Such a non-local introduction of ambiguity is a special case of the
 general problem that a generic function's type would change depending
-on what definitions have been added, which depends e.g. on which libraries
-have been loaded. This does not feel like the right abstraction:
+on what definitions have been added, which depends e.g.\ on which libraries
+have been loaded.
+This does not feel like the right abstraction:
 type tags are supposed to form a ``ground truth'' about objects against
-which program behavior can be selected. Though generic functions change
-with the addition of methods, it would be more satisfying for their
-types to somehow reflect an intrinsic, unchanging property.
+which program behavior can be selected.
+Though generic functions change with the addition of methods, it would be more
+satisfying for their types to somehow reflect an intrinsic, unchanging
+property.
 
 An additional minor problem with the intersection of arrows
 interpretation is that we have found, in practice, that Julia methods
-often have a large number of definitions. For example, the \texttt{+}
-function in Julia v0.3.4 has 117 definitions, and in a more recent
-development version with more functionality, it has 150 methods. An
-intersection of 150 types would be unwieldy, even if only
+often have a large number of definitions.
+For example, the \texttt{+} function in Julia v0.3.4 has 117 definitions,
+and in a more recent development version with more functionality, it has
+150 methods.
+An intersection of 150 types would be unwieldy, even if only
 inspected when debugging the compiler.
 
 A slightly different approach we might try would be to immitate
 the types of higher-order functions in traditional
-statically-typed functional languages. For example, we might wish
-to write \texttt{map} as follows:
+statically typed functional languages.
+Consider the classic \texttt{map} function, which creates a new container
+by calling a given function on every element of a given container.
+This is a general pattern that occurs in ``vectorized'' functions in
+technical computing environments, e.g.\ when a function like \texttt{+}
+or \texttt{sin} operates on arrays elementwise.
+We might wish to write \texttt{map} as follows:
 
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
@@ -1158,7 +1279,7 @@ what order of integrable singularity is present (see section~\ref{sec:BEM} for
 an application), or what dimension of linear operator the function represents.
 The idea of nominal function types is to describe the properties of interest
 using a data object, and then allow that data object to be treated as a
-function, i.e. ``called''. Some object-oriented languages call such an object
+function, i.e.\ ``called''. Some object-oriented languages call such an object
 a \emph{functor}.
 
 Julia accomodates this approach with the \texttt{call} mechanism used for
@@ -1186,6 +1307,17 @@ functions, which are usually opaque.
 
 % nominal types that classify algorithms, e.g. whether a sort is stable
 
+Another possible use of this feature is to implement automatic vectorization
+of scalar functions, as found in Chapel~\cite{chamberlain2007parallel}.
+Only one definition would be needed to lift any declared subtype of
+\texttt{ScalarFunction} to arrays:
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+call(f::ScalarFunction, a::AbstractArray) = map(f, a)
+\end{lstlisting}
+\end{singlespace}
+
 It is even possible to define a ``nominal arrow'' type, which uses this
 mechanism to impose a classification on functions based on argument and
 return types:
@@ -1205,11 +1337,9 @@ Calling an \texttt{Arrow} will yield a no-method error if the argument
 type fails to match, and a type error if the return type fails to
 match.
 
-It is worth examining the differences and tradeoffs between nominal
-functions and ``real'' arrow types.
-
-% TODO: mention using this to automatically ``vectorize'' functions
-% like chapel does.
+% TODO
+%It is worth examining the differences and tradeoffs between nominal
+%functions and ``real'' arrow types.
 
 % tradeoffs: arrows group all functions together, which is flexible,
 % but nominal functions let you make more distinctions.
@@ -1317,10 +1447,11 @@ being more complex, and amenable to more different interpretations,
 than what is usually studied in the context of those languages.
 
 
-
 \section{Performance model}
 
 \subsection{Type inference}
+
+Our compiler uses data flow type inference
 
 \cite{kaplanullman}
 \cite{abstractinterp}
@@ -1339,6 +1470,7 @@ the performance we manage to get derives from the language design,
 which enables a style of library implementation such that applying straightforward,
 known optimizations yields good performance.
 
+\section{Dispatch utilization}
 
 \begin{table}[!t]
 \begin{center}
@@ -1381,17 +1513,17 @@ The ``Julia Operators'' row describes 47 functions with special syntax
 \label{dispatchratios}
 \end{table}
 
-Multiple dispatch is used heavily throughout the Julia ecosystem. To quantify
-this statement, we use the following metrics for evaluating the extent of
-multiple dispatch \cite{multipledispatch}:
+To evaluate how dispatch is actually used in our application domain,
+we applied the following metrics \cite{multipledispatch}:
 
 \begin{enumerate}
 \item Dispatch ratio (DR): The average number of methods in a generic function.
 \item Choice ratio (CR): For each method, the total number of methods over all
-generic functions it belongs to, averaged over all methods. This is essentially
-the sum of the squares of the number of methods in each generic function, divided
-by the total number of methods. The intent of this statistic is to give more weight
-to functions with a large number of methods.
+generic functions it belongs to, averaged over all methods.
+This is essentially the sum of the squares of the number of methods in each
+generic function, divided by the total number of methods.
+The intent of this statistic is to give more weight to functions with a large
+number of methods.
 \item Degree of specialization (DoS): The average number of type-specialized
 arguments per method.
 \end{enumerate}
@@ -1400,8 +1532,10 @@ Table~\ref{dispatchratios} shows the mean of each metric over the entire Julia
 \code{Base} library, showing a high degree of multiple dispatch compared with
 corpora in other languages \cite{multipledispatch}.
 Compared to most multiple dispatch systems, Julia functions tend to have a large
-number of definitions. To see why this might be, it helps to compare results
-from a biased sample of only operators. These functions are the most obvious
-candidates for multiple dispatch, and as a result their statistics climb
-dramatically. Julia is focused on technical computing, and so is likely to
-have a large proportion of functions with this character.
+number of definitions.
+To see why this might be, it helps to compare results from a biased sample of
+only operators.
+These functions are the most obvious candidates for multiple dispatch, and as
+a result their statistics climb dramatically.
+Julia has an unusually large proportion of functions with this character.
+% this gives us some confidence that we picked the right abstraction

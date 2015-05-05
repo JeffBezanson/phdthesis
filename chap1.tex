@@ -137,7 +137,7 @@ We intend to show that an equilibrium point in the design space can be found
 by combining selection and specialization into a single dynamic type-based
 dispatch mechanism.
 The specific design is identified via subtyping theories and closure under
-data-flow operations.
+data flow operations.
 
 %what does this system achieve?
 %-
@@ -179,7 +179,7 @@ data-flow operations.
 %% source language for dispatch. We argue that this is the key feature
 %% missing from the present generation of dynamically typed languages.
 %This conclusion would not be surprising to advocates of static
-%type systems, but the approach we propose is actually a run-time
+%type systems, but the approach we propose is actually a run time
 %mechanism that does not restrict the class of valid programs.
 
 %Why integrate code specialization and code selection?
@@ -290,7 +290,7 @@ It is also clear that such a language must strive for maximum convenience, or el
 the split between performance languages and productivity languages will persist.
 
 It is fair to say that two approaches to this problem are being tried: one is
-to design better statically-typed languages, and the other is to apply
+to design better statically typed languages, and the other is to apply
 program analysis techniques to dynamically typed languages.
 Static type systems are getting close to achieving the desired level
 of flexibility (as in Fortress \cite{fortresspec} or Polyduce \cite{polyduce1},
@@ -380,7 +380,7 @@ tracked all argument types per call site to help guide inlining.
 Arguably, if method calls are dispatched on the first argument, but the types of all
 arguments can be inferred, some power has been ``left on the table'' ---
 we could have had multi-methods for little extra cost.
-This argument does not apply equally to statically-typed languages, since they
+This argument does not apply equally to statically typed languages, since they
 cannot simply ``switch'' their functions to generic functions without significant
 consequences for type checking.
 
@@ -471,7 +471,7 @@ Why do we prefer method signatures to imperative logic?
 %% so what to do?
 %% some sets of values are more robust under computation than others
 %% (closure properties).
-%% identify those sets using dataflow concerns.
+%% identify those sets using data flow concerns.
 
 %% say we have a method defined for integers, and also for the special cases
 %% ``2'' and ``odd integers''. a realistic implementation
@@ -571,7 +571,7 @@ Our approach is closely related to exotypes
 %% \item Type tags with nested structure
 %% \item A fully-connected type tree
 %% \item Dynamic multiple dispatch over all types % including parameters and varargs
-%% \item Dataflow type inference
+%% \item Data flow type inference
 %% \item Automatic code specialization
 %% \end{enumerate}
 %% \end{singlespace}
