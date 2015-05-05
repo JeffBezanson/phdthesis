@@ -1042,7 +1042,7 @@ PuLP~\cite{mitchell2011pulp} is Python-based, and was benchmarked under the
 PyPy JIT compiler~\cite{pypyjit}.
 
 
-\section{Boundary-element method}
+\section{Boundary element method}
 \label{sec:BEM}
 
 There are lots of general packages for FEM problems, but it is much more
@@ -1206,11 +1206,11 @@ First we define nominal function types that represent kernel functions:
 \begin{lstlisting}[language=julia]
 abstract AbstractKernel
 
-# any kernel that decays as ~$r^p$~, p < 0
-abstract APowerLaw{p} <: AbstractKernel
+# any kernel that decays as X^p for X ~$\ll$~ s and X^q for X ~$\gg$~ s
+abstract APowerLaw{p,q,s} <: AbstractKernel
 
 # ~$r^p$~ power law
-type PowerLaw{p} <: APowerLaw{p}; end
+type PowerLaw{p} <: APowerLaw{p,p}; end
 \end{lstlisting}
 \end{singlespace}
 
@@ -1250,11 +1250,13 @@ top:
 
 Analytically-known special cases can be added for other kernels.
 Here are two more.
-Notice that a Helmholtz kernel is also a power law kernel:
+Notice that a Helmholtz kernel is also a power law kernel
+\footnote{The \texttt{exprel} function used here is available in the
+external GSL package; see appendix~\ref{appendix:integration}.}:
 
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
-type Helmholtz{k} <: APowerLaw{-1}; end  # ~$e^{ikr} / 4\pi r$~
+type Helmholtz{k} <: APowerLaw{1,1}; end  # ~$e^{ikr} / 4\pi r$~
 
 function call{k,n}(::FirstIntegral{Helmholtz{k},n}, X::Number)
     ikX = im*k*X
@@ -1262,7 +1264,7 @@ function call{k,n}(::FirstIntegral{Helmholtz{k},n}, X::Number)
 end
 
 # magnetic field integral equation
-type MFIE{k} <: AbstractKernel; end  # ~$(ikr - 1) * e^{ikr} / 4\pi r^3$~
+type MFIE{k} <: APowerLaw{3,3}; end  # ~$(ikr - 1) * e^{ikr} / 4\pi r^3$~
 
 function call{k,n}(::FirstIntegral{MFIE{k},n}, X::Number)
     ikX = im*k*X
@@ -1272,23 +1274,28 @@ end
 \end{lstlisting}
 \end{singlespace}
 
-% TODO footnote on exprel
-
 It is possible to implement \texttt{FirstIntegral} for the general
 case of any \texttt{APowerLaw}.
 However, each kernel requires a large amount of up-front work that cannot be done
 efficiently at run time.
 Julia's staged functions solve this problem.
-% TODO more
+Appendix~\ref{appendix:integration} presents a full working implementation of
+the general case, which works by computing Chebyshev coefficients at compile
+time.
+The final generated code is a straight-line sequence of adds and multiplies.
+Here we show a rough outline of how the method works:
 
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
-@generated function call{p,P<:APowerLaw{p},n}(K::FirstIntegral{P,n},
-                                              X::Real)
+@generated function call{P<:APowerLaw,n}(K::FirstIntegral{P,n},
+                                         X::Real)
+    # compute Chebyshev coefficients c based on K
+    # ...
     quote
         X <= 0 && throw(DomainError())
-        t = ....
-        @evalpoly(t, ...coefs...)
+        ~$\xi$~ = 1 - (X + $(2^(1/q)))^$q
+        C = @evalcheb ~$\xi$~ $(c...)
+        return $p < 0 ? C * (X^$p + $(s^p)) : C
     end
 end
 \end{lstlisting}
@@ -1320,12 +1327,15 @@ optimizations.
 % another example is adding a single OpenMP #pragma to a loop instead of
 % hoping for an auto-parallelizing compiler.
 
-pseudocode for how this is used:
+To complete the picture, here is pseudocode for how this library would be
+used to solve a boundary element problem over a triangle mesh.
+The three cases inside the loop are a translation of the three formulas
+from figure 1 in \cite{ReidWhJo14} (only the first formula is shown in
+full for simplicity):
 
 %  # n depends on complicated stuff
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
-# from paper figure 1
 FP = [(FirstIntegral{K,i}(), polynomial(i)) for i in N]
 for trianglepair in mesh
     i, j = indexes based on triangles

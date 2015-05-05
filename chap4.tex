@@ -75,10 +75,11 @@ plus the special values \texttt{Any} and \texttt{Bottom}:
 \noindent
 The last item is the special abstract varargs tuple type.
 
-The language implicitly maps tags to data descriptions, and ensures that
+The language maps tags to data descriptions using built-in rules, and ensures that
 the data part of a tagged value always conforms to the tag's description.
 Mappings from tags to data descriptions are established by special type
-declaration syntax. Data descriptions have the following grammar:
+declaration syntax.
+Data descriptions have the following grammar:
 
 \vspace{-3ex}
 \begin{singlespace}
@@ -89,12 +90,17 @@ data\ ::=\ &\ bit^n\ |\ ref\ |\ data*
 
 \noindent
 where $bit^n$ represents a string of $n$ bits, and $ref$ represents a reference
-to a tagged data value. Data may be declared mutable, in which case its
-representation is implicitly wrapped in a mutable cell. A built-in primitive
-equality operator \texttt{===} is provided, based on $egal$ \cite{egal}
-(mutable objects are compared by address, and immutable objects are compared
-by directly comparing both the tag and data parts bit-for-bit, and recurring
-through references to other immutable objects).
+to a tagged data value.
+Data is automatically laid out according to the platform ABI for proper
+alignment.
+Currently all compound types and heterogeneous tuples use the C struct ABI, and
+homogeneous tuples use the array ABI.
+Data may be declared mutable, in which case its representation is implicitly
+wrapped in a mutable cell.
+A built-in primitive equality operator \texttt{===} is provided, based on
+$egal$ \cite{egal} (mutable objects are compared by address, and immutable objects
+are compared by directly comparing both the tag and data parts bit-for-bit, and
+recurring through references to other immutable objects).
 
 Functions are generally applied to more than one argument. In the application
 syntax $e_1(e_2)$, $e_2$ is an implicitly-constructed tuple of all arguments.
@@ -1458,10 +1464,6 @@ Our compiler uses data flow type inference
 \cite{graphfree}
 
 \subsection{Specialization}
-
-% \section{Separate compilation}
-% Technically julia does not support it, but that's never stopped anybody
-% from doing it anyway. e.g. C++
 
 it might be thought that julia achieves performance through a clever
 compiler that uses ``every trick in the book''.

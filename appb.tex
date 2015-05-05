@@ -1,0 +1,117 @@
+\chapter{Staged numerical integration}
+\label{appendix:integration}
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+abstract AbstractKernel
+
+# any kernel X^p for X ~$\ll$~ s and X^q for X ~$\gg$~ s
+abstract APowerLaw{p,q,s} <: AbstractKernel
+
+type FirstIntegral{K<:AbstractKernel,n}; end
+
+type PowerLaw{p} <: APowerLaw{p,p}; end # r^p power law
+
+# N chebyshev points (order N) on the interval (-1,1)
+chebx(N) = [cos(~$\pi$~*(n+0.5)/N) for n in 0:N-1]
+
+import GSL
+exprel(n, x) = GSL.sf_exprel_n(n, x)
+
+# N chebyshev coefficients for vector of f(x) values on chebx
+# points x
+function chebcoef(f::AbstractVector)
+    a = FFTW.r2r(f, FFTW.REDFT10) / length(f)
+    a[1] /= 2
+    return a
+end
+
+# given a function f and a tolerance, return enough Chebyshev
+# coefficients to reconstruct f to that tolerance on (-1,1)
+function chebcoef(f, tol=1e-13)
+    N = 10
+    local c
+    while true
+        x = chebx(N)
+        c = chebcoef(float([f(y) for y in x]))
+        # look at last 3 coefs, since individual c's might be 0
+        if max(abs(c[end]),
+               abs(c[end-1]),
+               abs(c[end-2])) < tol * maxabs(c)
+            break
+        end
+        N *= 2
+    end
+    return c[1:findlast(v -> abs(v)>tol, c)] # shrink to min length
+end
+
+# given cheb coefficients a, evaluate them for x in (-1,1) by
+# Clenshaw recurrence
+function evalcheb(x, a)
+    isempty(a) && throw(BoundsError())
+    -1 ~$\leq$~ x ~$\leq$~ 1 || throw(DomainError())
+    b~$_{k+1}$~ = b~$_{k+2}$~ = zero(x)
+    for k = length(a):-1:2
+        b~$_{k}$~ = a[k] + 2x*b~$_{k+1}$~ - b~$_{k+2}$~
+        b~$_{k+2}$~ = b~$_{k+1}$~
+        b~$_{k+1}$~ = b~$_{k}$~
+    end
+    return a[1] + x*b~$_{k+1}$~ - b~$_{k+2}$~
+end
+
+# inlined version of evalcheb given coefficents a, and x in (-1,1)
+macro evalcheb(x, a...)
+    isempty(a) && throw(BoundsError())
+    # Clenshaw recurrence, evaluated symbolically:
+    b~$_{k+1}$~ = b~$_{k+2}$~ = 0
+    for k = length(a):-1:2
+        b~$_{k}$~ = esc(a[k])
+        if b~$_{k+1}$~ != 0
+            b~$_{k}$~ = :(muladd(t2, $b~$_{k+1}$~, $b~$_{k}$~))
+        end
+        if b~$_{k+2}$~ != 0
+            b~$_{k}$~ = :($b~$_{k}$~ - $b~$_{k+2}$~)
+        end
+        b~$_{k+2}$~ = b~$_{k+1}$~
+        b~$_{k+1}$~ = b~$_{k}$~
+    end
+    ex = esc(a[1])
+    if b~$_{k+1}$~ != 0
+        ex = :(muladd(t, $b~$_{k+1}$~, $ex))
+    end
+    if b~$_{k+2}$~ != 0
+        ex = :($ex - $b~$_{k+2}$~)
+    end
+    Expr(:block, :(t = $(esc(x))), :(t2 = 2t), ex)
+end
+
+# extract parameters from APowerLaw type
+pAPowerLaw{p,q,s}(::APowerLaw{p,q,s}) = p
+qAPowerLaw{p,q,s}(::APowerLaw{p,q,s}) = q
+sAPowerLaw{p,q,s}(::APowerLaw{p,q,s}) = s
+
+@generated function call{P<:APowerLaw,n}(::FirstIntegral{P,n},
+                                         X::Real)
+    # compute the Chebyshev coefficients of the rescaled KK~$_{n}$~
+    K = P()
+    p = pAPowerLaw(K)
+    q = qAPowerLaw(K)
+    s = sAPowerLaw(K)
+    KK~$_{n}$~ = X->quadgk(w -> w^n * K(w*X), 0,1, abstol=1e-14,
+                    reltol=1e-12)[1]
+    # scale out X ~$\ll$~ s singularity
+    L~$_{n}$~ = p < 0 ? X -> KK~$_{n}$~(X) / (s^p + X^p) : KK~$_{n}$~
+    q > 0 && throw(DomainError()) # can't deal with growing kernels
+    qinv = 1/q
+    c = chebcoef(~$\xi$~ -> L~$_{n}$~((1-~$\xi$~)^qinv - 2^qinv), 1e-9)
+    # return an expression to evaluate KK~$_{n}$~ via C(~$\xi$~)
+    quote
+        X <= 0 && throw(DomainError())
+        ~$\xi$~ = 1 - (X + $(2^qinv))^$q
+        C = @evalcheb ~$\xi$~ $(c...)
+        return $p < 0 ? C * (X^$p + $(s^p)) : C
+    end
+end
+
+\end{lstlisting}
+\end{singlespace}
