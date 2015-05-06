@@ -1045,31 +1045,30 @@ PyPy JIT compiler~\cite{pypyjit}.
 \section{Boundary element method}
 \label{sec:BEM}
 
-There are lots of general packages for FEM problems, but it is much more
-difficult to create such a package for BEM problems.
-The method requires integrating functions with singularities, many times
-in the inner loop of code that builds the problem matrix.
-Integrating such functions numerically on each iteration is much too slow.
-As a result, many special-purpose implementations have been written by hand
-for different problems.
+There are lots of general
+packages~\cite{LoggOlgaardEtAl2012a,Rathgeber2015} implementing the
+finite-element method (FEM)~\cite{Zienkiewicz13} to solve partial
+differential equations (PDEs), but it is much more difficult to create
+such a ``multi-physics'' package for the boundary-element method
+(BEM)~\cite{Bonnet99,Chew09} to solve surface-integral equations
+(SIEs).  One reason is that BEM requires integrating functions with singularities
+many times in the inner loop of the code that builds the problem matrix, and
+doing this efficiently requires integration code, typically written by hand, that is specialized to
+the specific problem being solved.
 
-Recent work \cite{ReidWhJo14} managed a more general solution,
-using Mathematica to generate C++ code for different cases.
+Recent work \cite{ReidWhJo14} managed a more general solution
+using Mathematica to generate C++ code for different cases, in combination with some hand-written code.
 This worked well, but was difficult to implement and the resulting system
-is difficult to use.
+is difficult to apply to new problems..
 We see the familiar pattern of using multiple languages and
 code-generation techniques, with coordination of the overall process done
 either manually or with ad-hoc scripts.
 To polish the implementation for use as a practical library, a likely next
 step would be to add a Python interface, adding yet another layer of complexity.
-
-%Features of julia this demonstrates:
-
-%- functions that need to dispatch on more than one argument
-%- staged methods providing a natural way to integrate code generation
-%- doing specialization through the object system, leading to a ``flat'' system
-
-% The code can be structured as a simple function library.
+Instead, we believe that the entire problem can be solved efficiently in Julia,
+relying on Julia's rich dispatch system and integrated code-generation facilities,
+and especially on staged functions to automate the generation of singular-integration
+code while retaining the interface of a simple function library.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -1082,7 +1081,7 @@ the problem.
 
 A typical problem in computational science is to form a discrete approximation
 of some infinite-dimensional linear operator $\mathcal{L}$ with some finite set of
-basis functions $\{ b_m \}$ via a Galerkin approach [TODO refs], which leads to a
+basis functions $\{ b_m \}$ via a Galerkin approach\cite{Boyd01,Bonnet99,Zienkiewicz13}, which leads to a
 matrix $L$ with entries
 $L_{mn} = \langle b_m, \mathcal{L} b_n \rangle = \langle b_m, b_n \rangle_\mathcal{L}$
 where $\langle \cdot, \cdot \rangle$ denotes some inner product
@@ -1095,7 +1094,7 @@ integral equations (IEs).
 \iffalse
 \subsubsection{The ``easy'' case: nonsingular assembly}
 
-For example, in the finite-element method (FEM) [TODO refs], the basis functions $b_m$
+For example, in the finite-element method (FEM)~\cite{Zienkiewicz13}, the basis functions $b_m$
 are typically low-order polynomials defined piecewise over geometric elements
 (typically triangles or tetrahedra), and $\mathcal{L}$ is typically a differential
 operator like $-\nabla \cdot c(x) \nabla$ for some coefficients $c(x)$, which leads to
@@ -1129,10 +1128,11 @@ performed entirely within Julia without a C++ intermediary.
 Indeed, preliminary experiments with pure Julia FEM implementations
 [TODO ref http://www.codeproject.com/Articles/579983/Finite-Element-programming-in-Julia]
 have demonstrated performance comparable to sophisticated solutions like FEniCS in
-Python and FreeFem++ in C++ [TODO ref].
-\fi
+Python~\cite{FEniCS12} and FreeFem++ in C++~\cite{MR3043640}.
 
 \subsubsection{Singular assembly for integral operators}
+
+\fi
 
 A challenging case of Galerkin matrix assembly arises for singular
 \emph{integral} operators $\mathcal{L}$, which act by
@@ -1156,9 +1156,9 @@ unacceptably costly (for adaptive high-order schemes, which require huge numbers
 of cubature points around the singularity), or both.
 
 \item Integral operators typically arise for \emph{surface} integral
-equations (SIEs) [TODO ref], and involve unknowns on a surface.
+equations (SIEs)~\cite{Bonnet99,Chew09}, and involve unknowns on a surface.
 The analogue of the FEM discretization is then a boundary element method
-(BEM) [TODO ref], which discretizes a surface into elements
+(BEM)~\cite{Bonnet99,Chew09}, which discretizes a surface into elements
 (e.g.\ triangles), with basis functions that are low-order
 polynomials defiend piecewise in the elements.
 However, there are also volume integral equations (VIEs) which have FEM-like
@@ -1166,14 +1166,14 @@ volumetric meshes and basis functions.
 
 \item The matrix $L$ is typically dense, since $K$ is long-range.
 For large problems, $L$ is often stored and applied implicitly via
-fast-multipole methods [TODO refs] and similar schemes, but even in this
+fast-multipole methods and similar schemes~\cite{Chew01,Liu14}, but even in this
 case the diagonal $L_{mm}$ and the entries $L_{mn}$ for adjacent
 elements must typically be computed explicitly.
 (Moreover, these are the integrals in which the $K$ singularity is present.)
 \end{itemize}
 
 These difficulties are part of the reason why there is currently \emph{no}
-truly ``generic'' BEM software, analogous to FEniCS for FEM: essentially
+truly ``generic'' BEM software, analogous to FEniCS~\cite{FEniCS12} for FEM: essentially
 all practical BEM code is written for a specific integral kernel and
 a specific class of basis functions arising in a particular physical problem.
 Changing anything about the kernel or the basis---for example, going
