@@ -41,14 +41,16 @@ const TupleName = TypeName(); TupleName.super = AnyT
 
 ## type application
 inst(t::TagT) = t
-inst(t::UnionAllT, param) = subst(t.T, Dict{Any,Any}(t.var => param))
+inst(t::UnionAllT, param) = subst(t.T, Dict(t.var => param))
 inst(t::UnionAllT, param, rest...) = inst(inst(t,param), rest...)
-super(t::TagT) = t.name===TupleName ? AnyT : inst(t.name.super, t.params...)
+super(t::TagT) =
+  t.name===TupleName ? AnyT : inst(t.name.super, t.params...)
 
-extend(d::Dict, k, v) = (x = copy(d); x[k]=v; x)
+extend(d::Dict, k, v) = merge(d, Dict(k=>v))
 subst(t,          env) = t
 subst(t::TagT,    env) =
-  t===AnyT ? t : TagT(t.name, map(x->subst(x,env), t.params), t.vararg)
+  t===AnyT ? t : TagT(t.name, map(x->subst(x,env), t.params),
+                      t.vararg)
 subst(t::UnionT,  env) = UnionT(subst(t.a,env), subst(t.b,env))
 subst(t::Var,     env) = get(env, t, t)
 function subst(t::UnionAllT, env)
@@ -66,7 +68,7 @@ type Bounds
 end
 
 type UnionState
-  depth::Int           # number of union decision points we're inside
+  depth::Int           # number of nested union decision points
   more::Bool           # new union found; need to grow stack
   stack::Vector{Bool}  # stack of decisions
   UnionState() = new(1,0,Bool[])
@@ -123,7 +125,8 @@ function exists_issub(x, y, env, anyunions::Bool)
   return false
 end
 
-function issub_union(t, u::UnionT, env, R, state::UnionState)
+function issub_union(t, u::UnionT, env, R)
+  state = R ? env.Runions : env.Lunions
   if state.depth > length(state.stack)
     state.more = true
     return true
@@ -133,12 +136,12 @@ function issub_union(t, u::UnionT, env, R, state::UnionState)
   return R ? issub(t, choice, env) : issub(choice, t, env)
 end
 
-issub(a::UnionT, b::UnionT, env) = issub_union(a, b, env, true, env.Runions)
-issub(a::UnionT, b::Ty, env)     = issub_union(b, a, env, false, env.Lunions)
-issub(a::Ty, b::UnionT, env)     = issub_union(a, b, env, true, env.Runions)
+issub(a::UnionT, b::UnionT, env) = issub_union(a, b, env, true)
+issub(a::UnionT, b::Ty, env)     = issub_union(b, a, env, false)
+issub(a::Ty, b::UnionT, env)     = issub_union(a, b, env, true)
 # take apart unions before handling vars
-issub(a::UnionT, b::Var, env) = issub_union(b, a, env, false, env.Lunions)
-issub(a::Var, b::UnionT, env) = issub_union(a, b, env, true, env.Runions)
+issub(a::UnionT, b::Var, env)    = issub_union(b, a, env, false)
+issub(a::Var, b::UnionT, env)    = issub_union(a, b, env, true)
 
 function issub(a::TagT, b::TagT, env)
   a === b && return true
@@ -207,7 +210,7 @@ function var_gt(b::Var, a::Union(Ty,Var), env)
   return true
 end
 
-function issub_unionall(t::Ty, u::UnionAllT, env, R)
+function issub_uall(t::Ty, u::UnionAllT, env, R)
   haskey(env.vars, u.var) && (u = rename(u))
   env.vars[u.var] = Bounds(u.var.lb, u.var.ub, R)
   ans = R ? issub(t, u.T, env) : issub(u.T, t, env)
@@ -215,11 +218,11 @@ function issub_unionall(t::Ty, u::UnionAllT, env, R)
   return ans
 end
 
-issub(a::UnionAllT, b::UnionAllT, env) = issub_unionall(a, b, env, true)
-issub(a::UnionT, b::UnionAllT, env)    = issub_unionall(a, b, env, true)
-issub(a::UnionAllT, b::UnionT, env)    = issub_unionall(b, a, env, false)
-issub(a::Ty, b::UnionAllT, env)        = issub_unionall(a, b, env, true)
-issub(a::UnionAllT, b::Ty, env)        = issub_unionall(b, a, env, false)
+issub(a::UnionAllT, b::UnionAllT, env) = issub_uall(a,b,env,true)
+issub(a::UnionT, b::UnionAllT, env)    = issub_uall(a,b,env,true)
+issub(a::UnionAllT, b::UnionT, env)    = issub_uall(b,a,env,false)
+issub(a::Ty, b::UnionAllT, env)        = issub_uall(a,b,env,true)
+issub(a::UnionAllT, b::Ty, env)        = issub_uall(b,a,env,false)
 
 \end{lstlisting}
 \end{singlespace}

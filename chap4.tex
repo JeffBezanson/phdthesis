@@ -1015,6 +1015,12 @@ end
 This simple example implements indexing with \texttt{N} arguments
 in terms of linear indexing, by generating a fully-unrolled expression
 for the index of the element.
+Inside the body of the method, argument names refer to the types of
+arguments instead of their values.
+Parameter values \texttt{T} and \texttt{N} are available as usual.
+The method returns a quoted expression.
+This expression will be used, verbatim, as if it were the body of
+a normal method definition for these argument types.
 
 The remarkable thing about this is how seamlessly it integrates into
 the language.
@@ -1037,7 +1043,7 @@ then it would be difficult to reuse the existing dispatch system.
 The types of arguments say something about their \emph{meaning},
 and so unlike syntax-based systems (macros) are independent of how
 the arguments are computed.
-A staged function of this kind is \emph{guaranteed} to produce the
+A staged method of this kind is \emph{guaranteed} to produce the
 same results for arguments \texttt{2+2} and \texttt{4}.
 
 Another advantage of this approach is that the expression-generating
@@ -1046,10 +1052,12 @@ Staged programming with \texttt{eval}, in contrast, requires arbitrary
 user code to be executed in all stages.
 This has its uses; one example mentioned in \cite{DeVito:2014:FRG:2594291.2594307}
 is reading a schema from a database in order to generate code for it.
-With \texttt{@generated}, code is a pure function of type information,
+But with \texttt{@generated}, code is a pure function of type information,
 so when possible it can be invoked once at compile time and then
 never again.
-This preserves the possibility of full static compilation.
+This preserves the possibility of full static compilation, but due to
+dynamic typing the language cannot guarantee that all code generation
+will occur before run time.
 
 
 \section{Higher-order programming}

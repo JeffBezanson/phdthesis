@@ -1275,13 +1275,14 @@ end
 \end{singlespace}
 
 It is possible to implement \texttt{FirstIntegral} for the general
-case of any \texttt{APowerLaw}.
-However, each kernel requires a large amount of up-front work that cannot be done
-efficiently at run time.
-Julia's staged functions solve this problem.
+case of any \texttt{APowerLaw} using numerical integration, however
+this procedure is too slow to be useful.
+Instead, we would like to compute the integral for a range of
+parameter values in advance, construct a Chebyshev approximation,
+and use efficient polynomial evaluation at run time.
+Julia's staged methods provide an easy way to automate this process.
 Appendix~\ref{appendix:integration} presents a full working implementation of
-the general case, which works by computing Chebyshev coefficients at compile
-time.
+the general case, computing Chebyshev coefficients at compile time.
 The final generated code is a straight-line sequence of adds and multiplies.
 Here we show a rough outline of how the method works:
 
@@ -1315,7 +1316,7 @@ One might hope that with a sufficient amount of constant propagation and
 functional purity analysis, a compiler could automatically move
 computation of the Chebyshev coefficients to compile time.
 That does indeed seem possible.
-The point of \texttt{@generated}, then, is to make it \emph{so easy} to
+The point of \texttt{@generated}, then, is to make it so easy to
 get the desired staging that one does not have to worry
 about what amazing feats the compiler might be capable of.
 Without it, one would face a difficult debugging challenge when the
@@ -1330,7 +1331,7 @@ optimizations.
 To complete the picture, here is pseudocode for how this library would be
 used to solve a boundary element problem over a triangle mesh.
 The three cases inside the loop are a translation of the three formulas
-from figure 1 in \cite{ReidWhJo14} (only the first formula is shown in
+from figure 1 in \cite{ReidWhJo14} (only the first formula's code is shown in
 full for simplicity):
 
 %  # n depends on complicated stuff
