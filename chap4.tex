@@ -103,7 +103,7 @@ are compared by directly comparing both the tag and data parts bit-for-bit, and
 recurring through references to other immutable objects).
 
 Functions are generally applied to more than one argument. In the application
-syntax $e_1(e_2)$, $e_2$ is an implicitly-constructed tuple of all arguments.
+syntax $e_1(e_2)$, $e_2$ is an implicitly constructed tuple of all arguments.
 $e_1$ must evaluate to a generic function, and its most specific method
 matching the tag of argument $e_2$ is called.
 
@@ -523,7 +523,7 @@ it must be because it occurs in invariant position, and the steps outlined
 in the first paragraph of this section have ``flipped'' the order
 (comparing both $\texttt{B}\leq\texttt{C}$ and $\texttt{C}\leq\texttt{B}$).
 This explains the odd rule for comparing two right-side variables:
-this case can only occur with differently-nested \texttt{UnionAll}s and
+this case can only occur with differently nested \texttt{UnionAll}s and
 invariant constructors, in which case the relation holds only if
 all involved bounds are equal.
 By symmetry, one would expect the bottom-left rule in the figure to
@@ -537,7 +537,7 @@ compute $B\cap T$. However there is reason to suspect that serious
 trouble lies that way. We would need to either add intersection types
 to the system, or compute a meet without them. Either way, the
 algorithm would become much more complex and, judging by past
-results, very likely undecidable.
+results, likely undecidable.
 
 % worth asking why we go through such contortions, only to end up
 % setting X's bounds both to T exactly. the reason is that this
@@ -548,12 +548,12 @@ results, very likely undecidable.
 
 %TODO: termination and correctness.
 
-These subtyping rules are very likely $\Pi_2^{\textrm{P}}$-hard.
+These subtyping rules are likely $\Pi_2^{\textrm{P}}$-hard.
 Checking a subtype relation with unions requires checking that for all choices
 on the left, there exists a choice on the right that makes the relation hold.
 This matches the quantifier structure of 2-TQBF problems of the form
 $\forall x_i . \exists y_i . F$ where $F$ is a boolean formula. If the formula
-is rewritten in conjunctive normal form, it corresponds to subtype checking
+is written in conjunctive normal form, it corresponds to subtype checking
 between two tuple types, where the relation must hold for each pair of
 corresponding types. Now use a type \texttt{N\{}$x$\texttt{\}} to
 represent $\neg x$. The clause $(x_i \vee y_i)$ can be translated to
@@ -614,7 +614,7 @@ more constrained than a type where variables appear only once:
 
 \vspace{-3ex}
 \[
-\exists T\ .\ \texttt{Pair}\{T,T\}\ <\ \exists\ T\ .\ \exists\ S\ .\ \texttt{Pair}\{T,S\}
+\exists\ T\ .\ \texttt{Pair}\{T,T\}\ <\ \exists\ T\ .\ \exists\ S\ .\ \texttt{Pair}\{T,S\}
 \]
 
 \noindent
@@ -639,14 +639,14 @@ And the algorithm understands that tuples distribute over unions:
 
 \subsection{Type system variants}
 
-Our design criteria do not identify a unique type system.
-Many variants are possible.
+Our design criteria do not identify a unique type system; some
+variants are possible.
 The following features would probably be fairly straightforward to add:
 
 \vspace{-3ex}
 \begin{singlespace}
 \begin{itemize}
-\item Structurally-subtyped records
+\item Structurally subtyped records
 \item $\mu$-recursive types (regular trees)
 \item Regular types (allowing \texttt{...} in any position)
 \end{itemize}
@@ -747,11 +747,15 @@ than some element of $B$.
 hierarchy, regardless of parameters.
 %(this embeds a moderate amount of ``class based'' dispatch, compatible
 %with programmer intuition)
-\item A non-variable is more specific than a variable.
+\item A variable is more specific than type $T$ if its upper bound is more specific
+than $T$.
+\item Variable $A$ is more specific than variable $B$ if $A$'s upper bound is
+more specific than $B$'s, and $A$'s lower bound is not more specific than $B$'s.
 \end{itemize}
 
-\subsection{Diagonal dispatch}
-\label{sec:diagonal}
+So far, specificity is clearly a less formal notion than subtyping.
+
+\subsection{Parametric dispatch}
 
 We use the following syntax to express methods whose signatures
 are \texttt{UnionAll} types:
@@ -763,7 +767,20 @@ func{T<:Integer}(x::Array{T}) = ...
 \end{singlespace}
 
 \noindent
-This feature largely overcomes the limitations of parametric invariance.
+This method matches any \texttt{Array} whose element type is some subtype
+of \texttt{Integer}.
+This feature largely overcomes the restrictiveness of parametric invariance.
+Methods like these are similar to methods with ``implicit type parameters''
+in the Cecil language~\cite{cecilspec}.
+However, Cecil (along with its successor, Diesel~\cite{chambers2006diesel})
+does not allow methods to differ only in type parameters.
+In the semantic subtyping framework we use, such definitions have a
+natural interpretation (in terms of sets), and so are allowed.
+In fact, they are used extensively in Julia.
+% TODO point to examples in chap 5
+
+\subsection{Diagonal dispatch}
+\label{sec:diagonal}
 
 \texttt{UnionAll} types can also express constraints between arguments.
 The following definition matches two arguments of the same concrete
@@ -1013,7 +1030,7 @@ end
 
 \noindent
 This simple example implements indexing with \texttt{N} arguments
-in terms of linear indexing, by generating a fully-unrolled expression
+in terms of linear indexing, by generating a fully unrolled expression
 for the index of the element.
 Inside the body of the method, argument names refer to the types of
 arguments instead of their values.
@@ -1176,7 +1193,7 @@ but this would adversely affect usability (such declarations would also
 be helpful if we wanted to dispatch on arrow types, though they would
 not solve the ambiguity problem). Or we could use type inference
 of \texttt{f} on argument type \texttt{A}. This would not work very
-well, since the result would depend on partly-arbitrary heuristics.
+well, since the result would depend on partly arbitrary heuristics.
 Such heuristics are fine for analyzing a program, but
 are not appropriate for determining the value of a user-visible
 variable, as this would make program behavior unpredictable.
@@ -1188,7 +1205,7 @@ irrelevant cases as possible. Intersection types seem to be naturally
 opposed to this process, since they have the ability to
 generate infinite descending chains of ever-more-specific function
 types by tacking on more terms with $\cap$. There would be no such
-thing as a maximally-specific function type. In particular, it would be
+thing as a maximally specific function type. In particular, it would be
 hard to express that a function has exactly one definition,
 which is an especially important case for optimizing code.
 
@@ -1238,7 +1255,7 @@ arguments and return types &  241 (0.043\%)  &   85        &          0.23 \\
 \hline
 \end{tabular}
 \end{center}
-  \caption[Degree of reuse of function types]{
+  \caption[Sharing of function types]{
 \small{
     Number and percentage of pairs of functions with matching arguments, or
     matching arguments and return types. The second column gives the number of
@@ -1429,7 +1446,7 @@ might write by hand.
 In the second case, imagine \texttt{f} always returns \texttt{Int},
 but that the compiler is \emph{not} able to infer this.
 Then we incur the cost of an extra type check on each iteration,
-but we return the same efficiently-stored \texttt{Int}-specialized
+but we return the same efficiently stored \texttt{Int}-specialized
 \texttt{Array} (\texttt{Array\{Int\}}).
 This leads to significant memory savings, and allows subsequent
 operations on the returned array to be more efficient.

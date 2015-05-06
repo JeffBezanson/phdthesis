@@ -286,7 +286,7 @@ compilation add-ons or by rewriting in C or by using extensions
 like Cython \cite{wilbers2009using} \cite{Behnel:2011}.
 The results here, though simple, demonstrate why we feel a
 different approach is needed instead: abstraction overhead
-is still important, and involves the whole program and not just
+is important and involves the whole program, not just
 inner loops.
 
 %% How much of the past 30 years of handwritten Matlab internals can
@@ -402,7 +402,7 @@ code to map between tag systems.
 Polymorphic languages provide better interfaces in these cases.
 For example, C++ overloading can be used to provide the correct tag automatically
 based on the type of a function argument.
-However, these techniques only work for statically-known types.
+However, these techniques only work for statically known types.
 Code like that in the \texttt{vander} example that determines types using arbitrary
 computation is excluded.
 Dynamic typing provides a complete solution.
@@ -507,7 +507,7 @@ The vectorized style has the following touted benefits:
 \begin{enumerate}
 \item One may write \texttt{sin(x)} to compute the sine of
 all elements of \texttt{x}, which is much more compact than writing a loop.
-\item Most execution time can be spent inside an expertly-written library,
+\item Most execution time can be spent inside an expertly written library,
 taking advantage of special hardware (e.g. SIMD units or stream processors
 like GPUs) and parallelism implicitly.
 \item The performance of the high-level language being used becomes less

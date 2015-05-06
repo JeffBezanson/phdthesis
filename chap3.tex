@@ -114,7 +114,7 @@ At a lower level, the machine code for \texttt{A[i]} needs to be
 different depending on the array's element type.
 
 The idea of specialization unites parametric and ad-hoc polymorphism.
-Beginning with a parametrically-polymorphic function, one can imagine
+Beginning with a parametrically polymorphic function, one can imagine
 a compiler specializing it for various cases, i.e.\ certain concrete argument
 values. These specializations could be stored in a lookup table, for use
 either at compile time or at run time.
@@ -141,7 +141,7 @@ symbolic expression systems, XML) permits code to work for any object
 because every object has the same structure, allowing meaningful
 operations.
 
-In theory, a parametrically-polymorphic function works on all data
+In theory, a parametrically polymorphic function works on all data
 types.
 In practice, this can be achieved by forcing a uniform representation of
 data such as pointers, which can be handled by the same code regardless of
@@ -492,8 +492,6 @@ const ~$\bot$~ = BotElement()
 <=(::BotElement, ::TopElement) = true
 <=(::BotElement, ::LatticeElement) = true
 <=(::LatticeElement, ::TopElement) = true
-
-
 
 ~$\sqcup$~(x::LatticeElement, y::LatticeElement) =  # join
     (x <= y ? y : y <= x ? x : ~$\top$~)

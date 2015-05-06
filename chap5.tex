@@ -78,7 +78,7 @@ meaning that number comparison can simply fall back to intensional
 equality.
 However this definition is rather dubious.
 It gets the wrong answer every time the arguments are different representations
-(e.g. integer and floating point) of the same quantity.
+(e.g.\ integer and floating point) of the same quantity.
 We might hope that its behavior will be ``patched up'' later by more specific
 definitions for various concrete number types, but it still covers a dangerous
 amount of dispatch space.
@@ -98,7 +98,7 @@ we could get a silent wrong answer instead of an error.
 Now \texttt{===} will only be used on arguments of the same type,
 making it far more likely to give the right answer.
 Even better, any case where it does not give the right answer can be fixed with
-a single definition, i.e. \texttt{==(x::S, y::S)} for some
+a single definition, i.e.\ \texttt{==(x::S, y::S)} for some
 concrete type \texttt{S}.
 The more general \texttt{(Number, Number)} case is left open, and in the next
 section we will take advantage of this to implement ``automatic'' type promotion.
@@ -134,7 +134,7 @@ An ellipse is not a circle, and in general a circle cannot serve as an ellipse
 set of ellipses is, so a program written for ellipses might not work on circles).
 This problem implies that a single built-in type hierarchy is not
 sufficient: we want to model custom \emph{kinds} of relationships between
-types (e.g. ``can be embedded in'' in addition to ``is a'').
+types (e.g.\ ``can be embedded in'' in addition to ``is a'').
 
 %% Two further problems should also be kept in mind. First, the natural isomorphisms
 %% between sets of numbers might not be isomorphisms on a real computer. For example,
@@ -204,7 +204,7 @@ promote_result(t,s,T,S) = promote_type(T,S)
 # If no promote_rule is defined, both directions give Bottom.
 # In that case use typejoin on the original types instead.
 promote_result{T,S}(::Type{T}, ::Type{S},
-                   ::Type{Bottom}, ::Type{Bottom}) = typejoin(T, S)
+                    ::Type{Bottom}, ::Type{Bottom}) = typejoin(T, S)
 
 
 # Because of the promoting fallback definitions for Number, we need
@@ -213,7 +213,7 @@ promote_result{T,S}(::Type{T}, ::Type{S},
 # conversion happens, and +(promote(x,y)...) is called again, causing
 # a stack overflow.
 promote_result{T<:Number,S<:Number}(::Type{T}, ::Type{S},
-                                     ::Type{Bottom}, ::Type{Bottom}) =
+                                    ::Type{Bottom}, ::Type{Bottom}) =
     promote_sup(T, S, typejoin(T,S))
 
 # promote numeric types T and S to typejoin(T,S) if T<:S or S<:T
@@ -440,7 +440,7 @@ The second fact asks for run time flexibility.
 The third fact asks for dimensionality to be part of the type system, but
 partly determined at run time (for example, via virtual method dispatch).
 Current approaches choose a compromise.
-In some systems, the number of dimensions has a strict limit (e.g. 3 or 4),
+In some systems, the number of dimensions has a strict limit (e.g.\ 3 or 4),
 %% TODO: examples of systems limited to n==3
 so that separate classes for each case can be written out in full.
 Other systems choose flexibility, and just accept that most
@@ -514,7 +514,7 @@ Our goal here is a bit unusual: we are not concerned with which rules
 might work best, but merely with how they can be specified, so that
 domain experts can experiment.
 In fact different domains want different things.
-Working with images, each dimension might be quite different, e.g. representing
+Working with images, each dimension might be quite different, e.g.\ representing
 time, space, or color, so you don't want to drop or rearrange dimensions very often.
 \fi
 
@@ -536,7 +536,7 @@ implement the behavior in libraries, so that different kinds of arrays
 may be defined, or so that rules of similar complexity may be
 defined for other kinds of objects.
 In fact different domains want different things.
-Working with images, each dimension might be quite different, e.g. representing
+Working with images, each dimension might be quite different, e.g.\ representing
 time, space, or color, so you don't want to drop or rearrange dimensions very often.
 %But these kinds of rules are unusually difficult to implement in libraries.
 %If a library writes out its indexing logic using imperative code, the host
@@ -1086,7 +1086,7 @@ basis functions $\{ b_m \}$ via a Galerkin approach [TODO refs], which leads to 
 matrix $L$ with entries
 $L_{mn} = \langle b_m, \mathcal{L} b_n \rangle = \langle b_m, b_n \rangle_\mathcal{L}$
 where $\langle \cdot, \cdot \rangle$ denotes some inner product
-(e.g. $\langle u, v \rangle = \int u v$ is typical) and
+(e.g.\ $\langle u, v \rangle = \int u v$ is typical) and
 $\langle \cdot, \cdot \rangle_\mathcal{L}$ is the \emph{bilinear form} of the problem.
 Computing these matrix elements is known as the matrix \emph{assembly} step, and its
 performance is a crucial concern for solving partial differential equations (PDEs) and
@@ -1159,7 +1159,7 @@ of cubature points around the singularity), or both.
 equations (SIEs) [TODO ref], and involve unknowns on a surface.
 The analogue of the FEM discretization is then a boundary element method
 (BEM) [TODO ref], which discretizes a surface into elements
-(e.g. triangles), with basis functions that are low-order
+(e.g.\ triangles), with basis functions that are low-order
 polynomials defiend piecewise in the elements.
 However, there are also volume integral equations (VIEs) which have FEM-like
 volumetric meshes and basis functions.
@@ -1248,7 +1248,7 @@ top:
 \end{lstlisting}
 \end{singlespace}
 
-Analytically-known special cases can be added for other kernels.
+Analytically known special cases can be added for other kernels.
 Here are two more.
 Notice that a Helmholtz kernel is also a power law kernel
 \footnote{The \texttt{exprel} function used here is available in the
@@ -1368,31 +1368,53 @@ end
 
 
 \section{Beating the incumbents}
+\label{sec:beating}
 
-- erfinv and digamma using horner macro
+There is anecdotal evidence that libraries written in Julia are occasionally
+faster than their equivalents in established languages like C++, or
+than built-in functions in environments like MATLAB~\cite{matlab}.
+Here we collect a few examples.
 
-- randn beating matlab (any numpy)
-  can be split into a small number of operations that very rarely calls
-  a larger function.
-  the entire small part can be inlined.
+Special functions (e.g.\ bessel functions, the error function, etc.) are
+often evaluated using polynomial approximations.
+Traditional libraries usually read polynomial coefficients from arrays.
+When we wrote some of these functions in Julia we used a macro
+to expand the polynomials in line, storing the coefficients in the
+instruction stream, leading to better performance.
+There is an efficient algorithm for evaluating polynomials at complex-valued
+arguments~\cite{knuth1969art}, but it is fairly subtle and so not always
+used.
+%- erfinv and digamma using horner macro
+If the code can be generated by a macro, though, it is much easier to take
+advantage of, and Julia's \texttt{@evalpoly} does so.
 
-\texttt{@evalpoly} macro has separate cases for real and complex in order to
-automatically take advantage of a subtle algorithm \cite{knuth1969art}.
-A macro is perfect for generating the neccessary code, however it lacks
-the type information needed to select between the two cases.
-In Julia, it can generate a branch with a type check, and rely on the
-unused case being removed by automatic specialization. (A generic
-function with two definitions could be generated instead, but in
-high-performance programming the ``force inlining'' behavior of macros
-is welcome.)
+%\texttt{@evalpoly} macro has separate cases for real and complex in order to
+%automatically take advantage of a subtle algorithm .
+%A macro is perfect for generating the neccessary code, however it lacks
+%the type information needed to select between the two cases.
+%In Julia, it can generate a branch with a type check, and rely on the
+%unused case being removed by automatic specialization. (A generic
+%function with two definitions could be generated instead, but in
+%high-performance programming the ``force inlining'' behavior of macros
+%is welcome.)
 
-If nothing else, demonstrates that removing glue code overhead is worthwhile.
+Julia's function for generating normally distributed random numbers is
+significantly faster than that found in many numerical environments.
+We implemented the popular ziggurat method~\cite{Marsaglia:Tsang:2000:JSSOBK:v05i08},
+which consists of a commonly used fast path and a rarely used more complicated
+procedure.
+The fast path and check for the rare case can be put in a small function,
+which can be inlined at call sites in user code.
+We attribute most of the performance gain to this trick.
+This demonstrates that removing ``glue code'' overhead can be worthwhile.
 
-grisu: 6kLOC to 1kLOC (PR 7291), less than factor of 2 slower than c++
-
-
-%\section{ACAS}
-
-%\section{Parallel computing, e.g. parallel prefix}
-
-%\section{IJulia}
+%grisu: 6kLOC to 1kLOC (PR 7291), less than factor of 2 slower than c++
+Julia has long used the Grisu algorithm for printing floating-point
+numbers~\cite{Loitsch:2010:PFN:1809028.1806623}, at first calling the
+original implementation in C++.
+An opportunity to do an unusually direct comparison arose when this
+code was ported to Julia~\cite{grisu}.
+The Julia implementation is at worst 20\% slower, but wins on
+productivity: the C++ code is around 6000 lines, the Julia code
+around 1000 lines.
+% TODO can we say why?
