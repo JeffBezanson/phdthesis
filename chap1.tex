@@ -7,7 +7,7 @@ Over this period of time, programming tools have advanced in terms of
 the abstractions and generalizations they are capable of.
 
 Science as a whole evolves through the incorporation of specialized bits
-of knowledge into more powerful general theories.  
+of knowledge into more powerful general theories.
 There is a parallel in the world of programming languages:
 special-purpose languages have been subsumed by more powerful and general
 languages.
@@ -16,16 +16,6 @@ The surprising answer is: not as much as we would like.
 We see scientists and technical users generally either turning away
 from the best new programming languages, or else pushing them
 to their limits in unusual ways.
-
-%% Much of the history of programming languages has been about increasing abstraction
-%% and generalization. Today we take it for granted that a single suitably powerful
-%% language could be used for nearly any programming task, were it not for pragmatic
-%% factors beyond our control. Over time,
-%% The field of technical computing --- programming for applied math and the
-%% sciences --- is something of a holdout from this trend, with its own
-%% purpose-built languages still dominating.
-%% There are probably many reasons for this, including historical, social and
-%% technical.
 
 \begin{singlespace}
 \begin{figure}
@@ -60,9 +50,9 @@ In fact, we have discovered at least \emph{49} programming languages
 designed for technical computing since Fortran (figure~\ref{gangof40}).
 This high number begs for an explanation.
 We propose that technical users crave the flexibiltiy to pick notation
-for their problems, and
-language design is where you go when you need this level of flexibility.
-Language design is associated with the highest level of abstraction.
+for their problems, and language design --- the highest level of
+abstraction --- is where you go when you need this level of flexibility.
+%Language design is associated with the highest level of abstraction.
 The desire for scientists to rework their code is not so surprising when one reflects
 on the tradition of inventing new notation in mathematics and science.
 %This certainly
@@ -79,54 +69,38 @@ Most of these techniques are presently fairly difficult to use, and so
 programmers working at this level give up the notational conveniences
 of the purpose-built languages above.
 
-%Yet it also demands the greatest ease-of-use.
-%A good rule of thumb is that if you need to write a program that prints
-%out code in language X, then language X is not powerful enough.
+The goal of this thesis is to identify and address the fundamental
+issues that have made productive and performant technical computing
+so difficult to achieve.
+%We attempt to make the smallest
+%change that can be provided by a simple high-level language
+We ask: which general purpose language would \emph{also} be able to handle
+technical computing, such that the above workarounds would not have
+been necessary?
 
-%pathologies arising from the language level are subtle
-%not as immediate as ``this new matrix multiply is faster''
+% our theory is that t.c. is not just about matrices and numbers
+% but a specific pattern of code specialization and dispatch that
+% can be automated.
 
-This thesis addresses the essential challenges created by
-this state of affairs.
-We argue that the situation   
-can be improved considerably by
-abstracting, with a new language.
-
-%the essential challenges from the state
-%f affairs we have described.
-%Of course, a language is not the only thing the world of technical
-%computing needs.
+\iffalse
 Compiler techniques, library design, high-performance
 computational kernels, new algorithms, and approaches to parallelism are
 all important to technical computing.
-%ultimately be more important than language design.
 However these sorts of technologies can usually be applied to multiple
 languages, as has happened in the C and Fortran language families.
+%They do not by themselves insist that a new language be developed.
 However in conjunction with a new language, these technologies can flourish.
 Indeed, we believe that language design
 has reached a level of importance that even (perhaps temporarily) supersedes
 the traditional focus of cache utilization and the use of matrix operations.
+\fi
 
-%So in our view languages targeting this space need to dig deeper,
-%at least temporarily forgetting about matrices and cache utilization,
-%and look for bigger patterns.
-
-%\todo[inline]{{\it Please consider if this is even more true: }\newline
-%Technical computing  can benefit from many technologies.
-%Some of these include compiler techniques, library design, high-performance
-%computational kernels, new algorithms, and new approaches to parallelism.
-%These sorts of technologies can usually be applied to multiple
-%languages, as has happened in the C and Fortran language families.
-%They do not by themselves insist that a new language be developed.
-%However in conjunction with a new language, these technologies can flourish.
-%}
-
-In brief, our idea is to \emph{integrate code selection and specialization}.
+In brief, our answer is to \emph{integrate code selection and specialization}.
 The aforementioned flexibility requirement can be explained as
 a sufficiently powerful means for \emph{selecting} which piece of code
 to run.
-This notion subsumes method dispatch, function overloading,
-and potentially even branches.
+%This notion subsumes method dispatch, function overloading,
+%and potentially even branches.
 When such mechanisms are used in technical computing, there is nearly
 always a corresponding need to \emph{specialize} code for specific cases
 to obtain performance.
@@ -134,13 +108,19 @@ Polymorphic languages sometimes support forms of specialization,
 but often only through a designated mechanism (e.g. templates), or
 deployed rather conservatively out of resource concerns.
 We intend to show that an equilibrium point in the design space can be found
-by combining selection and specialization into a single dynamic type-based
-dispatch mechanism.
-The specific design is identified via subtyping theories and closure under
-data flow operations.
+by combining selection and specialization into a single sufficiently powerful
+dynamic type-based dispatch mechanism.
+%The specific design is identified via subtyping theories and closure under
+%data flow operations.
 
-%what does this system achieve?
-%-
+\subsubsection{Thesis statement}
+
+Integrating code selection and specialization using
+type-based dynamic dispatch captures both the performance and
+productivity requirements of technical computing.
+
+% how powerful should a dispatch system be? we have a way to find an
+% equillibrium point.
 
 % why dynamic dispatch?
 %% somewhat counter-intuitively, dynamic dispatch can be good for performance
@@ -148,28 +128,12 @@ data flow operations.
 %% static overloading can lead to calling a sub-optimal case when multiple
 %% overloads exist for the sake of performance.
 
-
 %Extensive code specialization is a key feature of
 %technical computing. ``what to specialize on'' has been an open problem.
 %our types are a possible solution to this for two reasons:
 
-%\begin{enumerate}
-%\item you can tune the amount of information they contain
-%\item everybody agrees to use them, which helps ensure that specializing on
-%  the types will actually do something useful.
-%\end{enumerate}
-
 %the amazing thing about programming languages it that a better
 %explanation can directly lead to better performance!)
-
-
-%By \emph{selection} we mean any mechanism used to pick one of several
-%pieces of code to run. This includes object-oriented mechanisms, as well
-%as function overloading, and even branches.
-
-%By \emph{specialization} we mean transformation of a given piece of code,
-%particularly as done by a compiler to generate efficient code for some
-%special case of a flexible piece of high-level code.
 
 %% Specialization entails program analysis. By necessity, a language's
 %% code selection mechanisms must inform this process, to ensure the
@@ -191,15 +155,6 @@ data flow operations.
 %  client code *or* any extra overhead
 %\end{itemize}
 
-%From this perspective, the language used is
-%incidental (``mere choice of notation''), which helps explain
-%the proliferation of languages --- any language that can call BLAS
-%\cite{blas} will do!
-
-%What do we mean by a \emph{language} for scientific computing?
-%The prevailing
-%answer is that it is about numeric arrays, perhaps matrices specifically,
-%and numerical libraries that use them.
 %Instead we intend to argue that, at a
 %deeper level, it is about certain kinds of flexibility, particularly
 %flexibility in the behavior of key operators and functions. This flexibility
@@ -327,11 +282,6 @@ burdensome.
 %such a system is totally reasonable. However if we are willing to
 %accept undecidable checking from the beginning, opportunities arise to
 %simplify and increase the power of the language.
-%Occasionally one hears that ``dynamic type'' is an oxymoron, or that
-%these types are not ``real types''
-
-% mention value of having types that are agreed-on and work well within
-% the language. enables so many optimizations.
 
 %Efforts to analyze and optimize dynamically typed programs generally make two
 %assumptions: (1) we should work on analyzing \emph{existing} popular
@@ -339,8 +289,6 @@ burdensome.
 %The first assumption makes practical sense.
 %Convenience is hard to quantify, so using existing languages that have already
 %been deemed convenient by popular opinion puts us on solid footing.
-%This thesis describes a new language, so we simply take the negation of the
-%first assumption as a premise.
 %Our work addresses the second assumption more directly.
 %We point out that types
 %\footnote{}
@@ -348,9 +296,6 @@ burdensome.
 %\emph{code selection} and \emph{code specialization} is particularly useful in
 %technical computing.
 %This perspective has not been explored thoroughly in the past.
-
-% there is a kind of arms race between those who want more expressiveness
-% and those trying to analyze and optimize programs. we propose a truce.
 
 % one of our main innovations is a way to deftly navigate between two
 % problems
@@ -370,8 +315,8 @@ generating code without type checks, removing branches, type-specializing
 the storage of variables, and compile time method lookup are all valuable
 and yield large real-world gains.
 
-Method-at-a-time JIT compilers (e.g. \cite{grcevski2004java}
-\cite{Suganuma:2005:DED:1075382.1075386})
+Method-at-a-time JIT compilers
+(e.g.\ \cite{grcevski2004java, Suganuma:2005:DED:1075382.1075386})
 can specialize method bodies on all arguments.
 %and might use multiple dispatch \emph{internally} to select implementations
 %at run time.
@@ -484,18 +429,6 @@ Why do we prefer method signatures to imperative logic?
 %likelihood of resolving many calls to a single implementation.
 
 
-% on the ``sufficiently smart compiler''
-% optimizing code is uncomputable in general, and in some sense
-% AI-complete. as soon as a person names any *specific* optimization
-% they want, it immediately becomes possible to imagine a compiler
-% doing it.
-% discussion on when dynamic typing is ``needed'' is related!
-% again, isolated examples often unconvincing.
-% same thing yet again tends to happen with multiple dispatch:
-% it feels very useful overall, but many particular cases can be
-% explained away as something single dispatch could handle.
-
-
 \subsection{Staged programming}
 
 In demanding applications, selecting the right algorithm might not
@@ -539,11 +472,8 @@ class of problems.
 In this framework code generators are invoked automatically by
 the compiler, and the results can be called directly or even inlined
 into user code.
-%A library can switched to a staged approach without affecting
-%calling code.
-Our approach is closely related to exotypes
-\cite{DeVito:2014:FRG:2594291.2594307}.
-
+Libraries can switch to using a staged implementation without affecting
+client code.
 
 
 %past (static) type systems for dispatch were designed to ensure the absence of
@@ -562,36 +492,11 @@ Our approach is closely related to exotypes
 
 %%%%%%
 
+\section{Summary of contributions}
 
-%% The key ingredients:
-
-%% \begin{singlespace}
-%% \begin{enumerate}
-%% \item Self-describing data model aware of memory layout
-%% \item Type tags with nested structure
-%% \item A fully-connected type tree
-%% \item Dynamic multiple dispatch over all types % including parameters and varargs
-%% \item Data flow type inference
-%% \item Automatic code specialization
-%% \end{enumerate}
-%% \end{singlespace}
-
-%% This list of features may appear somewhat ad-hoc. However, they turn out to be
-%% remarkably strongly coupled, and deeply constrained by our ultimate goal.
-%% Each of these features has appeared in some form before, but never in a way
-%% that fully solves the problems described here.
-
-%% Challenges of this approach (why has this not been done before?)
-
-
-\section{Contributions of this thesis}
-
-% thesis stmt: integrating code selection and specialization with
-% type-based dynamic dispatch captures both the performance and
-% productivity requirements of technical computing.
-
-% NUMBER ZERO
-
+\begin{itemize}
+%\item
+\iffalse
 Our first contribution is a discussion of the nature of technical computing
 that suggests which language-level abstractions might best support real use
 cases.
@@ -602,55 +507,44 @@ The success of this design is resonating with users worldwide.
 
 Based on the theory that technical computing is characterized by complex
 operators and particular combinations of binding time behavior.
+\fi
 
-% NUMBER ONE
+\item We introduce the idea of integrated code selection and specialization.
+This leads to a dispatch system that provides a novel combination of
+performance and expressiveness.
 
-To our knowledge, the first technical computing system written in a single language.
-Past systems have applied specialization to a set of user-level routines.
-We show that it can be used for an entire system.
+%It provides ``diagonal dispatch''
+%Using data flow types to drive the design leads to novel dispatch features:
+%- diagonal dispatch
+%- unifying variadic methods with regular types
+%- predictable performance without giving up flexibility
 
-%sort of language would form a good base for it. it should emphasize
-%complex operators and code generation/specialization.
-% this includes our real-world experience with building a new
-% technical computing environment from the ground up with a large open
-% source community.
-
-% NUMBER TWO
-
-Second, we introduce the idea of integrated code selection and specialization.
 %This leads to easy-to-use polymorphism, prioritizing
 %flexibility and performance over nearly all else.
-
-Using data flow types to drive the design leads to novel dispatch features:
-- diagonal dispatch
-- unifying variadic methods with regular types
-- predictable performance without giving up flexibility
 
 % Something about dispatch for performance. Given a performance kernel, it takes
 % a lot of info to describe when it is applicable.
 
 % dispatch on everything, not just classes
 
-% NUMBER THREE
+% ?? % \item Easy polymorphism
 
-Easy polymorphism
+%- library writers can decide what to put at the type level without affecting users
+%- a single mechanism to cover overloading, dispatch, and specialization
+%%%- using types, but mostly for dispatch, where they can be used gradually
+%- specialize by default (makes static polymorphism less of a black art)
 
-- library writers can decide what to put at the type level without affecting users
-- a single mechanism to cover overloading, dispatch, and specialization
-%- using types, but mostly for dispatch, where they can be used gradually
-- specialize by default (makes static polymorphism less of a black art)
-
-
-% NUMBER FOUR
-
-Subtyping algorithm
+\item A type system and subtyping algorithm designed for describing
+method applicability and performance-critical aspects of array data.
+This is the first system to apply the ``semantic subtyping'' approach
+to technical computing.
+We provide a simple implementation of our subtyping algorithm.
+This subtyping system is adoptable by dynamic languages that might not
+want to add static checking, but might benefit from a richer abstract
+value domain in other ways.
 
 % we design a type system for this. and introduce the ``evaluate softly
 % and carry a big subtype relation'' school of thought.
-
-% this subtype system is adoptable by dynamic languages that don't want to
-% add checking, but might benefit from a richer abstract value domain in
-% other ways.
 
 % we provide a straightforward implementation that should be easy to
 % translate to other languages.
@@ -661,22 +555,29 @@ Subtyping algorithm
 % subtyping systems are still relatively esoteric, often not even mentioned
 % in introductory texts.
 
-% NUMBER FIVE
+%\item a novel form of staged programming?
 
-Library design issues
-
-James Morris eloquently observed that
+\item James Morris eloquently observed that
 ``One of the most fruitful techniques of language analysis is explication through
-elimination. The basic idea is that one explains a linguistic feature by showing
-how one could do without it.'' \cite{morris}
-An additional contribution of this thesis is the application of this approach to features
-of technical computing environments that have not been subject to such analysis
-before.
-% showing our language is able to ``explain'' ...
+elimination.
+The basic idea is that one explains a linguistic feature by showing
+how one could do without it.''~\cite{morris}
+An additional contribution of this thesis is the application of our approach to
+features of technical computing environments that have not been subject to such
+analysis before.
+We provide an example application that shows how to use our language to
+more easily solve a difficult computational problem.
 
 % hopefully will provide useful examples for evaluating future dispatch
 % systems, object systems, and type systems
 
-% NUMBER SIX
+\item Finally, we contribute the Julia software system, currently a
+growing open source project.
+To our knowledge, this is the first technical computing system written in a
+single language.
+This demonstrates that our approach is both practical and appealing to a
+significant number of users.
+%Past systems have applied specialization to a set of user-level routines.
+%We show that it can be used for an entire system.
 
-% implementation: software system
+\end{itemize}

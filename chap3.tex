@@ -726,6 +726,28 @@ immutable SubArray{T,N,P<:AbstractArray,I<:Tuple{Vararg{ViewIndex}},LD} <: Abstr
 \end{singlespace}
 
 
+% conclude by summarizing the design decisions we end up with:
+
+%% \begin{singlespace}
+%% \begin{enumerate}
+%% \item Self-describing data model aware of memory layout
+%% \item Type tags with nested structure
+%% \item A fully-connected type tree
+%% \item Dynamic multiple dispatch over all types % including parameters and varargs
+%% \item Data flow type inference
+%% \item Automatic code specialization
+%% \end{enumerate}
+%% \end{singlespace}
+
+%% This list of features may appear somewhat ad-hoc. However, they turn out to be
+%% remarkably strongly coupled, and deeply constrained by our ultimate goal.
+%% Each of these features has appeared in some form before, but never in a way
+%% that fully solves the problems described here.
+
+%% Challenges of this approach (why has this not been done before?)
+
+
+
 %% \subsection{Objections to dynamic typing}
 
 % there are run time things, and just flow-sensitive things

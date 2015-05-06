@@ -168,7 +168,7 @@ Since set theory is widely understood, the use of such types tends to be intuiti
 These types
 are less coupled to the languages they are used with, since one may design
 a value domain and set relations within it without yet considering how types
-relate to program terms \cite{1029823} \cite{Castagna:2005:GIS:1069774.1069793}.
+relate to program terms \cite{1029823, Castagna:2005:GIS:1069774.1069793}.
 Since our goals only include
 performance and expressiveness, we simply skip the later steps for now, and do
 not consider in detail possible approaches to type checking.
@@ -300,8 +300,8 @@ When used with type inference, such types can grow without bound, possibly leadi
 to slow or even non-terminating compilation. Their occurrence also typically
 corresponds to cases that would fail most static type checkers. Yet from the
 perspectives of both data flow analysis and method specialization, they are
-perfectly natural and even essential \cite{abstractinterp}
-\cite{Igarashi} \cite{Smith:2008:JTI:1449764.1449804}.
+perfectly natural and even essential
+\cite{abstractinterp, Igarashi, Smith:2008:JTI:1449764.1449804}.
 
 The next problem we need to solve arises from data flow analysis of
 the \texttt{new} construct.
@@ -676,9 +676,9 @@ constraints.
 More work is needed to survey a large set of Julia libraries to see
 if this might be a problem in practice.
 
-Past work on subtyping with regular types~\cite{hosoya2000regular}
-\cite{xtatic} is also related, particularly to our treatment of
-union types and variadic tuples.
+Past work on subtyping with regular
+types~\cite{hosoya2000regular, xtatic} is also related, particularly
+to our treatment of union types and variadic tuples.
 
 \subsection{Type system variants}
 
@@ -1120,6 +1120,10 @@ This preserves the possibility of full static compilation, but due to
 dynamic typing the language cannot guarantee that all code generation
 will occur before run time.
 
+% TODO more disc. of related work
+%Our approach is closely related to exotypes
+%\cite{DeVito:2014:FRG:2594291.2594307}.
+
 
 \section{Higher-order programming}
 
@@ -1129,8 +1133,8 @@ However, assigning useful type tags to generic functions and deciding how
 they should dispatch is not so simple.
 Past work has often described the types of generic functions using the
 ``intersection of arrows'' formalism
-\cite{RonchiDellaRocca:1988:PTS:55079.55086} \cite{Dunfield:2012:EIU:2364527.2364534}
-\cite{boundedquant} \cite{Castagna:1995:COF:203496.203510}.
+\cite{RonchiDellaRocca:1988:PTS:55079.55086, Dunfield:2012:EIU:2364527.2364534,
+boundedquant, Castagna:1995:COF:203496.203510}.
 Since an ordinary function has an arrow type $A\rightarrow B$ describing how it
 maps arguments $A$ to results $B$, a function with multiple definitions can
 natually be considered to have multiple such types.
@@ -1528,9 +1532,7 @@ than what is usually studied in the context of those languages.
 
 Our compiler uses data flow type inference
 
-\cite{kaplanullman}
-\cite{abstractinterp}
-\cite{graphfree}
+\cite{kaplanullman,abstractinterp,graphfree}
 
 \subsection{Specialization}
 
