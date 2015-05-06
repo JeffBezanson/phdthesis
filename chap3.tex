@@ -717,6 +717,13 @@ overlap. However if one substitutes ``symbolic expression'' for
 ``XML document'', the similarity becomes clearer.
 
 % maybe subarray as an example of a fancy type here
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+const NonSliceIndex = Union(Colon, Range{Int}, UnitRange{Int}, Array{Int,1})
+const ViewIndex = Union(Int, NonSliceIndex)
+immutable SubArray{T,N,P<:AbstractArray,I<:Tuple{Vararg{ViewIndex}},LD} <: AbstractArray{T,N}
+\end{lstlisting}
+\end{singlespace}
 
 
 %% \subsection{Objections to dynamic typing}

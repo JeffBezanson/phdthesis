@@ -1256,7 +1256,7 @@ external GSL package; see appendix~\ref{appendix:integration}.}:
 
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
-type Helmholtz{k} <: APowerLaw{1,1}; end  # ~$e^{ikr} / 4\pi r$~
+type Helmholtz{k} <: APowerLaw{-1,-1}; end  # ~$e^{ikr} / 4\pi r$~
 
 function call{k,n}(::FirstIntegral{Helmholtz{k},n}, X::Number)
     ikX = im*k*X
@@ -1264,7 +1264,7 @@ function call{k,n}(::FirstIntegral{Helmholtz{k},n}, X::Number)
 end
 
 # magnetic field integral equation
-type MFIE{k} <: APowerLaw{3,3}; end  # ~$(ikr - 1) * e^{ikr} / 4\pi r^3$~
+type MFIE{k} <: APowerLaw{-3,-3}; end  # ~$(ikr - 1) * e^{ikr} / 4\pi r^3$~
 
 function call{k,n}(::FirstIntegral{MFIE{k},n}, X::Number)
     ikX = im*k*X

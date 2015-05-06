@@ -73,7 +73,7 @@ plus the special values \texttt{Any} and \texttt{Bottom}:
 \end{singlespace}
 
 \noindent
-The last item is the special abstract varargs tuple type.
+The last item is the special abstract variadic tuple type.
 
 The language maps tags to data descriptions using built-in rules, and ensures that
 the data part of a tagged value always conforms to the tag's description.
@@ -121,9 +121,9 @@ method replacements).
 The signature, or specializer, of a method is obtained by evaluating $e_{type}$,
 which must result in a type value as defined above. A method has $n$
 formal argument names $x_i$. The specializer must be a subtype of the
-varargs tuple type of length $n$. When a method is called, its formal argument
+variadic tuple type of length $n$. When a method is called, its formal argument
 names are bound to corresponding elements of the argument tuple. If the
-specializer is a vararg type, then the last argument name is bound to a
+specializer is a variadic type, then the last argument name is bound to a
 tuple of all trailing arguments.
 
 % (TODO describe restrictions)
@@ -340,7 +340,7 @@ only a single $T$ value might be involved.
 
 % $T=S \longleftrightarrow (T\leq S) \wedge (S\leq T)$.
 
-\subsection{Examples}
+\subsubsection{Examples}
 
 \texttt{UnionAll} types are quite expressive. In combination with nominal
 types they can describe groups of containers such as
@@ -630,12 +630,55 @@ However with sufficiently tight bounds that relationship no longer holds
 %                       (@UnionAll T @UnionAll S    inst(PairT,T,S)))
 
 \noindent
+Variadic tuples of unions are particularly expressive (``every argument is
+either this or that''):
+
+\vspace{-3ex}
+\begin{singlespace}
+\begin{align*}
+&\texttt{Tuple\{Vector\{Int\},Vector\{Vector\{Int\}\},Vector\{Int\}\},Vector\{Int\}\}}\ <\ \\
+&\hspace{4ex}\exists\ S<:\texttt{Real}\ .\ \texttt{Tuple\{Union\{Vector\{}S\}\texttt{,Vector\{Vector\{}S\texttt{\}\}\}...\}}
+\end{align*}
+\end{singlespace}
+
+\noindent
 And the algorithm understands that tuples distribute over unions:
 
 \vspace{-3ex}
 \[
 \texttt{Tuple\{Union\{A,B\},C\}}\ =\ \texttt{Union\{Tuple\{A,C\},Tuple\{B,C\}\}}
 \]
+
+\subsubsection{Related work}
+
+Our algorithm is similar to some that have been investigated for Java
+generics (\cite{wehr2008subtyping},
+\cite{Cameron:2009:SWE:1557898.1557902}, \cite{Tate:2011:TWJ:1993316.1993570}).
+In that context, the primary difficulty is undecidability due to
+circular constraints such as \texttt{class Infinite<P extends Infinite<?>>}
+and circularities in the inheritance hierarchy such as
+\texttt{class C implements List<List<?\ super C>>} (examples from
+\cite{Tate:2011:TWJ:1993316.1993570}).
+We have not found a need for such complex declarations.
+Julia disallows mentioning a type in the constraints of its own parameters.
+When declaring type $T$ a subtype of $S$, only the direct parameters of
+$T$ or $S$ can appear in the subtype declaration.
+We believe this leads to decidable subtyping.
+
+Dynamic typing provides a useful loophole: it is never truly
+necessary to declare constraints on a type's parameters, since
+the compiler does not need to be able to prove that those
+parameters satisfy any constraints when instances of the type are
+used.
+In theory, an analogous problem for Julia would be spurious method
+ambiguities due to an inability to declare sufficiently strong
+constraints.
+More work is needed to survey a large set of Julia libraries to see
+if this might be a problem in practice.
+
+Past work on subtyping with regular types~\cite{hosoya2000regular}
+\cite{xtatic} is also related, particularly to our treatment of
+union types and variadic tuples.
 
 \subsection{Type system variants}
 
@@ -737,7 +780,7 @@ types wherever they occur.
 We then need several more rules to cover other features of the type system:
 
 \begin{itemize}
-\item A vararg type is less specific than an otherwise equal non-vararg type.
+\item A variadic type is less specific than an otherwise equal non-variadic type.
 \item Union type $A$ is more specific than $B$ if some element of $A$ is
 more specific than $B$, and $B$ is not more specific than any
 element of $A$.
@@ -833,7 +876,8 @@ This requires a small adjustment to the evaluation rules: in the application
 syntax $e_1(e_2)$ when $e_1$ is not a function,
 evaluate $\texttt{call}(e_1,e_2)$ instead, where \texttt{call} is
 a particular generic function known to the system.
-This constructor can then be invoked by writing e.g.\ \texttt{Complex\{Float64\}(x,y)}.
+This constructor can then be invoked by writing e.g.\ \\
+\texttt{Complex\{Float64\}(x,y)}.
 
 Naturally, \texttt{Type} can be combined arbitrarily with other types,
 adding a lot of flexibility to constructor definitions.
