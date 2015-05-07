@@ -10,7 +10,7 @@ their type systems are dynamic or static:
 
 \vspace{3ex}
 
-\begin{table}
+%\begin{table}
 \begin{tabular}{|c||c|c|}
 \hline 
  & More types & Fewer types\tabularnewline
@@ -21,9 +21,9 @@ Dynamic & Dylan, Julia & Scheme, Python, MATLAB\tabularnewline
 Static & ML, Haskell, Scala & Fortran, Pascal, C\tabularnewline
 \hline 
 \end{tabular}
-\caption[A coarse classification of languages]{}
-\label{languageclass}
-\end{table}
+%\caption{A coarse classification of languages}
+%\label{languageclass}
+%\end{table}
 
 \vspace{3ex}
 
@@ -150,7 +150,7 @@ However this kind of representation is not the most efficient, and
 for good performance specialized code for different types must be
 generated.
 
-\subsection{Static checking vs.\ flexibility}
+%\subsection{Static checking vs.\ flexibility}
 
 \subsection{Modularity vs.\ large vocabularies}
 
@@ -667,7 +667,7 @@ willing to accept some uncertainty.
 Of course, many programmers and language designers prefer to maximize
 safety, leading to different approaches that trade away some precision
 (e.g. syntactic type systems such as those in the ML language
-family \cite{hindley1969principal}, \cite{MLtypeinf}).
+family \cite{hindley1969principal, MLtypeinf}).
 But if static guarantees are not the priority, or if a language considers
 itself unconcerned with ``types'', then we can take the domain-theoretic
 model as our type system.

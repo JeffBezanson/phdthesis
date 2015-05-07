@@ -106,7 +106,7 @@ always a corresponding need to \emph{specialize} code for specific cases
 to obtain performance.
 Polymorphic languages sometimes support forms of specialization,
 but often only through a designated mechanism (e.g. templates), or
-deployed rather conservatively out of resource concerns.
+deployed conservatively out of resource concerns.
 We intend to show that an equilibrium point in the design space can be found
 by combining selection and specialization into a single sufficiently powerful
 dynamic type-based dispatch mechanism.
@@ -220,6 +220,7 @@ written in lower-level languages.
 Seeking a similar tradeoff, others have gone as far as writing a C++
 interpreter \cite{vasilev2012cling}.
 
+% something about complicated architecture and not-always-good performance
 %technical computing systems have an unusually large amount of
 %``failure of abstraction'' --- manual duplication of facts
 %all over the system. imagine changing from column-major to
@@ -257,148 +258,182 @@ Here we will use a dynamically typed approach, with approximate type inference
 (for an excellent discussion of the many meanings of the word ``type''
 see \cite{Kell2014}).
 There are several reasons for this.
-First, insufficient static checking is most likely not the current limiting
-factor in scientific computing productivity.
-Second, some idioms in this domain appear to be inherently, or at least naturally,
+First, some idioms in this domain appear to be inherently, or at least naturally,
 dynamically typed (as we will explore in chapter~\ref{chap:2}).
-Third, there has been a sense that ``dynamic'' or ``scripting'' language users do
-not want to hear about types: they are thought of as a distraction and
-associated with verbosity and nuisance compiler errors.
-We hope to contribute an example of a language where types are useful and not
-burdensome.
+Second, insufficient static checking is most likely not the current limiting
+factor in scientific computing productivity.
+In our view the first priority is to get the combination of
+performance and flexibility we already know users want, and then try to
+improve safety later.
 
-% making whatever high-level language faster leaves two things out:
-% - providing more control for experts to request performance, or get
-%   super high performance
-% - making the language more flexible and powerful
+\subsection{Dispatch}
+
+There has been a large amount of work on running dynamic languages faster
+(notable examples are Self~\cite{selflang}, and more recently PyPy~\cite{pypyjit}).
+These efforts have been very successful, but arguably leave something
+out: a better interface to performance.
+Performance-critical aspects of most dynamically typed languages (e.g.\ arithmetic)
+have fixed behavior, and it is not clear what to do when your code does not
+perform as well as it could.
+Adding type annotations can work, but raises questions about how powerful
+the type system should be, and how it relates to the rest of the language.
+We speculate that this relative lack of control keeps experts away,
+perpetuating the split between performance and productivity languages.
+
+According to our theory, the issue is not really just a lack of types,
+but an exclusive focus on specialization, and not enough on selection.
+%Code selection is crucial to performance at all levels: at the lowest
+%level, it means picking the best machine instruction,
+%and at the highest level it means picking the best algorithm.
+In technical computing, it is often so important to select the best
+optimized kernel for a problem that it is worth doing a slow dynamic
+dispatch in order to do so.
+Most of the productivity languages mentioned above are designed
+entirely around this principle.
+But their view of code selection is incomplete: the dispatch
+mechanisms used are ad-hoc and not employed consistently.
+Even when an optimizing compiler for the source language is developed,
+it does not necessarily take all relevant forms of dispatch into
+account.
+For example, NumPy has its own dispatch system underneath Python's,
+and so is not helped as much as it could be by PyPy, which only
+understands Python method selection.
+
+A dispatch specification, for example a method signature in a
+multi-method system, describes when a piece of code is applicable.
+%A more powerful dispatch system brings many benefits.
+A more expressive dispatch system then allows code to be written
+in smaller pieces, helping the compiler remove irrelevant code
+from consideration.
+It is also more extensible, providing more opportunities to
+identify special cases that deserve tailored implementations.
+Method-at-a-time JIT compilers
+(e.g.\ \cite{grcevski2004java, Suganuma:2005:DED:1075382.1075386})
+can specialize method bodies on all arguments.
+%For example an optimizing compiler for Self~\cite{Dean:1994:TBI:182590.182489}
+%tracked all argument types per call site to help guide inlining.
+Such a system might even use multiple dispatch internally to
+select optimized methods.
+In that case, why not expose that capability to the programmer?
+
+%how to write things so they perform, and how to
+%add algorithms for special cases in an extensible way
+
+%performance is related to dispatch since it lets you describe when some
+%efficient kernel is applicable.
 
 % also for linking purposes the compiler will want to leave some
 % record of what it has done, i.e. what assumptions it has made to
 % generate the code it left behind.
 % here you will want a type system.
 
-%Finally, it is often the case that a seemingly-minor
+%% Why do we prefer method signatures to imperative logic?
+%% - it's extensible
+%% - its declarative style is more compact
+%% - allows writing functions in small pieces
+%%   the more descriptive the types, the smaller the pieces
+%%   might make compiler more efficient; removes large bits of code from
+%%   consideration just from looking at types. don't need to analyze a
+%%   large function just to discover that only a small part of it
+%%   remains.
+%% - clearer performance model. it's hard for programmer to guess
+%%   when the compiler will statically evaluate an arbitrary expression
+%% - allows defining semantics about things that are optimized, but
+%%   *not* compile-time constants.
+%%   method table can be (ab)used as a mutable lookup table structure.
+
+%Finally, it is often the case that a seemingly minor
 %modification to a type system makes type checking undecidable. Rejecting
 %such a system is totally reasonable. However if we are willing to
 %accept undecidable checking from the beginning, opportunities arise to
 %simplify and increase the power of the language.
 
-%Efforts to analyze and optimize dynamically typed programs generally make two
-%assumptions: (1) we should work on analyzing \emph{existing} popular
-%languages, and (2) users of these languages don't want to use types.
-%The first assumption makes practical sense.
-%Convenience is hard to quantify, so using existing languages that have already
-%been deemed convenient by popular opinion puts us on solid footing.
-%Our work addresses the second assumption more directly.
-%We point out that types
-%\footnote{}
-%do not have to be used for static checking, and that using them for
-%\emph{code selection} and \emph{code specialization} is particularly useful in
-%technical computing.
-%This perspective has not been explored thoroughly in the past.
-
 % one of our main innovations is a way to deftly navigate between two
 % problems
 
-\subsection{The excess power problem}
+%% \subsection{The excess power problem}
 
-We claim that the amount of information that can be statically inferred
-exceeds most dynamic languages' capacity to exploit it.
-Much work has been done on program analysis and optimization techniques
-for dynamically typed languages.
-When static analyses (often incorporating run time information) are applied
-to dynamically typed programs, it is typically possible to recover a
-significant amount of type information (e.g. \cite{druby}).
-What, then, can one do with this information?
-If the goal is performance, various partial evaluations can be done:
-generating code without type checks, removing branches, type-specializing
-the storage of variables, and compile time method lookup are all valuable
-and yield large real-world gains.
+%% We claim that the amount of information that can be statically inferred
+%% exceeds most dynamic languages' capacity to exploit it.
+%% Much work has been done on program analysis and optimization techniques
+%% for dynamically typed languages.
+%% When static analyses (often incorporating run time information) are applied
+%% to dynamically typed programs, it is typically possible to recover a
+%% significant amount of type information (e.g. \cite{druby}).
+%% What, then, can one do with this information?
+%% If the goal is performance, various partial evaluations can be done:
+%% generating code without type checks, removing branches, type-specializing
+%% the storage of variables, and compile time method lookup are all valuable
+%% and yield large real-world gains.
 
-Method-at-a-time JIT compilers
-(e.g.\ \cite{grcevski2004java, Suganuma:2005:DED:1075382.1075386})
-can specialize method bodies on all arguments.
 %and might use multiple dispatch \emph{internally} to select implementations
 %at run time.
-For example an optimizing compiler for Self~\cite{Dean:1994:TBI:182590.182489}
-tracked all argument types per call site to help guide inlining.
-Arguably, if method calls are dispatched on the first argument, but the types of all
-arguments can be inferred, some power has been ``left on the table'' ---
-we could have had multi-methods for little extra cost.
-This argument does not apply equally to statically typed languages, since they
-cannot simply ``switch'' their functions to generic functions without significant
-consequences for type checking.
+%% Arguably, if method calls are dispatched on the first argument, but the types of all
+%% arguments can be inferred, some power has been ``left on the table'' ---
+%% we could have had multi-methods for little extra cost.
+%% This argument does not apply equally to statically typed languages, since they
+%% cannot simply ``switch'' their functions to generic functions without significant
+%% consequences for type checking.
 
-This ``excess power'' problem applies to data structures as well.
-For example, static or run time analysis might reveal that a certain array
-can be represented as a native \texttt{Int32} array \cite{Bolz2013}.
-If this information is not reflected in the source language, then
-certain uses like passing data to native code become unnecessarily more
-complicated.
-And if one is going to implement homogeneous arrays anyway, why not
-let programmers request them?
-%Of course, a library like NumPy \emph{does} allow this, but with a
-%mechanism
+%% This ``excess power'' problem applies to data structures as well.
+%% For example, static or run time analysis might reveal that a certain array
+%% can be represented as a native \texttt{Int32} array \cite{Bolz2013}.
+%% If this information is not reflected in the source language, then
+%% certain uses like passing data to native code become unnecessarily more
+%% complicated.
+%% And if one is going to implement homogeneous arrays anyway, why not
+%% let programmers request them?
 
-Some levels of performance are difficult to reach with implicitly
-specialized code and data.
-Given the knowledge that an array contains only \texttt{Int32} data,
-we might want to go beyond essential optimizations like storing intermediate
-values in registers, and actually use different algorithms.
-For example, in Miller-Rabin primality testing~\cite{Rabin1980128}, checking
-three ``witness'' values suffices for all 32-bit arguments, but up to seven
-values might be needed for 64-bit arguments.
-In cryptographic applications, exploiting this difference in an inner loop
-could bring significant benefits.
+%% Some levels of performance are difficult to reach with implicitly
+%% specialized code and data.
+%% Given the knowledge that an array contains only \texttt{Int32} data,
+%% we might want to go beyond essential optimizations like storing intermediate
+%% values in registers, and actually use different algorithms.
+%% For example, in Miller-Rabin primality testing~\cite{Rabin1980128}, checking
+%% three ``witness'' values suffices for all 32-bit arguments, but up to seven
+%% values might be needed for 64-bit arguments.
+%% In cryptographic applications, exploiting this difference in an inner loop
+%% could bring significant benefits.
 
 
-\subsection{The divergence problem}
+%\subsection{The divergence problem}
 
-Another problem that occurs when analyzing programs with complex
-type behavior is divergence: the analysis is likely to infer an
-overly large result from failing to eliminate enough possible
-behaviors.
-Narrowing the inferred types requires some extra source of type
-information.
-Multi-method signatures work well for this purpose.
+%The remaining question is what exactly we should dispatch on.
+%Naturally, it might be nice to be able to dispatch on any criteria
+%at all.
+%However as a dispatch system gets more powerful, its utility as a
+%performance model degrades.
+% TODO: introduce before this how dispatch can be a performance model
 
-past approaches include: optional user annotations, or a built-in
-database of function type behavior, determined empirically or
-analytically.
-to solve the problem in general, library behavior should not be
-built-in to the compiler.
-however, when functions that are both highly complex and performance
-critical are implemented at the library level it can be difficult
-to ensure they are sufficiently optimized.
+
+%% Another problem that occurs when analyzing programs with complex
+%% type behavior is divergence: the analysis is likely to infer an
+%% overly large result from failing to eliminate enough possible
+%% behaviors.
+%% Narrowing the inferred types requires some extra source of type
+%% information.
+%% Multi-method signatures work well for this purpose.
+
+%% past approaches include: optional user annotations, or a built-in
+%% database of function type behavior, determined empirically or
+%% analytically.
+%% to solve the problem in general, library behavior should not be
+%% built-in to the compiler.
+%% however, when functions that are both highly complex and performance
+%% critical are implemented at the library level it can be difficult
+%% to ensure they are sufficiently optimized.
+
 % specializer must decide when to widen, when to stop going around
 % loops, etc.
 % this is an opaque process.
 % there is an essential divide between what it will statically
 % evaluated, and what it won't.
 
-However the divergence problem also places a limit on what
-kinds of dispatch specifications are useful to program analyses:
-some sets of values tend to be more robust under execution
-than others.
+%% However the divergence problem also places a limit on what
+%% kinds of dispatch specifications are useful to program analyses:
+%% some sets of values tend to be more robust under execution
+%% than others.
 
-\todo[inline]{Would love an example if possible}
-
-
-Why do we prefer method signatures to imperative logic?
-
-- it's extensible
-- its declarative style is more compact
-- allows writing functions in small pieces
-  the more descriptive the types, the smaller the pieces
-  might make compiler more efficient; removes large bits of code from
-  consideration just from looking at types. don't need to analyze a
-  large function just to discover that only a small part of it
-  remains.
-- clearer performance model. it's hard for programmer to guess
-  when the compiler will statically evaluate an arbitrary expression
-- allows defining semantics about things that are optimized, but
-  *not* compile-time constants.
-  method table can be (ab)used as a mutable lookup table structure.
 
 % TODO:
 % claim dispatch works better on approximate type info than branches

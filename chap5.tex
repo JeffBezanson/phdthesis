@@ -671,6 +671,7 @@ et.al. \cite{lawn181}:
 \end{small}
 \end{singlespace}
 
+\iffalse
 Multiple dispatch on special matrices
 
 29 LAPACK types via composition of 9 types, issue 8240
@@ -722,7 +723,9 @@ GeneralizedSchur{Ty<:BlasFloat, M<:AbstractMatrix} <: Factorization{Ty}
 LDLt{T,S<:AbstractMatrix} <: Factorization{T}
 LU{T,S<:AbstractMatrix} <: Factorization{T}
 CholeskyDenseRFP{T<:BlasFloat} <: Factorization{T}
+\fi
 
+Describing the applicability of BLAS:
 
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
@@ -734,8 +737,7 @@ axpy!{T<:BlasFloat}(alpha::Number,
 \end{lstlisting}
 \end{singlespace}
 
-
-
+\iffalse
 QR factorization: want to support it on all input types, but many
 types (integer, rational) are not closed under the needed operations.
 compare to eigen: in C++, if you want a qrfact of an integer matrix,
@@ -763,6 +765,7 @@ This code is not statically typeable, and yet with specialization a
 compiler could in fact determine the type of each call site.
 It just happens to be convenient to specify this behavior with a
 branch.
+\fi
 
 \section{Units}
 

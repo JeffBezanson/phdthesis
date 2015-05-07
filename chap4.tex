@@ -175,11 +175,20 @@ not consider in detail possible approaches to type checking.
 A good slogan for this attitude might be ``evaluate softly and carry a big
 subtype relation!''
 
-To avoid the dual traps of ``excess power'' and divergence, the system we use
+% TODO maybe mention that in some sense being dynamically typed makes the
+% requirements on subtyping stricter, because we don't have the option
+% of being conservative and giving more compiler errors than necessary.
+% at every point, we have to pick some behavior and we can't silently
+% do the wrong thing.
+
+%To avoid the dual traps of ``excess power'' and divergence
+The system we use
 must have a decidable subtype relation, and must be closed under data flow operations
-(meet, join, and widen). It must also lend itself to a reasonable definition of
+(meet, join, and widen).
+It must also lend itself to a reasonable definition of
 specificity, so that methods can be ordered automatically (a necessary property for
-composability). These requirements are fairly strict.
+composability).
+These requirements are fairly strict.
 %, but still admit many possible designs.
 %The one we present here is aimed at providing the minimum level of
 %sophistication needed to yield a language that feels ``powerful'' to most modern
@@ -652,8 +661,8 @@ And the algorithm understands that tuples distribute over unions:
 \subsubsection{Related work}
 
 Our algorithm is similar to some that have been investigated for Java
-generics (\cite{wehr2008subtyping},
-\cite{Cameron:2009:SWE:1557898.1557902}, \cite{Tate:2011:TWJ:1993316.1993570}).
+generics (\cite{wehr2008subtyping, Cameron:2009:SWE:1557898.1557902,
+Tate:2011:TWJ:1993316.1993570}).
 In that context, the primary difficulty is undecidability due to
 circular constraints such as \texttt{class Infinite<P extends Infinite<?>>}
 and circularities in the inheritance hierarchy such as
@@ -1071,6 +1080,8 @@ with a macro called \texttt{@generated}:
 end
 \end{lstlisting}
 \end{singlespace}
+
+%TODO explain quote syntax fully
 
 \noindent
 This simple example implements indexing with \texttt{N} arguments
@@ -1538,7 +1549,7 @@ Our compiler uses data flow type inference
 
 it might be thought that julia achieves performance through a clever
 compiler that uses ``every trick in the book''.
-at risk of being overly self-deprecating, this is not the case.
+at risk of being self-deprecating, this is not the case.
 the performance we manage to get derives from the language design,
 which enables a style of library implementation such that applying straightforward,
 known optimizations yields good performance.
