@@ -63,8 +63,8 @@ the ways that the technical computing domain uses general purpose
 languages.
 Effective scientific libraries extensively employ
 polymorphism, custom operators, and compile time abstraction.
-Code generation approaches (writing a program that writes the needed
-program) are unusually common.
+Code generation approaches (writing programs that write programs)
+are unusually common.
 Most of these techniques are presently fairly difficult to use, and so
 programmers working at this level give up the notational conveniences
 of the purpose-built languages above.
@@ -108,7 +108,7 @@ Polymorphic languages sometimes support forms of specialization,
 but often only through a designated mechanism (e.g. templates), or
 deployed conservatively out of resource concerns.
 We intend to show that an equilibrium point in the design space can be found
-by combining selection and specialization into a single sufficiently powerful
+by combining selection and specialization into a single appropriately designed
 dynamic type-based dispatch mechanism.
 %The specific design is identified via subtyping theories and closure under
 %data flow operations.
@@ -241,7 +241,9 @@ match the performance of C, C++, and Fortran.
 To do that, it is almost certain that speculative optimizations such as tracing
 \cite{tracingjit} will not be sufficient ---
 the language will need to be able to \emph{prove} facts about types, or at least
-let the user request specific types.
+let the user request specific types
+(for an excellent discussion of the many meanings of the word ``type''
+see \cite{Kell2014}).
 It is also clear that such a language must strive for maximum convenience, or else
 the split between performance languages and productivity languages will persist.
 
@@ -253,10 +255,7 @@ of flexibility (as in Fortress \cite{fortresspec} or Polyduce \cite{polyduce1},
 for instance), but it is still too early to call a winner between these two
 approaches (if, indeed, there even needs to be a winner).
 
-Here we will use a dynamically typed approach, with approximate type inference
-% TODO make a bigger deal out of Kell
-(for an excellent discussion of the many meanings of the word ``type''
-see \cite{Kell2014}).
+Here we will use a dynamically typed approach, with approximate type inference.
 There are several reasons for this.
 First, some idioms in this domain appear to be inherently, or at least naturally,
 dynamically typed (as we will explore in chapter~\ref{chap:2}).
@@ -309,12 +308,22 @@ It is also more extensible, providing more opportunities to
 identify special cases that deserve tailored implementations.
 Method-at-a-time JIT compilers
 (e.g.\ \cite{grcevski2004java, Suganuma:2005:DED:1075382.1075386})
-can specialize method bodies on all arguments.
+can specialize method bodies on all arguments, and so are
+arguably already equipped to implement and optimize multiple dispatch
+(even though most object-oriented languages do not offer it).
+At the same time, dispatch specifications are a good way to provide
+type information to the compiler.
 %For example an optimizing compiler for Self~\cite{Dean:1994:TBI:182590.182489}
 %tracked all argument types per call site to help guide inlining.
-Such a system might even use multiple dispatch internally to
-select optimized methods.
-In that case, why not expose that capability to the programmer?
+%Such a system might even use multiple dispatch internally to
+%select optimized methods.
+%In that case, why not expose that capability to the programmer?
+
+%%%%%%%%%
+%compilation is expensive, so traditional languages have forced the equation
+%(what you can generate code for) = (known at compile time)
+%wanting specialized code for more dynamic properties is the issue.
+%%%%%%%%
 
 %how to write things so they perform, and how to
 %add algorithms for special cases in an extensible way
@@ -398,13 +407,36 @@ In that case, why not expose that capability to the programmer?
 
 %\subsection{The divergence problem}
 
-%The remaining question is what exactly we should dispatch on.
-%Naturally, it might be nice to be able to dispatch on any criteria
-%at all.
+The remaining question is what exactly we should dispatch on.
+Naturally, it might be nice to be able to dispatch on any criteria
+at all.
+However there is a balancing act to perform: if dispatch signatures
+become too specific, it becomes difficult to predict whether they
+will be resolved statically.
+At one end of the spectrum are mechanisms like static overloading
+in C++, where the compiler simply insists that it be possible to
+resolve definitions at compile time.
+At the other end of the spectrum, we might dispatch on arbitrary
+predicates.
+We do neither of these.
+Instead, our dispatch is based on sets of values that are robust
+under evaluation: abstract evaluation over such sets is less likely
+to diverge.
+For example, consider the set $\{1,2\}$.
+This set is not closed under ``natural'' functions.
+As we evaluate a recursive function over this abstract value, the
+set will typically grow, and the fixed point will be much larger
+than the original set.
+So while specializing a method for $\{1,2\}$ could in some rare
+cases be useful, it also leads to unpredictable performance.
+To find reasonably robust sets to dispatch on, we
+begin with structured type tags and take the closure under data flow
+operations.
+This will be developed in detail in section~\ref{sec:typesystem}.
+
 %However as a dispatch system gets more powerful, its utility as a
 %performance model degrades.
 % TODO: introduce before this how dispatch can be a performance model
-
 
 %% Another problem that occurs when analyzing programs with complex
 %% type behavior is divergence: the analysis is likely to infer an
@@ -501,7 +533,7 @@ syntactic) information is available, but machine code has not been
 generated yet.
 In general, this semantic information can also include run time (and
 always, at least, approximate run time) information.
-Since the types used by dispatch have rich, nested structure, they
+Since the types used by dispatch support nested structure, they
 convey enough information to drive code generation for a significant
 class of problems.
 In this framework code generators are invoked automatically by
@@ -574,9 +606,8 @@ method applicability and performance-critical aspects of array data.
 This is the first system to apply the ``semantic subtyping'' approach
 to technical computing.
 We provide a simple implementation of our subtyping algorithm.
-This subtyping system is adoptable by dynamic languages that might not
-want to add static checking, but might benefit from a richer abstract
-value domain in other ways.
+This subtyping system is adoptable by dynamic languages that might
+benefit from a richer abstract value domain.
 
 % we design a type system for this. and introduce the ``evaluate softly
 % and carry a big subtype relation'' school of thought.
