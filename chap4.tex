@@ -1,6 +1,6 @@
 \chapter{The Julia approach}
 
-\section{Core calculus and data model}
+\section{Core calculus}
 \label{sec:corecalc}
 
 Julia is based on an untyped lambda calculus augmented with generic functions,
@@ -23,36 +23,53 @@ tagged data values, and mutable cells.
 \end{align*}
 \end{singlespace}
 
-The \texttt{new} construct resembles the \texttt{Dynamic} constructor
+The \texttt{new} construct creates a value from a type tag and some other
+values; it resembles the \texttt{Dynamic} constructor
 in past work on dynamic typing \cite{Abadi:1991:DTS:103135.103138}.
-The main difference is that the tag is determined by evaluating an
-expression.
+The tag is determined by evaluating an expression.
 %\footnote{Some agree that this qualifies as ``dynamic dependent typing''
 %  (personal communication with Jean Yang, 2014). Others contend that this
 %  terminology is not sensible.
 %}
 % TODO: say something about: it seems cumbersome to need to compute 2 parts
 % for every value, but in practice it is easy to abstract away.
-Why? The flippant answer is that we are already giving up decidable
-type checking, so we might as well.
-But what this really means is that constructing types is part of programming.
-This can be used to request specific kinds of objects from an API, or
-used as an implementation detail to tell the compiler which object
-properties to track.
-In practice, \texttt{new} is always wrapped in a constructor function, so
-the programmer defining a data type is the only one who actually instantiates
-it.
+This means constructing types is part of programming, and types can
+contain nearly arbitrary data.\footnote{We restrict this to values that can
+be accurately compared by \texttt{===}, which will be introduced shortly.}
+In Julia syntax, types are constructed using curly braces; this is shorthand
+for an appropriate \texttt{new} expression
+(tags are a specific subset of data values whose tag is the built-in value
+\texttt{Tag}).
+Although type expressions are quite often constants, one might also write
+\texttt{MyType\{x+y\}}, to construct a \texttt{MyType} with
+a parameter determined by computing \texttt{x+y}.
+This provides a tradeoff that we feel is highly desirable for our intended
+applications:
+
+\begin{itemize}
+\item The compiler cannot always statically determine types.
+\item Program behavior does not depend on the compiler's (in)ability to
+determine types.
+\item The compiler can do whatever it wants in an attempt to determine types.
+\end{itemize}
+
+The last point means that if the compiler is somehow able to statically
+evaluate \texttt{x+y}, it is free to do so, and gain sharper type information.
+This is a general property of dynamic type inference systems
+\cite{kaplanullman,TICL,pticl,nimble,rubydust}.
+Julia's types are designed to support this kind of inference, but they
+are also used for code selection and specialization regardless of the
+results of inference.
+
+%This can be used to request specific kinds of objects from an API, or
+%used as an implementation detail to tell the compiler which object
+%properties to track.
+In practice, \texttt{new} is always wrapped in a constructor function,
+abstracting away the inconvenience of constructing both a type and a value.
 In fact, \texttt{new} for \emph{user-defined} data types is syntactically
 available only within the code block that defines the type.
 This provides some measure of data abstraction, since it is not possible
 for user code to construct arbitrary instances.
-However, tags themselves (the first argument to \texttt{new}) can be
-constructed anywhere using nested applications of the syntax
-\texttt{T\{}$\cdots$\texttt{\}}.
-Tags are a specific subset of data values whose tag is the built-in value
-\texttt{Tag}.
-Once so constructed, a tag can be passed to a constructor (which is just
-a generic function) to obtain an instance if desired.
 
 Constants are pre-built tagged values.
 
@@ -74,6 +91,8 @@ plus the special values \texttt{Any} and \texttt{Bottom}:
 
 \noindent
 The last item is the special abstract variadic tuple type.
+
+\subsubsection{Data model}
 
 The language maps tags to data descriptions using built-in rules, and ensures that
 the data part of a tagged value always conforms to the tag's description.
@@ -101,6 +120,8 @@ A built-in primitive equality operator \texttt{===} is provided, based on
 $egal$ \cite{egal} (mutable objects are compared by address, and immutable objects
 are compared by directly comparing both the tag and data parts bit-for-bit, and
 recurring through references to other immutable objects).
+
+\subsubsection{Functions and methods}
 
 Functions are generally applied to more than one argument. In the application
 syntax $e_1(e_2)$, $e_2$ is an implicitly constructed tuple of all arguments.
@@ -133,9 +154,6 @@ a unique local name and defining a single method on it.
 
 Mutable lexical bindings are provided by the usual translation to operations
 on mutable cells.
-
-The all-important array type is written as \texttt{Array\{T,N\}} where
-\texttt{T} is an element type and \texttt{N} is a number of dimensions.
 
 %\subsection{A note on static typing}
 
@@ -174,7 +192,7 @@ Since our goals only include
 performance and expressiveness, we simply skip the later steps for now, and do
 not consider in detail possible approaches to type checking.
 A good slogan for this attitude might be ``evaluate softly and carry a big
-subtype relation!''
+subtype relation.''
 
 % TODO maybe mention that in some sense being dynamically typed makes the
 % requirements on subtyping stricter, because we don't have the option
@@ -195,13 +213,14 @@ These requirements are fairly strict.
 %sophistication needed to yield a language that feels ``powerful'' to most modern
 %programmers.
 Beginning with the simplest possible system, we added features as
-needed either to satsify the aforementioned closure properties, or to allow us to
-write method definitions that seemed particularly useful (as it turns out, these
-two considerations lead to essentially the same features).
+needed to satsify the aforementioned closure properties.
+% or to allow us to
+%write method definitions that seemed particularly useful (as it turns out, these
+%two considerations lead to essentially the same features).
 %The presentation that
 %follows will partially reproduce the order of this design process.
 
-We will define our types by formally describing their denotations as sets.
+We will define our types by describing their denotations as sets.
 We use the notation $\llbracket T \rrbracket$ for the set denotation of
 type expression $T$.
 Concrete language syntax and terminal symbols of the type expression grammar
@@ -218,6 +237,8 @@ a partial order $\leq$:
 
 \noindent
 where $\mathcal{D}$ represents the domain of all values.
+Also note that the all-important array type is written as \texttt{Array\{T,N\}} where
+\texttt{T} is an element type and \texttt{N} is a number of dimensions.
 
 Next we add data objects with structured tags.
 The tag of a value is accessed with \texttt{typeof(x)}.
@@ -249,8 +270,8 @@ complex
 (tuples are a special case where covariance works, because each component type need
 only refer to single value, so there is no need for concrete
 tuple types with non-concrete parameters).
-We also find that most uses of covariance are more flexibly
-handled by union type connectives (introduced below).
+%We also find that most uses of covariance are more flexibly
+%handled by union type connectives (introduced below).
 
 Next we add conventional product (tuple) types, which are used to represent the
 arguments to methods. These are almost identical to the nominal types defined above,
@@ -272,17 +293,19 @@ The abstract tuple types ending in \texttt{...} correspond to variadic methods, 
 provide convenient interfaces for tasks like concatenating any number of arrays.
 Multiple dispatch has been formulated as dispatch on tuple types before \cite{Leavens1998}.
 This formulation has the advantage that \emph{any} type that is a subtype of a
-tuple type can be used to express the signature of a method. It also makes the system
-simpler and more reflective, since subtype queries can be used to ask questions about
-methods.
+tuple type can be used to express the signature of a method.
+It also makes the system simpler and more reflective, since subtype queries can be
+used to ask questions about methods.
 
-The types introduced so far would be perfectly sufficient for many programs, and are
+The types introduced so far would be sufficient for many programs, and are
 roughly equal in power to several multiple dispatch systems that have been designed
-before. However, these types are not closed under data flow operations. For example,
-when the two branches of a conditional expression yield different types, a program
-analysis must compute the union of those types to derive the type of the conditional.
-The above types are not closed under set union. We therefore add the following
-type connective:
+before.
+However, these types are not closed under data flow operations.
+For example, when the two branches of a conditional expression yield different types,
+a program analysis must compute the union of those types to derive the type of
+the conditional.
+The above types are not closed under set union.
+We therefore add the following type connective:
 
 \vspace{-3ex}
 \[
@@ -290,27 +313,30 @@ type connective:
 \]
 
 As if by coincidence, \texttt{Union} types are also tremendously useful for expressing
-method dispatch. For example, if a certain method applies to all 32-bit integers regardless
+method dispatch.
+For example, if a certain method applies to all 32-bit integers regardless
 of whether they are signed or unsigned, it can be specialized for \texttt{Union\{Int32,UInt32\}}.
 
 \texttt{Union} types are easy to understand, but complicate the type system considerably.
 To see this, notice that they provide an unlimited number of ways to rewrite any type.
 For example a type \texttt{T} can always be rewritten as \texttt{Union\{T,Bottom\}}, or
-\texttt{Union\{Bottom,Union\{T,Bottom\}\}}, etc. Any code that processes types must
-``understand'' these equivalences. Covariant constructors (tuples in our case)
-also distribute over \texttt{Union} types, providing even more ways to rewrite types:
+\texttt{Union\{Bottom,Union\{T,Bottom\}\}}, etc.
+Any code that processes types must ``understand'' these equivalences.
+Covariant constructors (tuples in our case) also distribute over \texttt{Union} types,
+providing even more ways to rewrite types:
 
 \vspace{-3ex}
 \[
 \texttt{Tuple\{Union\{A,B\},C\}} = \texttt{Union\{Tuple\{A,C\},Tuple\{B,C\}\}}
 \]
 
-This is one of a few reasons that union types are often considered undesirable.
+This is one of several reasons that union types are often considered undesirable.
 When used with type inference, such types can grow without bound, possibly leading
-to slow or even non-terminating compilation. Their occurrence also typically
-corresponds to cases that would fail most static type checkers. Yet from the
-perspectives of both data flow analysis and method specialization, they are
-perfectly natural and even essential
+to slow or even non-terminating compilation.
+Their occurrence also typically corresponds to cases that would fail many static type
+checkers.
+Yet from the perspectives of both data flow analysis and method specialization, they
+are perfectly natural and even essential
 \cite{abstractinterp, Igarashi, Smith:2008:JTI:1449764.1449804}.
 
 The next problem we need to solve arises from data flow analysis of
@@ -322,11 +348,12 @@ does not correctly represent the result.
 The correct result would be the union of all types \texttt{C\{}$T$\texttt{\}}
 where $T\leq S$.
 Interestingly, there is again a corresponding need for such types in method
-dispatch. Often one has, for example, a method that applies to arrays of any
+dispatch.
+Often one has, for example, a method that applies to arrays of any
 kind of integer (\texttt{Array\{Int32\}}, \texttt{Array\{Int64\}}, etc.).
 These cases can be expressed using a \texttt{UnionAll} connective, which denotes
-an iterated union of a type expression for all values of a parameter in a specified
-range:
+an iterated union of a type expression for all values of a parameter within
+specified bounds:
 
 \vspace{-3ex}
 \[
@@ -382,11 +409,12 @@ element type, and in these cases it should be possible to ignore type parameters
 
 Consider \texttt{Array\{T\}}, the type of arrays with element type \texttt{T}.
 In most languages with parametric types, the identifier \texttt{Array} would
-refer to a type constructor, i.e. a type of a different \emph{kind} than
+refer to a type constructor, i.e.\ a type of a different \emph{kind} than
 ordinary types like \texttt{Int} or \texttt{Array\{Int\}}.
 Instead, we find it intuitive and appealing for \texttt{Array} to refer to
 any kind of array, so that a declaration such as \texttt{x::Array} simply
-asserts \texttt{x} to be some kind of array. In other words,
+asserts \texttt{x} to be some kind of array.
+In other words,
 
 \vspace{-3ex}
 \[
@@ -490,6 +518,16 @@ type at a particular parameter value.
   \label{subtvars}
 \end{figure}
 
+Computing the subtype relation is the key algorithm in our system.
+It is used in the following cases:
+
+\begin{itemize}
+\item Determining whether a tuple of arguments matches a method signature.
+\item Comparing method signatures for specificity and equality.
+\item Source-level type assertions.
+\item Checking whether an assigned value matches the declared type of a
+location.
+\end{itemize}
 
 Deciding subtyping for base types is straightforward: \texttt{Bottom} is
 a subtype of everything, everything is a subtype of \texttt{Any}, and
