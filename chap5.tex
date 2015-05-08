@@ -484,8 +484,8 @@ or all operations will be dynamically dispatched.
 Other systems might provide flexibility only at compile time, for example a
 template library where the number of dimensions must be statically known.
 
-%Whatever decision is made, rules must be defined for how various operators
-%act on dimensions.
+Whatever tradeoff is made, rules must be defined for how various operators
+act on dimensions.
 Here we focus on indexing, since selecting parts of arrays has particularly
 rich behavior with respect to dimensionality.
 For example, if a single row or column of a matrix is
@@ -494,6 +494,11 @@ Array implementations prefer to invoke general rules to answer such questions.
 Such a rule might say ``dimensions indexed with scalars are dropped'', or ``trailing
 dimensions of size one are dropped'', or ``the rank of the result
 is the sum of the ranks of the indexes'' (as in APL).
+A significant amount of work has been done on inferring properties like these
+for existing array-based languages
+(e.g.\ \cite{Joisha:2006:AAS:1152649.1152651,Garg:2014:JSI:2627373.2627382},
+although these methods go farther and attempt to infer complete size
+information).
 
 C++ and Haskell are both examples of languages with sufficiently powerful
 static semantics to support defining efficient and reasonably flexible
@@ -584,19 +589,17 @@ capabilities of such systems.
 \fi
 
 Our dispatch mechanism permits a novel solution \cite{Bezanson2014}.
-If a multiple dispatch
-system supports variadic functions and argument ``splatting'' (the ability
-to pass a structure of $n$ values as $n$ separate arguments to a function),
-then indexing behavior can be defined as method signatures.
-
+Indexing behavior can be defined with method signatures, using a combination
+of variadic methods and argument ``splatting'' (the ability
+to pass a structure of $n$ values as $n$ separate arguments to a function,
+known as \texttt{apply} in Lisp dialects).
 This solution is still a compromise among the factors outlined above,
-but it is a new compromise that provides a modest, but definite,
-increment of power.
+but it is a new compromise that provides a modest increment of power.
 % TODO more
 
 Below we define a function \texttt{index\_shape} that computes the
-shape of a result array given a series of index arguments. We show
-three versions, each implementing a different rule that users in
+shape of a result array given a series of index arguments.
+We show three versions, each implementing a different rule that users in
 different domains might want:
 
 % TODO: point out array = (shape, data), so those are the two parts
@@ -604,28 +607,21 @@ different domains might want:
 % object; it is not directly exposed to the user, but this is more
 % of an implementation detail.
 
+\vspace{-3ex}
 \begin{singlespace}
 \begin{verbatim}
 # drop dimensions indexed with scalars
 index_shape() = ()
 index_shape(i::Real, I...) = index_shape(I...)
-index_shape(i, I...) = tuple(length(i), index_shape(I...)...)
-\end{verbatim}
-\end{singlespace}
+index_shape(i, I...)       = (length(i), index_shape(I...)...)
 
-\begin{singlespace}
-\begin{verbatim}
 # drop trailing dimensions indexed with scalars
 index_shape(i::Real...) = ()
-index_shape(i, I...) = tuple(length(i), index_shape(I...)...)
-\end{verbatim}
-\end{singlespace}
+index_shape(i, I...)    = (length(i), index_shape(I...)...)
 
-\begin{singlespace}
-\begin{verbatim}
 # rank summing (APL)
-index_shape() = ()
-index_shape(i, I...) = tuple(size(i)..., index_shape(I...)...)
+index_shape()        = ()
+index_shape(i, I...) = (size(i)..., index_shape(I...)...)
 \end{verbatim}
 \end{singlespace}
 
