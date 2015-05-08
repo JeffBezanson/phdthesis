@@ -39,7 +39,7 @@ checked at compile time.
 These views have some merit, but as a result the top-left corner of this design
 space has been under-explored.
 
-\subsection{Classes vs.\ functions}
+\subsubsection{Classes vs.\ functions}
 
 Technical computing is function oriented.
 
@@ -48,7 +48,7 @@ overloading.
 however then you also need to accept different semantics, static resolution.
 
 
-\subsection{Separate compilation vs.\ performance}
+\subsubsection{Separate compilation vs.\ performance}
 
 Writing the signature of a generic method that needs to be separately compiled,
 as in Java, can be a difficult exercise.
@@ -87,7 +87,7 @@ again for each instantiation).
 It is quite interesting that performance and ease-of-use pull this design
 decision in the same direction.
 
-\subsection{Parametric vs.\ ad-hoc polymorphism}
+\subsubsection{Parametric vs.\ ad-hoc polymorphism}
 
 The term \emph{polymorphism} refers generally to reuse of code or data
 structures in different contexts.
@@ -152,7 +152,7 @@ generated.
 
 %\subsection{Static checking vs.\ flexibility}
 
-\subsection{Modularity vs.\ large vocabularies}
+\subsubsection{Modularity vs.\ large vocabularies}
 
 In the context of software engineering, modularity is a primary concern.
 To build large systems, separate components must be isolated to some
@@ -170,9 +170,9 @@ designs. For example MATLAB for most of its history supported only a single
 namespace, which comes pre-populated with thousands of functions.
 
 
-\subsection{Eliminating vs.\ embracing tagged data}
+\subsubsection{Eliminating vs.\ embracing tagged data}
 
-\subsection{Data hiding vs.\ explicit memory layout}
+\subsubsection{Data hiding vs.\ explicit memory layout}
 
 Examples of CSC and CSR sparse representation.
 In one sense this is a perfect example of an interface with multiple implementations,
@@ -189,7 +189,38 @@ The loss of encapsulation due to multimethods weighed in \cite{binarymethods}
 is less of a problem for technical computing, and in some cases even
 advantageous.
 
-\subsection{Dynamic dispatch is key}
+
+\section{Dispatch systems}
+
+% CHART of different multiple dispatches. classify them
+
+%Why ``just overloading'' is not enough. You intercept every operation and
+%rewrite it, kind of an escape hatch for a language you don't like. If
+%somebody else also tries to do this, there won't necessarily be any
+%coherence.
+
+A helpful way to classify languages with some kind of generic programming
+support is to look at which language constructs are generic. For example,
+in C++ the syntax \texttt{object.method(x)} is generic: a programmer can
+get it to do different things by supplying different values for
+\texttt{object}. The C++ syntax \texttt{f(a,b)} or \texttt{a+b} is
+usually not generic, but can be overloaded by supplying definitions for
+different argument types. However, this overloading only uses compile time
+types (no run time information), and so is essentially a form of renaming ---
+it can be implemented by renaming each definition with a unique name, and
+replacing overloaded calls with an appropriate name based on compile time
+types. This is a much weaker form of generic programming, since different
+behaviors cannot be obtained by passing different values at run time.
+
+For this reason, C++ programs are not fully generic: it is difficult to
+substitute new behaviors for every part of a program. Some languages
+take generic programming much further. For example, in MATLAB, \emph{every}
+function is effectively generic, and can be overloaded by new classes.
+This enables a programmer to ``intercept'' every function call (and therefore,
+essentially everything a program does)
+
+
+\subsection{A hierarchy of dispatch}
 
 It would be unpleasant if every piece of every program we wrote were forced
 to do only one specific task. Every time we wanted to do something slightly
@@ -409,37 +440,6 @@ encounter{T<:Animal}(a: T, b: T) = mate(a, b)
 \end{verbatim}
 
 
-
-\section{Dispatch systems}
-
-% CHART of different multiple dispatches. classify them
-
-%Why ``just overloading'' is not enough. You intercept every operation and
-%rewrite it, kind of an escape hatch for a language you don't like. If
-%somebody else also tries to do this, there won't necessarily be any
-%coherence.
-
-A helpful way to classify languages with some kind of generic programming
-support is to look at which language constructs are generic. For example,
-in C++ the syntax \texttt{object.method(x)} is generic: a programmer can
-get it to do different things by supplying different values for
-\texttt{object}. The C++ syntax \texttt{f(a,b)} or \texttt{a+b} is
-usually not generic, but can be overloaded by supplying definitions for
-different argument types. However, this overloading only uses compile time
-types (no run time information), and so is essentially a form of renaming ---
-it can be implemented by renaming each definition with a unique name, and
-replacing overloaded calls with an appropriate name based on compile time
-types. This is a much weaker form of generic programming, since different
-behaviors cannot be obtained by passing different values at run time.
-
-For this reason, C++ programs are not fully generic: it is difficult to
-substitute new behaviors for every part of a program. Some languages
-take generic programming much further. For example, in MATLAB, \emph{every}
-function is effectively generic, and can be overloaded by new classes.
-This enables a programmer to ``intercept'' every function call (and therefore,
-essentially everything a program does)
-
-
 \subsection{Example: lattices}
 
 This example will illustrate possible benefits of multiple dispatch and
@@ -537,6 +537,7 @@ representations of values are exposed to the dispatch system
 (e.g. there is no difference between being a list and being something
 represented as a list).
 \todo{Wish you would say more!}
+
 
 \subsection{Predicate dispatch}
 
@@ -746,6 +747,8 @@ immutable SubArray{T,N,P<:AbstractArray,I<:Tuple{Vararg{ViewIndex}},LD} <: Abstr
 
 %% Challenges of this approach (why has this not been done before?)
 
+%% reflect on level of power: this dispatch system is both more and less
+%% powerful than previous ones in various ways.
 
 
 %% \subsection{Objections to dynamic typing}

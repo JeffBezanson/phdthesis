@@ -241,9 +241,7 @@ match the performance of C, C++, and Fortran.
 To do that, it is almost certain that speculative optimizations such as tracing
 \cite{tracingjit} will not be sufficient ---
 the language will need to be able to \emph{prove} facts about types, or at least
-let the user request specific types
-(for an excellent discussion of the many meanings of the word ``type''
-see \cite{Kell2014}).
+let the user request specific types.
 It is also clear that such a language must strive for maximum convenience, or else
 the split between performance languages and productivity languages will persist.
 
@@ -252,18 +250,27 @@ to design better statically typed languages, and the other is to apply
 program analysis techniques to dynamically typed languages.
 Static type systems are getting close to achieving the desired level
 of flexibility (as in Fortress \cite{fortresspec} or Polyduce \cite{polyduce1},
-for instance), but it is still too early to call a winner between these two
-approaches (if, indeed, there even needs to be a winner).
+for instance),
+%, but it is still too early to call a winner between these two
+%approaches (if, indeed, there even needs to be a winner).
+but here we will use a dynamically typed approach.%, with approximate type inference.
+We are mostly interested in types in the sense of \emph{data types} and
+\emph{partial information}
+(for an excellent discussion of the many meanings of the word ``type''
+see \cite{Kell2014}).
+Additionally, some idioms in this domain appear to be inherently, or at least
+naturally, dynamically typed (as we will explore in chapter~\ref{chap:2}).
+The mechanism we will explore provides useful run time behavior and, we hope,
+performance improvements.
+Many approaches to statically checking its properties are likely possible,
+however we leave them to future work.
 
-Here we will use a dynamically typed approach, with approximate type inference.
-There are several reasons for this.
-First, some idioms in this domain appear to be inherently, or at least naturally,
-dynamically typed (as we will explore in chapter~\ref{chap:2}).
-Second, insufficient static checking is most likely not the current limiting
-factor in scientific computing productivity.
-In our view the first priority is to get the combination of
-performance and flexibility we already know users want, and then try to
-improve safety later.
+%Second, insufficient static checking is most likely not the current limiting
+%factor in scientific computing productivity.
+%In our view the first priority is to get the combination of
+%performance and flexibility we already know users want, and then try to
+%improve safety later.
+
 
 \subsection{Dispatch}
 
@@ -419,8 +426,8 @@ resolve definitions at compile time.
 At the other end of the spectrum, we might dispatch on arbitrary
 predicates.
 We do neither of these.
-Instead, our dispatch is based on sets of values that are robust
-under evaluation: abstract evaluation over such sets is less likely
+Instead, our dispatch is based on \emph{sets of values that are robust
+under evaluation}: abstract evaluation over such sets is less likely
 to diverge.
 For example, consider the set $\{1,2\}$.
 This set is not closed under ``natural'' functions.
@@ -526,11 +533,13 @@ for invoking its generated code.
 
 We find that our particular style of dynamic type-based dispatch provides
 an unusually good substrate for staged programming.
-The reason is that the language, though semantically dynamically typed,
-has a canonical (and not optional!) type analysis stage.
-This is a natural place to hook in code generators: semantic (not just
-syntactic) information is available, but machine code has not been
-generated yet.
+The reason is that the language, though dynamically typed,
+has a powerful standard notion of partial information that can be
+used to generate code based on semantic (not just syntactic) information.
+%has a canonical (and not optional!) type analysis stage.
+%This is a natural place to hook in code generators: semantic (not just
+%syntactic) information is available, but machine code has not been
+%generated yet.
 In general, this semantic information can also include run time (and
 always, at least, approximate run time) information.
 Since the types used by dispatch support nested structure, they
@@ -541,7 +550,6 @@ the compiler, and the results can be called directly or even inlined
 into user code.
 Libraries can switch to using a staged implementation without affecting
 client code.
-
 
 %past (static) type systems for dispatch were designed to ensure the absence of
 %no-method errors and ambiguities (completeness and uniqueness). our goal
