@@ -527,15 +527,17 @@ It is used in the following cases:
 \item Source-level type assertions.
 \item Checking whether an assigned value matches the declared type of a
 location.
+\item Checking for convergence during type inference.
 \end{itemize}
 
 Deciding subtyping for base types is straightforward: \texttt{Bottom} is
 a subtype of everything, everything is a subtype of \texttt{Any}, and
-tuple types are compared component-wise. The invariant parameters
-of tag types are compared in both directions: to check
+tuple types are compared component-wise.
+The invariant parameters of tag types are compared in both directions: to check
 $\texttt{A\{B\}}\leq \texttt{A\{C\}}$, check $\texttt{B}\leq\texttt{C}$ and
-then $\texttt{C}\leq\texttt{B}$. In fact, the algorithm depends on these
-checks being done in this order, as we will see in a moment.
+then $\texttt{C}\leq\texttt{B}$.
+In fact, the algorithm depends on these checks being done in this order, as we
+will see in a moment.
 
 Checking union types is a bit harder. When a union $A\cup B$ occurs in the
 algorithm, we need to non-deterministically replace it with either $A$ or
@@ -762,8 +764,9 @@ of subtyping:
 
 \section{Dispatch system}
 
-Julia's dispatch system strongly resembles the multi-method systems
-found in some object-oriented languages.
+Julia's dispatch system strongly resembles the multimethod systems
+found in some object-oriented languages
+\cite{closspec,closoverview,dylanlang,cecil,cecilspec,chambers2006diesel}.
 However we prefer the term type-based dispatch, since our system
 actually works by dispatching a \emph{single tuple type} of arguments.
 The difference is subtle and in many cases not noticeable, but has
@@ -860,6 +863,7 @@ func{T<:Integer}(x::Array{T}) = ...
 \noindent
 This method matches any \texttt{Array} whose element type is some subtype
 of \texttt{Integer}.
+The value of \texttt{T} is available inside the function.
 This feature largely overcomes the restrictiveness of parametric invariance.
 Methods like these are similar to methods with ``implicit type parameters''
 in the Cecil language~\cite{cecilspec}.

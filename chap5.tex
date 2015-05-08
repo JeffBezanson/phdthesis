@@ -65,7 +65,7 @@ As with conversion, we would like to provide default definitions for
 \texttt{==} that cover families of cases.
 Numbers are a reasonable domain to pick, since all numbers should be
 equality-comparable to each other.
-We might try
+We might try (\texttt{Number} is the abstract supertype of all numeric types):
 
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
@@ -170,25 +170,52 @@ One reason is that there is a bottom element, which most data types lack.
 It has been suggested on theoretical grounds \cite{categorytheoryoperators}
 that generic binary operators should have ``key variants'' where the
 arguments are of the same type.
+We implement this in Julia with a default definition that uses diagonal
+dispatch:
 
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
-+(x::Number, y::Number) = +(promote(x,y)...)
-
 +{T<:Number}(x::T, y::T) = no_op_err("+", T)
 \end{lstlisting}
 \end{singlespace}
 
+Then we can implement a more general definition for different-type arguments
+that tries to promote the arguments to a common type by calling \texttt{promote}:
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
++(x::Number, y::Number) = +(promote(x,y)...)
+\end{lstlisting}
+\end{singlespace}
+
 \noindent
+\texttt{promote} returns a pair of the values of its arguments after conversion
+to a common type, so that a ``key variant'' can be invoked.
+
+\texttt{promote} is designed to be extended by new numeric types.
 A full-featured promotion operator is a tall order.
 We would like
 
 \begin{itemize}
-\item Each combination of types only needs to be defined in one order
-\item It falls back to join
-\item It must prevent promotion above a certain point to avoid circularity
+\item Each combination of types only needs to be defined in one order; we
+don't want to redundantly define the behavior of \texttt{(T,S)} and \texttt{(S,T)}.
+\item It falls back to join for types without any defined promotion.
+\item It must prevent promotion above a certain point to avoid circularity.
 %in promoting fallback definitions of operators.
 \end{itemize}
+
+The core of the mechanism is three functions: \texttt{promote\_type}, which
+performs promotion in the type domain only, \texttt{promote\_rule}, which is
+the function defined by libraries, and a utility function \texttt{promote\_result}.
+The default definition of \texttt{promote\_rule} returns \texttt{Bottom},
+indicating no promotion is defined.
+\texttt{promote\_type} calls \texttt{promote\_rule} with its arguments in
+both possible orders.
+If one order is defined to give \texttt{X} and the other is not defined,
+\texttt{promote\_result} recursively promotes \texttt{X} and \texttt{Bottom},
+giving \texttt{X}.
+If neither order is defined, the last definition below is called, which
+falls back to \texttt{typejoin}:
 
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
@@ -205,13 +232,21 @@ promote_result(t,s,T,S) = promote_type(T,S)
 # In that case use typejoin on the original types instead.
 promote_result{T,S}(::Type{T}, ::Type{S},
                     ::Type{Bottom}, ::Type{Bottom}) = typejoin(T, S)
+\end{lstlisting}
+\end{singlespace}
 
+The obvious way to extend this system is to define \texttt{promote\_rule},
+but it can also be extended in a less obvious way.
+For the purpose of manipulating container types, we would like e.g.\ \texttt{Int}
+and \texttt{Real} to promote to \texttt{Real}.
+However, we do not want to introduce a rule that promotes arbitrary pairs of
+numeric types to \texttt{Number}, since that would make the above
+default definition of \texttt{+} circular.
+The following definitions accomplish this, by promoting to the larger
+numeric type if one is a subtype of the other:
 
-# Because of the promoting fallback definitions for Number, we need
-# a special case for undefined promote_rule on numeric types.
-# Otherwise, typejoin(T,S) is called (returning Number) so no
-# conversion happens, and +(promote(x,y)...) is called again, causing
-# a stack overflow.
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
 promote_result{T<:Number,S<:Number}(::Type{T}, ::Type{S},
                                     ::Type{Bottom}, ::Type{Bottom}) =
     promote_sup(T, S, typejoin(T,S))
@@ -272,9 +307,9 @@ colon{T}(start::T, step, stop::T) = StepRange(start, step, stop)
 
 Now there is a problem to fix: if the first and last arguments are of some
 non-floating-point numeric type, but the step is floating point, we want to
-promote all arguments to a common floating point type. We must also do this
-if the first and last arguments are floats, but the step is some other kind
-of number:
+promote all arguments to a common floating point type.
+We must also do this if the first and last arguments are floats, but the step
+is some other kind of number:
 
 \begin{verbatim}
 colon{T<:Real}(a::T, s::FloatingPoint, b::T) = colon(promote(a,s,b)...)
@@ -284,7 +319,8 @@ colon{T<:FloatingPoint}(a::T, s::Real, b::T) = colon(promote(a,s,b)...)
 
 These two definitions are correct, but ambiguous: if the step is a float
 of a different type than \texttt{a} and \texttt{b} both definitions are
-equally applicable. We can add the following disambiguating definition:
+equally applicable.
+We can add the following disambiguating definition:
 
 \begin{verbatim}
 colon{T<:FloatingPoint}(a::T, s::FloatingPoint, b::T) =
@@ -292,7 +328,8 @@ colon{T<:FloatingPoint}(a::T, s::FloatingPoint, b::T) =
 \end{verbatim}
 
 All of these five definitions require \texttt{a} and \texttt{b} to be of the
-same type. If they are not, we must promote just those two arguments, and leave
+same type.
+If they are not, we must promote just those two arguments, and leave
 the step alone (in case we are dealing with ordinal types):
 
 \begin{verbatim}
@@ -301,14 +338,13 @@ colon{A,B}(a::A, s, b::B) =
 \end{verbatim}
 
 This example shows that it is not always sufficient to have a built-in set of
-``promoting operators''. Library functions like this \texttt{colon} need more
-control.
+``promoting operators''.
+Library functions like this \texttt{colon} need more control.
 
 \subsubsection{On implicit conversion}
 
-In order to facilitate the human style of thinking that equates
-isomorphic sets, many programming languages offer some flexibility
-in when types are required to match.
+In order to facilitate human styles of thinking, many programming languages offer
+some flexibility in when types are required to match.
 %This often takes the form of implicit conversion.
 For example, a C function declared to accept type \texttt{float}
 can also be called with an \texttt{int}, and the compiler will
@@ -376,7 +412,7 @@ We might have
 
 \noindent
 Types with $^*$ have not been implemented yet, but the rest have.
-In external packages, people have implemented types for interval arithmetic,
+In external packages, there are types for interval arithmetic,
 dual and hyper-dual numbers for computing first and second derivatives,
 and finite fields.
 

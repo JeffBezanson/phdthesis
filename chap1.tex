@@ -299,7 +299,7 @@ and so is not helped as much as it could be by PyPy, which only
 understands Python method selection.
 
 A dispatch specification, for example a method signature in a
-multi-method system, describes when a piece of code is applicable.
+multimethod system, describes when a piece of code is applicable.
 %A more powerful dispatch system brings many benefits.
 A more expressive dispatch system then allows code to be written
 in smaller pieces, helping the compiler remove irrelevant code
@@ -379,7 +379,7 @@ type information to the compiler.
 %at run time.
 %% Arguably, if method calls are dispatched on the first argument, but the types of all
 %% arguments can be inferred, some power has been ``left on the table'' ---
-%% we could have had multi-methods for little extra cost.
+%% we could have had multimethods for little extra cost.
 %% This argument does not apply equally to statically typed languages, since they
 %% cannot simply ``switch'' their functions to generic functions without significant
 %% consequences for type checking.
@@ -444,7 +444,7 @@ This will be developed in detail in section~\ref{sec:typesystem}.
 %% behaviors.
 %% Narrowing the inferred types requires some extra source of type
 %% information.
-%% Multi-method signatures work well for this purpose.
+%% Multimethod signatures work well for this purpose.
 
 %% past approaches include: optional user annotations, or a built-in
 %% database of function type behavior, determined empirically or
