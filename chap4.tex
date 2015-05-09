@@ -764,6 +764,8 @@ of subtyping:
 
 \section{Dispatch system}
 
+% TODO \cite{Dubois:1995:EP:199448.199473}
+
 Julia's dispatch system strongly resembles the multimethod systems
 found in some object-oriented languages
 \cite{closspec,closoverview,dylanlang,cecil,cecilspec,chambers2006diesel}.
@@ -985,6 +987,7 @@ hold statistical data, supporting missing values).
 Each library wants to be able to interoperate with other array-like
 containers, and so defines e.g.\ \texttt{+(::Image, ::AbstractArray)}.
 This definition is ambiguous with \texttt{+(::AbstractArray, ::DataArray)}.
+% TODO clarify why ambiguous
 However in practice Images and DataArrays are not used together, so
 worrying about this is a bit of a distraction.
 Giving a run time error forcing the programmer to clarify intent
@@ -1052,7 +1055,7 @@ widen(::Type{Int32}) = Int64
 \end{lstlisting}
 \end{singlespace}
 
-\subsubsection{Traits}
+\subsubsection{Simulating multiple inheritance}
 
 It turns out that external multiple dispatch is sufficiently powerful
 to simulate a kind of multiple inheritance.
@@ -1125,6 +1128,9 @@ end
 \end{singlespace}
 
 %TODO explain quote syntax fully
+
+% where the rest of the language is about running code efficiently,
+% this is about running code not at all.
 
 \noindent
 This simple example implements indexing with \texttt{N} arguments
@@ -1571,34 +1577,117 @@ homogeneous array of a single larger numeric type.
 Other applications might not want to use typed arrays at all, in
 which case \texttt{map} can be much simpler and always return an
 \texttt{Array\{Any\}}.
-% todo maybe mention mutation as well
+Still other applications might want to arbitrarily mutate the result
+of \texttt{map}, in which case it is difficult for any automated
+process to predict what type of array is wanted.
 
 It must be admitted that this \texttt{map} is more complex than
 what we are used to in typical functional languages.
 However, this is at least partly due to \texttt{map} itself
 being more complex, and amenable to more different interpretations,
-than what is usually studied in the context of those languages.
+than what is usually considered in the context of those languages.
+
+% while ML gets the type of the map function itself totally right,
+% programmers often care more about the type of container it returns at
+% run time.
 
 
 \section{Performance model}
 
 \subsection{Type inference}
 
-Our compiler uses data flow type inference
+Our compiler performs data flow type inference~\cite{kaplanullman,abstractinterp}
+using a graph-free algorithm~\cite{graphfree}.
+Type inference is invoked on a method cache miss, and recursively follows the
+call graph emanating from the analyzed function.
+The first non-trivial function examined tends to cause a large fraction of
+loaded code to be processed.
 
-\cite{kaplanullman,abstractinterp,graphfree}
+The algorithmic components needed for this process to work are subtyping
+(already covered), join (which can be computed by forming a union type),
+meet ($\sqcap$), widening operators, and type-domain implementations
+(also known as transfer functions) of core language constructs.
+
+Meets are challenging to compute, and we do not yet have an algorithm for
+it that is as rigorously developed as our subtyping.
+Our current implementation traverses two types, recursively applying the
+rules
+
+\vspace{-3ex}
+\begin{singlespace}
+\begin{align*}
+T\leq S  \implies &\ T\sqcap S = T \\
+S\leq T  \implies &\ T\sqcap S = S \\
+         otherwise\ &\ T\sqcap S = \bot
+\end{align*}
+\end{singlespace}
+
+\noindent
+As this is done, constraints on all variables are accumulated, and then
+solved.
+$(A\cup B)\sqcap C$ is computed as $(A\sqcap C) \cup (B\sqcap C)$.
+Due to the way meet is used, it is safe for it to over estimate its
+result.
+That will only cause us to conclude that more methods are applicable
+than really are, leading to coarser but still correct type inference.
+Note that for concrete type $T$, the rule
+$T\leq S \implies T\sqcap S = T$ suffices.
+
+Widening is needed in two places:
+
+\begin{itemize}
+\item Function argument lists that grow in length moving down the call stack.
+\item Computing the type of a field. Instantiating field types builds up
+other types, potentially leading to infinite chains.
+\end{itemize}
+
+\noindent
+Each kind of type has a corresponding form of widening.
+A type nested too deeply can be replaced by a \texttt{UnionAll} type
+with variables replacing each component that extends beyond a certain
+fixed depth.
+A union type can be widened using a union-free join of its components.
+A long tuple type is widened to a variadic tuple type.
+
+Since the language has few core constructs, not many transfer functions
+are needed, but the type system requires them to be fairly sophisticated.
+For example accessing an unknown index of \texttt{Tuple\{Int...\}} can
+still conclude that the result type is \texttt{Int}.
+The most important rule is the one for generic functions:
+
+\[
+T(f,t_{arg}) = \bigsqcup_{(s,g) \in f}T(g,t_{arg} \sqcap s)
+\]
+
+\noindent
+where $T$ is the type inference function.
+$t_{arg}$ is the inferred argument tuple type.
+The tuples $(s,g)$ represent the signatures $s$ and their associated
+definitions $g$ within generic function $f$.
+
 
 \subsection{Specialization}
 
-it might be thought that julia achieves performance through a clever
-compiler that uses ``every trick in the book''.
-at risk of being self-deprecating, this is not the case.
-the performance we manage to get derives from the language design,
-which enables a style of library implementation such that applying straightforward,
-known optimizations yields good performance.
+It might be thought that Julia is fast because our compiler is very well
+engineered, perhaps using ``every trick in the book''.
+At risk of being self-deprecating, this is not the case.
+After type inference we apply standard optimizations: static method
+resolution, inlining, specializing variable storage, eliminating tuples
+that do not escape local scope, unboxing function arguments, and
+replacing known function calls with equivalent instruction sequences.
 
+The performance we manage to get derives from language design.
+Writing complex functions with many behaviors as generic functions
+naturally encourages them to be written in a style that is easier to
+analyze statically.
+% the dispatch specs are the things we can analyze
+
+Julia specializes methods for nearly every combination of concrete
+argument types that occurs.
+This is undeniably expensive, and past work has often sought to avoid
 % user-directed type-based specialization in scala
-\cite{Dragos:2009:CGT:1565824.1565830}
+or limit specialization (e.g.\ \cite{Dragos:2009:CGT:1565824.1565830}).
+% we find it is the right default
 
 % it's interesting to note that java generics did not originally support
 % types like int and float as parameters. in T.C. those are practically

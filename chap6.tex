@@ -12,6 +12,10 @@
 % to what extent is this a technical computing language?
 % it's not, really :)
 
+``I’ve yet to hear anyone explain how you decide what are the boundaries of a “domain-specific” language. Isn’t the “domain” mathematics and science itself?''~\cite{bobharperdsl}
+
+% \cite{meyerovich2012socio} about appealing to some domain first
+
 A generation of dynamic languages have been designed by trying variants of
 the class-based object oriented paradigm. This process has been aided by
 the development of standard techniques (e.g. bytecode VMs) and reusable
@@ -64,3 +68,14 @@ how to incorporate finer types more smoothly
 % \section{Separate compilation}
 % Technically julia does not support it, but that's never stopped anybody
 % from doing it anyway. e.g. C++
+
+% oscar:
+% - what we have now is the ``minimal julia''
+% - ``easy to write code that's easy to analyze statically''
+% - got non-programmer people to write easy to analyze code
+%   - bad that they need to think about type stability, but
+%     also good that is relatively easy to grasp, and it gets
+%     people thinking about it who wouldn't normally
+%     - the types give people the tools to deal with it
+% - can't pretend that people wont have to worry about this stuff;
+%   it's fundamental

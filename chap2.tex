@@ -243,7 +243,8 @@ is much faster.
 It is not clear why Julia is still faster in this case;
 it may be due to NumPy's more general algorithm that can
 accumulate along any dimension.
-In that sense the comparison is not totally fair.
+In some cases, built-in routines in NumPy are slightly faster than
+Julia implementations.
 However, the Julia code for \texttt{accumulate} is so compact
 that it is reasonable to write manually when needed; a fully
 general library function is not required.
