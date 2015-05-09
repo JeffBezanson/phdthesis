@@ -393,6 +393,37 @@ an array, an integer, and a value that is an instance of the array's
 element type. This is a natural signature for a method that assigns a
 value to a given index within an array.
 
+\subsubsection{Type system variants}
+
+Our design criteria do not identify a unique type system; some
+variants are possible.
+The following features would probably be fairly straightforward to add:
+
+\vspace{-3ex}
+\begin{singlespace}
+\begin{itemize}
+\item Structurally subtyped records
+\item $\mu$-recursive types (regular trees)
+\item Regular types (allowing \texttt{...} in any position)
+\end{itemize}
+\end{singlespace}
+
+\noindent
+The following features would be difficult to add, or possibly break decidability
+of subtyping:
+
+\vspace{-3ex}
+\begin{singlespace}
+\begin{itemize}
+\item Arrow types
+\item Negations
+\item Intersections, multiple inheritance
+\item Universal quantifiers
+\item Contravariance
+%\item arbitrary predicates, theory of natural numbers, etc.
+\end{itemize}
+\end{singlespace}
+
 
 \subsection{Type constructors}
 
@@ -458,22 +489,6 @@ type at a particular parameter value.
       \\[8pt]
 
       \begin{tabular}{cc}
-        \AxiomC{$^BX^L,\Gamma\ \vdash\ B \leq T$}
-        \UnaryInfC{$^BX^L,\Gamma\ \vdash\ X \leq T$}
-        \DisplayProof
-
-        \hspace{3ex}
-
-        &
-
-        \AxiomC{$_AX^L,\Gamma\ \vdash\ T \leq A$}
-        \UnaryInfC{$_AX^L,\Gamma\ \vdash\ T \leq X$}
-        \DisplayProof
-
-        \hspace{3ex}
-
-        \\[8pt]
-
         \AxiomC{$^BX^L,{} _AY^L,\Gamma\ \vdash\ B \leq Y\ \vee\ X \leq A$}
         \UnaryInfC{$^BX^L,{} _AY^L,\Gamma\ \vdash\ X \leq Y$}
         \DisplayProof
@@ -488,16 +503,30 @@ type at a particular parameter value.
 
         \\[8pt]
 
-        \AxiomC{$_A^BX^R,\Gamma\ \vdash\ A \leq T$}
-        \UnaryInfC{$_A^TX^R,\Gamma\ \vdash\ X \leq T$}
+        \AxiomC{$_A^BX^R,\Gamma\ \vdash\ T \leq B$}
+        \UnaryInfC{$_{A \cup T}^{\ \ \ B}X^R,\Gamma\ \vdash\ T \leq X$}
         \DisplayProof
 
         \hspace{4ex}
 
         &
 
-        \AxiomC{$_A^BX^R,\Gamma\ \vdash\ T \leq B$}
-        \UnaryInfC{$_{A \cup T}^{\ \ \ B}X^R,\Gamma\ \vdash\ T \leq X$}
+        \AxiomC{$_A^BX^R,\Gamma\ \vdash\ A \leq T$}
+        \UnaryInfC{$_A^TX^R,\Gamma\ \vdash\ X \leq T$}
+        \DisplayProof
+
+        \\[8pt]
+
+        \AxiomC{$_AX^L,\Gamma\ \vdash\ T \leq A$}
+        \UnaryInfC{$_AX^L,\Gamma\ \vdash\ T \leq X$}
+        \DisplayProof
+
+        \hspace{3ex}
+
+        &
+
+        \AxiomC{$^BX^L,\Gamma\ \vdash\ B \leq T$}
+        \UnaryInfC{$^BX^L,\Gamma\ \vdash\ X \leq T$}
         \DisplayProof
 
         \\[8pt]
@@ -513,6 +542,7 @@ type at a particular parameter value.
     $_A^BX$ means $X$ has lower bound $A$ and upper bound $B$.
     $^R$ and $^L$ track whether a variable originated on the right or on the left of
     $\leq$.
+    Rules are applied top to bottom.
 }
   }
   \label{subtvars}
@@ -557,17 +587,19 @@ In analogy to union types, we need to check that for all variable values on
 the left, there exists a value on the right such that the relation holds.
 The for-all side is relatively easy to implement, since we can just use
 a variable's bounds as proxies for its value (this is shown in
-the second row of the figure).
+the last row of the figure).
 We implement the there-exists side by narrowing a variable's bounds
-(raising the lower bound and lowering the upper bound). The relation holds
-as long as the bounds remain consistent (i.e. lower bound $\leq$
-upper bound). The algorithm assumes that all input types are well-formed,
+(raising the lower bound and lowering the upper bound, in figure row 3).
+The relation holds
+as long as the bounds remain consistent (i.e.\ lower bound $\leq$
+upper bound).
+The algorithm assumes that all input types are well-formed,
 which includes variable lower bounds always being less than or equal to
 upper bounds.
 
-However, at this point (starting in the third row, second column) the
-algorithm appears asymmetric. This is a result of exploiting the lack of
-contravariant constructors. No contravariance means that every time a
+The rules in the second row appear asymmetric.
+This is a result of exploiting the lack of contravariant constructors.
+No contravariance means that every time a
 right-side variable appears on the \emph{left} side of a comparison,
 it must be because it occurs in invariant position, and the steps outlined
 in the first paragraph of this section have ``flipped'' the order
@@ -576,14 +608,14 @@ This explains the odd rule for comparing two right-side variables:
 this case can only occur with differently nested \texttt{UnionAll}s and
 invariant constructors, in which case the relation holds only if
 all involved bounds are equal.
-By symmetry, one would expect the bottom-left rule in the figure to
+By symmetry, one would expect the rule in row 3, column 2 to
 update $X$'s upper bound to $B\cap T$. But because of invariance,
-$T\leq B$ has already been checked by the bottom-right rule in the
-figure. Therefore $B\cap T = T$. This is the reason the ``forward''
+$T\leq B$ has already been checked by rule in row 3, column 1.
+Therefore $B\cap T = T$. This is the reason the ``forward''
 direction of the comparison needs to be checked first: otherwise,
 we would have updated $B$ to equal $T$ already and the $T\leq B$
 comparison would become vacuous. Alternatively, we could actually
-compute $B\cap T$. However there is reason to suspect that serious
+compute $B\cap T$. However there is reason to suspect that
 trouble lies that way. We would need to either add intersection types
 to the system, or compute a meet without them. Either way, the
 algorithm would become much more complex and, judging by past
@@ -597,6 +629,8 @@ results, likely undecidable.
 % variables have equal upper and lower bounds.
 
 %TODO: termination and correctness.
+
+\subsubsection{Complexity}
 
 These subtyping rules are likely $\Pi_2^{\textrm{P}}$-hard.
 Checking a subtype relation with unions requires checking that for all choices
@@ -615,6 +649,8 @@ convincing. $\Pi_2^{\textrm{P}}$ is only the most obvious
 reduction to try; it is possible our system equals PSPACE or even greater,
 as has often been the case for subtyping systems like ours.
 
+\subsubsection{Implementation}
+
 Appendix~\ref{appendix:subtyping} gives a Julia implementation of this
 algorithm.
 % TODO more
@@ -631,7 +667,7 @@ The algorithm can determine that a type matches constraints specified by another
 
 \vspace{-5ex}
 \[
-\texttt{Tuple}\{\texttt{Array}\{\texttt{Integer},1\}, \texttt{Int}\}\ \leq\ 
+\texttt{Tuple}\{\texttt{Array}\{\texttt{Integer},1\}, \texttt{Int}\}\ <\ 
   (\exists\ T<:\texttt{Integer}\ .\ \exists\ S<:T\ .\ \texttt{Tuple}\{\texttt{Array}\{T,1\},S\})
 \]
 
@@ -650,8 +686,8 @@ Variables can have non-trivial bounds that refer to other variables:
 \vspace{-3ex}
 \begin{singlespace}
 \begin{align*}
-&\texttt{Tuple}\{\texttt{Float32},\texttt{Array}\{\texttt{Float32},1\}\}\ \leq\ \\
-&\hspace{4ex}\exists\ T<:\texttt{Real}\ .\ \exists\ S<:\texttt{AbstractArray}\{T,1\}\ .\ \texttt{Tuple}\{T,S\}
+&\texttt{Pair}\{\texttt{Float32},\texttt{Array}\{\texttt{Float32},1\}\}\ <\ \\
+&\hspace{4ex}\exists\ T<:\texttt{Real}\ .\ \exists\ S<:\texttt{AbstractArray}\{T,1\}\ .\ \texttt{Pair}\{T,S\}
 \end{align*}
 \end{singlespace}
 
@@ -729,37 +765,6 @@ if this might be a problem in practice.
 Past work on subtyping with regular
 types~\cite{hosoya2000regular, xtatic} is also related, particularly
 to our treatment of union types and variadic tuples.
-
-\subsection{Type system variants}
-
-Our design criteria do not identify a unique type system; some
-variants are possible.
-The following features would probably be fairly straightforward to add:
-
-\vspace{-3ex}
-\begin{singlespace}
-\begin{itemize}
-\item Structurally subtyped records
-\item $\mu$-recursive types (regular trees)
-\item Regular types (allowing \texttt{...} in any position)
-\end{itemize}
-\end{singlespace}
-
-\noindent
-The following features would be difficult to add, or possibly break decidability
-of subtyping:
-
-\vspace{-3ex}
-\begin{singlespace}
-\begin{itemize}
-\item Arrow types
-\item Negations
-\item Intersections, multiple inheritance
-\item Universal quantifiers
-\item Contravariance
-%\item arbitrary predicates, theory of natural numbers, etc.
-\end{itemize}
-\end{singlespace}
 
 
 \section{Dispatch system}
@@ -1184,6 +1189,9 @@ will occur before run time.
 %Our approach is closely related to exotypes
 %\cite{DeVito:2014:FRG:2594291.2594307}.
 
+\subsubsection{Tradeoffs of staged programming}
+
+% TODO
 
 \section{Higher-order programming}
 
@@ -1692,6 +1700,9 @@ or limit specialization (e.g.\ \cite{Dragos:2009:CGT:1565824.1565830}).
 % it's interesting to note that java generics did not originally support
 % types like int and float as parameters. in T.C. those are practically
 % the only types you want to support!
+
+\subsection{Performance predictability}
+
 
 \section{Dispatch utilization}
 
