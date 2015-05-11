@@ -65,11 +65,15 @@ Let's try a different abstraction mechanism: templates and overloading.
 
 then you can write
 
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
 if diagonal
     solve(Diagonal(M), x)
 elseif bidiagonal
     solve(Bidiagonal(M), x)
 end
+\end{lstlisting}
+\end{singlespace}
 
 but the part that selects a matrix type can't be abstracted away.
 we want to be able to write solve(factorize(M), x).
@@ -83,16 +87,60 @@ to them at run time.
 It's clear what's going on here: mathematics is dependently typed.
 Knowing what a given object \emph{is} in a relevant sense would
 require arbitrary proofs, and in research computing these proofs
-would refer to objects that are not yet well understood.
+might refer to objects that are not yet well understood.
 % In numerical computing, if \emph{anybody} were able to prove the
 % relevant property, there would be no point in running the program.
 
+Most languages offer a strict divide between early and late binding,
+separated by what the type system can statically prove.
+The less the type system models the domain of interest, the more it
+gets in the way.
 % talk about the premature optimization of assuming
 % (generate code for) = (known at compile time)
+The compiler's ability to generate specialized code is also coupled
+to the static type system, preventing it from being reused for domains
+the type system does not handle well.
+In general, of course, lifting this restriction implies a need to
+generate code at run time, which is not always acceptable.
+However run time code generation might not be necessary in every case.
+A compiler could, for example, automatically generate a range of
+specialized routines and select among them at run time, falling back
+to slower generic code if necessary.
 
-Instead of a split between static and dynamic resolution, we can
-instead focus on program \emph{analysis}.
-The goal is to understand a program as well as possible.
+Consider the tradeoff this entails.
+The programmer is liberated from worrying about the binding time of
+different language constructs.
+With a JIT compiler, performance will probably be good.
+But without JIT, performance will be unpredictable, with no clear
+syntactic rules for what is expected to be fast.
+So it is not surprising that software engineering languages shun this
+tradeoff.
+However we believe it is the tradeoff technical computing
+users want by default, and it has not generally been available
+in any language.
+
+Designing for this tradeoff requires a change of perspective
+within the compiler.
+Most compilers focus on, and make decisions according to, the
+language's source-level type system.
+Secondarily, they will perform flow analysis to discover
+properties not captured by the type system.
+Given our goals, we need to invert this relationship.
+The focus needs to be on understanding program behavior
+\emph{as thoroughly as possible}, since no one set of rules
+will cover all cases.
+Usually changing a language's type system is a momentous event,
+but in the analysis-focused perspective the compiler can evolve
+rapidly, with ``as thoroughly as possible'' handling more cases
+all the time.
+Although we will not discuss it much, this approach is still
+compatible with static typing.
+Nothing stops us from picking a well-defined subset of the system,
+or a separate type system, to give errors about.
+
+%Instead of a split between static and dynamic resolution, we can
+%instead focus on program \emph{analysis}.
+%The goal is to understand a program as well as possible.
 
 %2 problems?
 %   1 - flexibility implies late binding, slowness. e.g. CSR/CSC as classes
@@ -195,6 +243,9 @@ In some sense, it is our type system whether we like it or not
 
 %relationship between programs and domains
 
+% - checking isbidiag() vs. having a type
+% - checking every array elt for integer - maybe for ^ function
+
 \iffalse
 function diag(a)
     if ndims(a) == 1
@@ -240,7 +291,6 @@ end
 \draw(Sparse) -- (bot);
 \end{tikzpicture}
 \fi
-
 
 
 
@@ -647,21 +697,21 @@ Parametric polymorphism refers to reusing the \emph{same} code for
 different purposes, while ad hoc polymorphism refers to selecting
 \emph{different} code for different circumstances.
 
-Both forms occur frequently in technical computing.
-For example, a programmer intuitively expects that \texttt{A[i]} selects
-an element of an array regardless of what kind of array \texttt{A} is.
-\texttt{A} might contain integers or strings, it might be a local
-array or a distributed array, and so on.
-This is parametric polymorphism.
-However the ``parametric'' property only applies to the code \texttt{A[i]}
-itself.
-When we dig into how array indexing actually works, we will probably
-need to resort to ad hoc polymorphism.
-For example, when \texttt{A} is a local array the code accesses local
-memory, and when \texttt{A} is distributed it might be necessary to
-send a network message instead.
-At a lower level, the machine code for \texttt{A[i]} needs to be
-different depending on the array's element type.
+%% Both forms occur frequently in technical computing.
+%% For example, a programmer intuitively expects that \texttt{A[i]} selects
+%% an element of an array regardless of what kind of array \texttt{A} is.
+%% \texttt{A} might contain integers or strings, it might be a local
+%% array or a distributed array, and so on.
+%% This is parametric polymorphism.
+%% However the ``parametric'' property only applies to the code \texttt{A[i]}
+%% itself.
+%% When we dig into how array indexing actually works, we will probably
+%% need to resort to ad hoc polymorphism.
+%% For example, when \texttt{A} is a local array the code accesses local
+%% memory, and when \texttt{A} is distributed it might be necessary to
+%% send a network message instead.
+%% At a lower level, the machine code for \texttt{A[i]} needs to be
+%% different depending on the array's element type.
 
 The idea of specialization unites parametric and ad hoc polymorphism.
 Beginning with a parametrically polymorphic function, one can imagine
