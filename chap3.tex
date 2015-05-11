@@ -1,226 +1,260 @@
-\chapter{Available technology}
-
-\section{The language design space}
+\chapter{Design space}
 
 % ``technology transfer'' from PLT to TC
 
-It is helpful to begin with a rather coarse classification of programming
-languages, according to how expressive their type systems are, and whether
-their type systems are dynamic or static:
+This chapter will attempt to locate technical computing within the large
+design space of programming languages.
+It will discuss how the priorities introduced in section~\ref{sec:tcproblem}
+relate to type systems and dispatch systems.
+% concludes with an intro to julia etc.
 
-\vspace{3ex}
+% it is important to bear in mind the many meanings of the word ``type''
+% often people use it just when they want a different ``kind of thing'',
+% and have not yet thought about how that relates to the means of
+% expression available.
 
-%\begin{table}
-\begin{tabular}{|c||c|c|}
-\hline 
- & More types & Fewer types\tabularnewline
-\hline 
-\hline 
-Dynamic & Dylan, Julia & Scheme, Python, MATLAB\tabularnewline
-\hline 
-Static & ML, Haskell, Scala & Fortran, Pascal, C\tabularnewline
-\hline 
-\end{tabular}
-%\caption{A coarse classification of languages}
-%\label{languageclass}
-%\end{table}
+\section{A binding time dilemma}
 
-\vspace{3ex}
-
-The lower right corner tends to contain older languages.
-The upper right corner contains many popular ``dynamic'' languages.
-The lower left corner contains many modern languages resulting from research
-on static type systems.
-We are most interested in the upper left corner, which is notable for being
-rather sparsely populated.
-It has been generally believed that dynamic languages do not ``need'' types,
-or that there is no point in talking about types if they are not going to be
-checked at compile time.
-These views have some merit, but as a result the top-left corner of this design
-space has been under-explored.
-
-\subsubsection{Classes vs.\ functions}
-
-Technical computing is function oriented.
-
-in C++ to ``extend'' an existing type you have to use another mechanism,
-overloading.
-however then you also need to accept different semantics, static resolution.
-
-
-\subsubsection{Separate compilation vs.\ performance}
-
-Writing the signature of a generic method that needs to be separately compiled,
-as in Java, can be a difficult exercise.
-The programmer must use the type system to write down sufficient conditions on all
-arguments.
-The following example from a generic Java graph
-library~\cite{Garcia:2003:CSL:949305.949317} demonstrates the level of verbosity
-that can be required:
+Consider the following fragment of a function called \texttt{factorize},
+which numerically analyzes a matrix to discover structure that
+can be exploited to solve problems efficiently:
 
 \begin{singlespace}
-\begin{lstlisting}[language=java,style=ttcode]
-public class breadth_first_search {
-  public static<Vertex, Edge extends GraphEdge<Vertex>,
-                VertexIterator extends Iterator<Vertex>,
-                OutEdgeIterator extends Iterator<Edge>,
-                Visitor extends BFSVisitor,
-                ColorMap extends ReadWriteMap<Vertex, Integer>>
-  void go(VertexListAndIncidenceGraph<Vertex,Edge,
-            VertexIterator,VerticesSizeType,OutEdgeIterator,
-            DegreeSizeType> g,
-          Vertex s, ColorMap c, Visitor vis);
-}
+\begin{lstlisting}[language=julia]
+if istril(A)
+    istriu(A) && return Diagonal(A)
+    utri1 = true
+    for j = 1:n-1, i = j+1:m
+        if utri1 && A[i,j] != 0
+            utri1 = i == j + 1
+        end
+    end
+    utri1 && return Bidiagonal(diag(A), diag(A, -1), false)
+    return LowerTriangular(A)
+end
 \end{lstlisting}
 \end{singlespace}
 
-(other problems: primitive types int and double cannot be used,
-static parameters can only be inferred directly from arguments,
-not from constraints of other parameters. our subtyping system
-does not have this problem)
+The code returns different structured matrix types based on the input
+data.
+% TODO a bit more about how it's used
+This sort of pattern can be implemented in object-oriented languages
+by defining an interface or base class (perhaps called \texttt{StructuredMatrix}),
+and declaring \texttt{Diagonal}, \texttt{Bidiagonal}, and so on as
+subclasses.
 
-If, however, we are going to specialize the method, the compiler can analyze it
-using actual types from call sites, and see for itself whether the method works
-in each case (this is how C++ templates are type-checked; they are analyzed
-again for each instantiation).
+Unfortunately, there are several problems with this solution.
+Class-based OO ties together variation and dynamic dispatch: to allow
+a value's representation to vary, each use of it needs to perform an
+indirect call.
+A major reason to use structured matrix types like \texttt{Bidiagonal}
+is performance, so we'd rather avoid the overhead of indirect calls.
+%for operations like element access.
+Most code operating on \texttt{Bidiagonal} would
+be implementing algorithms that exploit its representation.
+These algorithms would have to be implemented as methods of
+\texttt{Bidiagonal}.
+However this is not natural, since one cannot expect to have every
+function that might be applied to bidiagonal matrices defined in
+one place.
+This kind of computing is function-oriented.
+% other examples: CSC vs. CSR
 
-It is quite interesting that performance and ease-of-use pull this design
-decision in the same direction.
+Let's try a different abstraction mechanism: templates and overloading.
+% TODO
 
-\subsubsection{Parametric vs.\ ad-hoc polymorphism}
+then you can write
 
-The term \emph{polymorphism} refers generally to reuse of code or data
-structures in different contexts.
-A further distinction is often made between \emph{parametric} polymorphism
-and \emph{ad-hoc} polymorphism.
-Parametric polymorphism refers to reusing the \emph{same} code for
-different purposes, while ad-hoc polymorphism refers to selecting
-\emph{different} code for different circumstances.
+if diagonal
+    solve(Diagonal(M), x)
+elseif bidiagonal
+    solve(Bidiagonal(M), x)
+end
 
-Both forms occur frequently in technical computing.
-For example, a programmer intuitively expects that \texttt{A[i]} selects
-an element of an array regardless of what kind of array \texttt{A} is.
-\texttt{A} might contain integers or strings, it might be a local
-array or a distributed array, and so on.
-This is parametric polymorphism.
-However the ``parametric'' property only applies to the code \texttt{A[i]}
-itself.
-When we dig into how array indexing actually works, we will probably
-need to resort to ad-hoc polymorphism.
-For example, when \texttt{A} is a local array the code accesses local
-memory, and when \texttt{A} is distributed it might be necessary to
-send a network message instead.
-At a lower level, the machine code for \texttt{A[i]} needs to be
-different depending on the array's element type.
+but the part that selects a matrix type can't be abstracted away.
+we want to be able to write solve(factorize(M), x).
 
-The idea of specialization unites parametric and ad-hoc polymorphism.
-Beginning with a parametrically polymorphic function, one can imagine
-a compiler specializing it for various cases, i.e.\ certain concrete argument
-values. These specializations could be stored in a lookup table, for use
-either at compile time or at run time.
+%... no wonder people use prepackaged version of this functionality
+Given these constraints, the traditional design of technical
+computing systems makes sense: pre-generate a large number of
+optimized routines for various cases, and be able to dispatch
+to them at run time.
 
-Next we can imagine that the compiler might not optimally specialize
-certain definitions, and that the programmer would like to provide
-hints or hand-written implementations to speed up special cases.
-For example, imagine a function that traverses a generic array. A compiler-generated
-specialization might inline a specific array types's indexing operations, but a human
-might further realize that the loop order should be switched for certain
-arrays types based on their storage order.
+It's clear what's going on here: mathematics is dependently typed.
+Knowing what a given object \emph{is} in a relevant sense would
+require arbitrary proofs, and in research computing these proofs
+would refer to objects that are not yet well understood.
+% In numerical computing, if \emph{anybody} were able to prove the
+% relevant property, there would be no point in running the program.
 
-However, if we are going to let a human specialize a function for performance,
-we might as well allow them to specialize it for some other reason, including
-entirely different behavior. But at this point separate ad-hoc polymorphism
-is no longer necessary; we are using a single overloading feature for
-everything.
+% talk about the premature optimization of assuming
+% (generate code for) = (known at compile time)
+
+Instead of a split between static and dynamic resolution, we can
+instead focus on program \emph{analysis}.
+The goal is to understand a program as well as possible.
+
+%2 problems?
+%   1 - flexibility implies late binding, slowness. e.g. CSR/CSC as classes
+%   2 - given a simple type system, programs will not match the lattice
+%       and analysis diverges
+
+% issues:
+% - how programs make choices
+% - how compiler-understandable are those choices
+% - when do you get specialized code
+
+\section{Domain theory}
+
+In the late 1960s Dana Scott and Christopher Strachey asked how to assign
+meanings to programs, which otherwise just appear to be lists of symbols
+\cite{scott1971toward}.
+For example, given a program computing the factorial function, we
+want a process by which we can assign the meaning ``factorial'' to it.
+This led to the invention of domain theory, which can be interpreted
+as modeling the behavior of a program without running it.
+A ``domain'' in this theory is a partial order of sets of values that a
+program might manipulate.
+Domain theory models computation as follows: a program starts with no
+information, the lowest point in the partial order (``bottom'').
+Computation steps accumulate information, gradually moving higher through
+the order.
+The advantage of this model, in essence, is that it provides a
+way to think about the meaning of a program without running the program.
+Even the ``result'' of a non-terminating program has a representation ---
+the bottom element.
+Other elements of the partial order might refer to intermediate results.
+
+The idea of ``running a program without running it'' is of great interest
+in compiler implementation.
+A compiler would like to discover as much information as possible about a
+program without running it, since running it might take a long time, or
+produce side effects that the programmer does not want yet, or, of course,
+not terminate.
+The general recipe for doing this is to design a partial order (lattice)
+that captures program properties of interest, and then describe all
+primitive operations in the language based on how they transform
+elements of this lattice.
+Then an input program can be executed, in an approximate sense, until
+it converges to a fixed point.
+% TODO should be a full example
+For example, given a program that outputs an integer, we might decide
+that we only care whether this integer is even or odd.
+Then our posets are the even and odd integers, and we will classify operations
+in the program according to whether they are evenness-preserving,
+evenness-inverting, always even, always odd, of uncertain evenness,
+etc. % TODO figure
+Most modern compilers use a technique like this
+(sometimes called abstract interpretation \cite{abstractinterp})
+to semi-decide
+interesting properties like whether a variable is a constant, whether
+a variable might be used before it is initialized, whether a variable's
+value is never used, and so on.
+%Domain theory gave rise to the study of denotational semantics and the
+%design of type systems. However, the original theory is quite general
+%and invites us to invent any domains we wish for any sort of language.
+%Abstract interpretation \cite{abstractinterp} is an especially
+%elegant and general implementation of this idea.
+%It should be clear that this sort of analysis, while clearly related
+%to type systems, is fairly different from what most programmers
+%think of as type \emph{checking}.
+
+Given the general undecidability of questions about programs, analyses
+like these are \emph{conservative} in nature.
+For example, if our goal is to warn programmers about use of uninitialized
+variables, we want to be ``better safe than sorry'' and print a warning
+if such a use \emph{might} occur.
+Such a use corresponds to any lattice element greater than or equal to
+the element representing ``uninitialized''.
+Such conservative analyses are the essence of compiler transformations
+for performance (optimizations): we only want to perform an optimization
+if the program property it relies on holds for sure, and not if there is
+any uncertainty.
+
+The generality of this approach makes it a kind of ``ur type system'':
+we can discover a large variety of program properties as long as we are
+willing to accept some uncertainty.
+Of course, many programmers and language designers prefer to maximize
+safety, leading to different approaches that trade away some precision
+(e.g. syntactic type systems such as those in the ML language
+family \cite{hindley1969principal, MLtypeinf}).
+But if static guarantees are not the priority, or if a language considers
+itself unconcerned with ``types'', then we can take the domain-theoretic
+model as our type system.
+In some sense, it is our type system whether we like it or not
+(as implied by \cite{scott1976data})!
+
+%- make it easier to ``follow the lattice''
+% analyses don't work as well with programs not written to be
+% ``type conscious''.
+% the solution is just to make it easier to write type conscious programs.
+% this doesn't require any restrictions, just a stylistic change.
+% you would think if types are also just data values there would be no
+% gain, but there is.
+% there are run time things, and just flow-sensitive things
+
+%relationship between programs and domains
+
+\iffalse
+function diag(a)
+    if ndims(a) == 1
+        n = length(a)
+        d = zeros(eltype(a), n, n)
+        for i=1:n; d[i,i] = a[i]; end
+        d
+    elseif ndims(a) == 2
+        n = min(size(a,1),size(a,2))
+        d = zeros(eltype(a), n)
+        for i=1:n; d[i] = a[i,i]; end
+        d
+    else
+        error("expected vector or matrix")
+    end
+end
+\fi
+
+\iffalse
+\begin{tikzpicture}[node distance=2cm]
+\title{A coarse lattice of array types.}
+\node(top)   {$\top$};
+\node(Dense)  [below left=0.8cm of top] {\texttt{Dense}};
+\node(Sparse) [below right=0.8cm of top] {\texttt{Sparse}};
+\node(bot)   [below=1.6cm of top] {$\bot$};
+\draw(top) -- (Dense);
+\draw(top) -- (Sparse);
+\draw(Dense) -- (bot);
+\draw(Sparse) -- (bot);
+\end{tikzpicture}
+
+\begin{tikzpicture}[node distance=2cm]
+\title{A coarse lattice of array types.}
+\node(top)   {$\top$};
+\node(Aint)  [below=0.5cm of top] {\texttt{SomeArray\{Int\}}};
+\node(Dense)  [below left=1cm of Aint] {\texttt{Dense\{Int\}}};
+\node(Sparse) [below right=1cm of Aint] {\texttt{Sparse\{Int\}}};
+\node(bot)   [below=2.8cm of top] {$\bot$};
+\draw(top) -- (Aint);
+\draw(Aint) -- (Dense);
+\draw(Aint) -- (Sparse);
+\draw(Dense) -- (bot);
+\draw(Sparse) -- (bot);
+\end{tikzpicture}
+\fi
 
 
-Parametric polymorphism describes code that works for any object precisely
-because it does not do anything meaningful to the object, for example the
-identity function. In contrast, programming with tagged data (e.g.
-symbolic expression systems, XML) permits code to work for any object
-because every object has the same structure, allowing meaningful
-operations.
-
-In theory, a parametrically polymorphic function works on all data
-types.
-In practice, this can be achieved by forcing a uniform representation of
-data such as pointers, which can be handled by the same code regardless of
-what kind of data is pointed to.
-However this kind of representation is not the most efficient, and
-for good performance specialized code for different types must be
-generated.
-
-%\subsection{Static checking vs.\ flexibility}
-
-\subsubsection{Modularity vs.\ large vocabularies}
-
-In the context of software engineering, modularity is a primary concern.
-To build large systems, separate components must be isolated to some
-degree.
-Reasons for this include simple concerns like avoiding name conflicts,
-and a desire to separate interface from implementation to allow
-a component to change without affecting the rest of the system.
-
-Modularity is sometimes taken to an extreme, and one will see
-fully qualified names like \texttt{org.jboss.annotation.ejb.cache.simple.CacheConfig}
-(selected from the JBOSS Java APIs).
-
-Technical computing languages have often avoided and discouraged such
-designs. For example MATLAB for most of its history supported only a single
-namespace, which comes pre-populated with thousands of functions.
 
 
-\subsubsection{Eliminating vs.\ embracing tagged data}
 
-\subsubsection{Data hiding vs.\ explicit memory layout}
-
-Examples of CSC and CSR sparse representation.
-In one sense this is a perfect example of an interface with multiple implementations,
-and therefore a good use case for object-oriented programming.
-However in the technical computing world, \emph{hiding} this difference in
-representation is not usually considered desirable.
-Clearly a sparse matrix class cannot contain all functions of matrices that users
-might want to compute.
-Yet when new functions are added, the programmer needs and wants to exploit
-representation details (CSC or CSR) for performance.
-The performance differences involved here are quite significant (TODO cite).
-
-The loss of encapsulation due to multimethods weighed in \cite{binarymethods}
-is less of a problem for technical computing, and in some cases even
-advantageous.
+% The loss of encapsulation due to multimethods weighed in \cite{binarymethods}
+% is less of a problem for technical computing, and in some cases even
+% advantageous.
 
 
 \section{Dispatch systems}
 
-% CHART of different multiple dispatches. classify them
-
-%Why ``just overloading'' is not enough. You intercept every operation and
-%rewrite it, kind of an escape hatch for a language you don't like. If
-%somebody else also tries to do this, there won't necessarily be any
-%coherence.
-
-A helpful way to classify languages with some kind of generic programming
-support is to look at which language constructs are generic. For example,
-in C++ the syntax \texttt{object.method(x)} is generic: a programmer can
-get it to do different things by supplying different values for
-\texttt{object}. The C++ syntax \texttt{f(a,b)} or \texttt{a+b} is
-usually not generic, but can be overloaded by supplying definitions for
-different argument types. However, this overloading only uses compile time
-types (no run time information), and so is essentially a form of renaming ---
-it can be implemented by renaming each definition with a unique name, and
-replacing overloaded calls with an appropriate name based on compile time
-types. This is a much weaker form of generic programming, since different
-behaviors cannot be obtained by passing different values at run time.
-
-For this reason, C++ programs are not fully generic: it is difficult to
-substitute new behaviors for every part of a program. Some languages
-take generic programming much further. For example, in MATLAB, \emph{every}
-function is effectively generic, and can be overloaded by new classes.
-This enables a programmer to ``intercept'' every function call (and therefore,
-essentially everything a program does)
-
-
-\subsection{A hierarchy of dispatch}
+% message of the table: you have to know a really large amount to
+% pick which one of these to use. there is no best one.
+% ``domain'' languages are all about avoiding knowledge of this table.
 
 It would be unpleasant if every piece of every program we wrote were forced
 to do only one specific task. Every time we wanted to do something slightly
@@ -229,7 +263,10 @@ allows the same program element to do different things at different times,
 we can write whole classes of programs at once. This kind of capability is
 one of the main reasons \emph{object-oriented} programming is popular: it
 provides a way to automatically select different behaviors according to
-some structured criteria.
+some structured criteria
+(we use the non-standard term ``criteria'' deliberately, in order
+to clarify our point of view, which is independent of any particular
+object system).
 
 In class-based OO there is essentially \emph{no way} to create an operation
 that dispatches on existing types (the expression problem \cite{wadler1998expression}).
@@ -245,9 +282,7 @@ that dispatch on them.
 %important, but it may be because of them that over time too little
 %emphasis has been placed on expressive power.
 
-We use the non-standard term ``criteria'' deliberately, in order
-to clarify our point of view, which is independent of any particular
-object system.
+\subsection{A hierarchy of dispatch}
 
 The sophistication of the available ``selection criteria'' account for a
 large part of the perceived ``power'' or leverage provided by a language.
@@ -440,105 +475,6 @@ encounter{T<:Animal}(a: T, b: T) = mate(a, b)
 \end{verbatim}
 
 
-\subsection{Example: lattices}
-
-This example will illustrate possible benefits of multiple dispatch and
-dynamic typing for mathematical computing.
-The benefits are not absolute, but notational and semantic:
-they involve code size and clarity, and the extent to which the entities
-provided by the language match a mental model of the domain.
-
-A \emph{lattice} is an algebraic structure where some pairs of elements
-satisfy a reflexive, antisymmetric, and transitive relation $\leq$.
-For purposes of this example, we will consider lattices that have
-a greatest, or \emph{top}, element ($\top$), and a least, or \emph{bottom}
-element ($\bot$). When working with lattices one often wants to compute
-a least upper bound, or \emph{join} ($\sqcup$), or a greatest lower bound,
-or \emph{meet} ($\sqcap$).
-
-Several interesting concerns arise when modeling lattices in a programming
-language. First, the structure is very general, and so admits implementations
-for many different kinds of elements. We want to write code using
-the operators $\leq$, $\sqcup$, and $\sqcap$, and have it apply to any kind
-of lattice. Therefore some kind of overloading or object-oriented programming
-is desirable. Second, some properties apply to all lattices, and we would
-like to avoid implementing them repeatedly.
-
-Using ``duck typing'', the problem of modeling an abstraction like lattices
-disappears almost entirely. One may simply define methods for
-$\leq$, $\sqcup$, and $\sqcap$ at any time, for any type, and that type will
-function as a lattice. That is certainly convenient, but it also fails to
-provide any reusable functionality for those defining lattices.
-
-
-
-\begin{figure}[!t]
-\todo[inline]{what does $===$ mean here?}  
-  \begin{center}
-\begin{singlespace}
-\begin{lstlisting}[language=julia]
-abstract LatticeElement
-
-<=(x::LatticeElement, y::LatticeElement) = x===y
-==(x::LatticeElement, y::LatticeElement) = x<=y && y<=x
-< (x::LatticeElement, y::LatticeElement) = x<=y && !(y<=x)
-
-immutable TopElement <: LatticeElement; end
-immutable BotElement <: LatticeElement; end
-
-const ~$\top$~ = TopElement()
-const ~$\bot$~ = BotElement()
-
-<=(::BotElement, ::TopElement) = true
-<=(::BotElement, ::LatticeElement) = true
-<=(::LatticeElement, ::TopElement) = true
-
-~$\sqcup$~(x::LatticeElement, y::LatticeElement) =  # join
-    (x <= y ? y : y <= x ? x : ~$\top$~)
-
-~$\sqcap$~(x::LatticeElement, y::LatticeElement) =  # meet
-    (x <= y ? x : y <= x ? y : ~$\bot$~)
-\end{lstlisting}
-\end{singlespace}
-  \end{center}
-  \label{julialattices}
-  \caption{A small Julia library for lattices}
-\end{figure}
-
-
-
-
-
-Figure~\ref{julialattices} shows a small Julia library for lattices.
-It defines an abstract class \texttt{LatticeElement} that may be subclassed
-by objects that will be used primarily as elements of some lattice.
-The library also provides standard
-\texttt{LatticeElement} provides some useful default method definitions.\todo{sentence grammar?}
-\todo[inline]{Join of two incomparables in general lattices does not have to be top}
-
-
-
-\subsection{Symbolic programming}
-
-There has always been an essential divide between ``numeric'' and ``symbolic''
-languages in the world of technical computing. To many people the
-distinction is fundamental, and we should happily live with both
-kinds of languages. But if one insists on an answer as to which approach
-is the right one, then the answer is: \todo{Love it!}  symbolic.
-
-Systems based on symbolic rewrite rules arguably occupy a further tier of
-dispatch sophistication. In these systems, you can dispatch on essentially
-anything, including arbitrary values and structures. These systems are
-typically powerful enough to concisely define the kinds of behaviors we
-are interested in.
-
-However, symbolic programming lacks data abstraction: the concrete
-representations of values are exposed to the dispatch system
-(e.g. there is no difference between being a list and being something
-represented as a list).
-\todo{Wish you would say more!}
-
-
 \subsection{Predicate dispatch}
 
 %Patterns are very powerful, but the tradeoff is that there is not
@@ -598,116 +534,88 @@ Programs that map integers to integers abound, but programs that map, say,
 even integers to even integers are rare to the point of irrelevance.
 
 
-\section{Domain theory}
+\subsection{Symbolic programming}
 
-In the late 1960s Dana Scott and Christopher Strachey asked how to assign
-meanings to programs, which otherwise just appear to be lists of symbols
-\cite{scott1971toward}.
-For example, given a program computing the factorial function, we
-want a process by which we can assign the meaning ``factorial'' to it.
-This led to the invention of domain theory, which can be interpreted
-as modeling the behavior of a program without running it.
-A ``domain'' in this theory is a
-partial order of sets of values that a program might manipulate. 
-Domain theory models computation as follows: a program starts with no
-information, the lowest point in the partial order (``bottom'').
-Computation steps accumulate information, gradually moving higher through
-the order. The advantage of this model, in essence, is that it provides a
-way to think about the meaning of a program without running the program.
-Even the ``result'' of a non-terminating program has a representation ---
-the bottom element. Other elements of the partial order might refer to
-intermediate results.
+There has always been a divide between ``numeric'' and ``symbolic''
+languages in the world of technical computing.
+To many people the distinction is fundamental, and we should happily live
+with both kinds of languages.
+But if one insists on an answer as to which approach
+is the right one, then the answer is: \todo{Love it!}  symbolic.
+% programs are ultimately symbolic artifacts
 
-The idea of ``running a program without running it'' is of great interest
-in compiler implementation. A compiler would like to discover as much
-information as possible about a program without running it, since
-running it might take a long time, or produce side effects that the
-programmer does not want yet, or, of course, not terminate.
-The general recipe for doing this is to design a partial order (lattice)
-that captures program properties of interest, and then describe all
-primitive operations in the language based on how they transform
-elements of this lattice.
-Then an input program can be executed, in an approximate sense, until
-it converges to a fixed point.
-For example, given a program that outputs an integer, we might decide
-that we only care whether this integer is even or odd. Then our posets
-are the even and odd integers, and we will classify operations in the
-program according to whether they are evenness-preserving,
-evenness-inverting, always even, always odd, of uncertain evenness,
-etc. % TODO figure
-Most modern compilers use a technique like this
-(sometimes called abstract interpretation \cite{abstractinterp})
-to semi-decide
-interesting properties like whether a variable is a constant, whether
-a variable might be used before it is initialized, whether a variable's
-value is never used, and so on.
-%Domain theory gave rise to the study of denotational semantics and the
-%design of type systems. However, the original theory is quite general
-%and invites us to invent any domains we wish for any sort of language.
-%Abstract interpretation \cite{abstractinterp} is an especially
-%elegant and general implementation of this idea.
-%It should be clear that this sort of analysis, while clearly related
-%to type systems, is fairly different from what most programmers
-%think of as type \emph{checking}.
+Systems based on symbolic rewrite rules arguably occupy a further tier of
+dispatch sophistication. In these systems, you can dispatch on essentially
+anything, including arbitrary values and structures. These systems are
+typically powerful enough to concisely define the kinds of behaviors we
+are interested in.
 
-Given the general undecidability of questions about programs, analyses
-like these are \emph{conservative} in nature.
-For example, if our goal is to warn programmers about use of uninitialized
-variables, we want to be ``better safe than sorry'' and print a warning
-if such a use \emph{might} occur.
-Such a use corresponds to any lattice element greater than or equal to
-the element representing ``uninitialized''.
-Such conservative analyses are the essence of compiler transformations
-for performance (optimizations): we only want to perform an optimization
-if the program property it relies on holds for sure, and not if there is
-any uncertainty.
-
-The generality of this approach makes it a kind of ``ur type system'':
-we can discover a large variety of program properties as long as we are
-willing to accept some uncertainty.
-Of course, many programmers and language designers prefer to maximize
-safety, leading to different approaches that trade away some precision
-(e.g. syntactic type systems such as those in the ML language
-family \cite{hindley1969principal, MLtypeinf}).
-But if static guarantees are not the priority, or if a language considers
-itself unconcerned with ``types'', then we can take the domain-theoretic
-model as our type system.
-In some sense, it is our type system whether we like it or not
-(as implied by \cite{scott1976data})!
-
-\subsection{Monotonicity}
-
-When this kind of type system is used, it usually becomes part of the
-meta-theory of the language: values are ``lifted'' into an abstract
-domain, and abstract values are manipulated only by a compiler
-or other program analysis.
-One good reason for this is that the abstract values (which we will
-now interchangeably call ``types'') must meet certain requirements in
-order to be useful.
-For an abstract interpretation to terminate, its lattice must be of
-finite height, and all functions of lattice elements must be
-monotonic (given lattice elements $a$ and $b$, we must have
-$a\subseteq b$ implies $f(a)\subseteq f(b)$ for all $f$).
+However, symbolic programming lacks data abstraction: the concrete
+representations of values are exposed to the dispatch system
+(e.g. there is no difference between being a list and being something
+represented as a list).
+\todo{Wish you would say more!}
 
 
-Functions of types are not monotonic. \texttt{isa(2,3)} is \texttt{false},
-but \texttt{isa(2,Int)} is \texttt{true}.
-This provides one way to separate ``real types'' from set-valued terms:
-if there is a way to interpret execution over types such that all functions
-are monotonic in the (alleged) type lattice, then we are really dealing
-with types.
-One way to do this is to specify a genuinely multi-valued term language
-like $\lambda_\aleph$ \cite{Glew:2013:MLD:2502409.2502412}.
-In this approach a term like \texttt{isa(2,Int)} is interpreted as a
-union of all results obtained by substituting all possible single values
-for each sub-term. One cannot help but be impressed by such a language,
-though it seems prohibitively difficult to actually implement.
-%$\lambda_\aleph$ was introduced a couple years after we began work on Julia
-We opt instead for a simpler approach where \texttt{Int} is
-interpreted as \texttt{Type\{Int\}} (in a near-borrowing of notation from
-\cite{cardelli1986polymorphic} and \cite{Glew:2013:MLD:2502409.2502412}),
-and multi-valued terms exist only statically within a separate
-maximum-fixed-point evaluator.
+\subsection{Choices, choices}
+
+\newcommand{\chk}{{\Large \checkmark}}
+
+\makesavenoteenv{tabular}
+\makesavenoteenv{table}
+
+\begin{table}[!t]
+\begin{center}
+\begin{tabular}{|c||c|c|c|c|c|c|c|}
+\hline
+               & Domain &  Dynamic  & Spec. & ADTs & Pattern & Safety & S.C. \\
+\hline
+\hline
+Methods        & $O(1)$   &         &       & \chk &         & \chk   & \chk \\
+\hline
+Virt. methods  & $O(1)$   & \chk    &       & \chk &         & \chk   & \chk \\
+\hline
+Overloading    & $O(n)$   &         &       & \chk &         & \chk   & \chk \\
+\hline
+Templates      & $O(n)$   &         & \chk  & \chk &         & \chk   &      \\
+\hline
+Closures       & $O(1)$   & \chk    &       &      &         & \chk   & \chk \\
+\hline
+Multimethods   & $O(n)$   & \chk    &       & \chk &         & ?      & ?    \\
+\hline
+Predicates     & $O(n m)$ & \chk    &       & \chk &  \footnote{Depending on design details.}  & ? & ? \\
+\hline
+Typeclasses    & $O(m)$   & \footnote{When combined with existential types.}    &  \footnote{Optionally, with declarations.}        & \chk &   \footnote{With the \texttt{FlexibleInstances} option.}  & \chk & \chk \\
+\hline
+Term rewriting & $O(n m)$ & \chk    &       &      & \chk    &        &      \\
+\hline
+\end{tabular}
+\end{center}
+\caption[Attributes of code selection features]{
+Attributes of several code selection features. S.C.\ stands for separate compilation.
+}
+\label{dispatchtable}
+\end{table}
+
+%n = # arguments
+%m = amount of data in one argument
+
+Table~\ref{dispatchtable} compares nine language features.
+Each provides some sort of control flow indirection, packaged into a
+structure designed to facilitate reasoning (ideally human reasoning,
+but often the compiler's reasoning is prioritized).
+The ``domain'' column describes the amount of information considered
+by the dispatch system, where $n$ is the number of arguments and
+$m$ is the amount of relevant information per argument.
+$O(1)$ means each use of the feature considers basically the same
+amount of information.
+$O(n)$ is similar, but extends the process to every argument.
+$O(m)$ means that one value is considered, but its structure can be
+taken into account.
+
+%% it may be that the ``power'' of a language is measured by the complexity
+%% of the criteria used by the language's run time dispatch mechanisms.
+
 
 \section{Subtyping}
 
@@ -717,30 +625,146 @@ was quite a while before we discovered these papers and noticed the
 overlap. However if one substitutes ``symbolic expression'' for
 ``XML document'', the similarity becomes clearer.
 
-% maybe subarray as an example of a fancy type here
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
-const NonSliceIndex = Union(Colon, Range{Int}, UnitRange{Int}, Array{Int,1})
-const ViewIndex = Union(Int, NonSliceIndex)
-immutable SubArray{T,N,P<:AbstractArray,I<:Tuple{Vararg{ViewIndex}},LD} <: AbstractArray{T,N}
+const ViewIndex = Union(Int, Colon, Range{Int}, UnitRange{Int},
+                        Array{Int,1})
+immutable SubArray{T, N, P<:AbstractArray,
+                   I<:Tuple{ViewIndex...}, LD} <: AbstractArray{T,N}
 \end{lstlisting}
 \end{singlespace}
 
 
+\section{Specialization}
+
+\subsection{Parametric vs.\ ad hoc polymorphism}
+
+The term \emph{polymorphism} refers generally to reuse of code or data
+structures in different contexts.
+A further distinction is often made between \emph{parametric} polymorphism
+and \emph{ad hoc} polymorphism.
+Parametric polymorphism refers to reusing the \emph{same} code for
+different purposes, while ad hoc polymorphism refers to selecting
+\emph{different} code for different circumstances.
+
+Both forms occur frequently in technical computing.
+For example, a programmer intuitively expects that \texttt{A[i]} selects
+an element of an array regardless of what kind of array \texttt{A} is.
+\texttt{A} might contain integers or strings, it might be a local
+array or a distributed array, and so on.
+This is parametric polymorphism.
+However the ``parametric'' property only applies to the code \texttt{A[i]}
+itself.
+When we dig into how array indexing actually works, we will probably
+need to resort to ad hoc polymorphism.
+For example, when \texttt{A} is a local array the code accesses local
+memory, and when \texttt{A} is distributed it might be necessary to
+send a network message instead.
+At a lower level, the machine code for \texttt{A[i]} needs to be
+different depending on the array's element type.
+
+The idea of specialization unites parametric and ad hoc polymorphism.
+Beginning with a parametrically polymorphic function, one can imagine
+a compiler specializing it for various cases, i.e.\ certain concrete argument
+values. These specializations could be stored in a lookup table, for use
+either at compile time or at run time.
+
+Next we can imagine that the compiler might not optimally specialize
+certain definitions, and that the programmer would like to provide
+hints or hand-written implementations to speed up special cases.
+For example, imagine a function that traverses a generic array. A compiler-generated
+specialization might inline a specific array types's indexing operations, but a human
+might further realize that the loop order should be switched for certain
+arrays types based on their storage order.
+
+However, if we are going to let a human specialize a function for performance,
+we might as well allow them to specialize it for some other reason, including
+entirely different behavior. But at this point separate ad hoc polymorphism
+is no longer necessary; we are using a single overloading feature for
+everything.
+
+
+Parametric polymorphism describes code that works for any object precisely
+because it does not do anything meaningful to the object, for example the
+identity function. In contrast, programming with tagged data (e.g.
+symbolic expression systems, XML) permits code to work for any object
+because every object has the same structure, allowing meaningful
+operations.
+
+In theory, a parametrically polymorphic function works on all data
+types.
+In practice, this can be achieved by forcing a uniform representation of
+data such as pointers, which can be handled by the same code regardless of
+what kind of data is pointed to.
+However this kind of representation is not the most efficient, and
+for good performance specialized code for different types must be
+generated.
+
+\subsection{Separate compilation vs.\ performance}
+
+Writing the signature of a generic method that needs to be separately compiled,
+as in Java, can be a difficult exercise.
+The programmer must use the type system to write down sufficient conditions on all
+arguments.
+The following example from a generic Java graph
+library~\cite{Garcia:2003:CSL:949305.949317} demonstrates the level of verbosity
+that can be required:
+
+\begin{singlespace}
+\begin{lstlisting}[language=java,style=ttcode]
+public class breadth_first_search {
+  public static<Vertex, Edge extends GraphEdge<Vertex>,
+                VertexIterator extends Iterator<Vertex>,
+                OutEdgeIterator extends Iterator<Edge>,
+                Visitor extends BFSVisitor,
+                ColorMap extends ReadWriteMap<Vertex, Integer>>
+  void go(VertexListAndIncidenceGraph<Vertex,Edge,
+            VertexIterator,VerticesSizeType,OutEdgeIterator,
+            DegreeSizeType> g,
+          Vertex s, ColorMap c, Visitor vis);
+}
+\end{lstlisting}
+\end{singlespace}
+
+(other problems: primitive types int and double cannot be used,
+static parameters can only be inferred directly from arguments,
+not from constraints of other parameters. our subtyping system
+does not have this problem)
+
+If, however, we are going to specialize the method, the compiler can analyze it
+using actual types from call sites, and see for itself whether the method works
+in each case (this is how C++ templates are type-checked; they are analyzed
+again for each instantiation).
+
+It is quite interesting that performance and ease-of-use pull this design
+decision in the same direction.
+
+
+\section{Design summary}
+
 % conclude by summarizing the design decisions we end up with:
 
-%% \begin{singlespace}
-%% \begin{enumerate}
-%% \item Self-describing data model aware of memory layout
-%% \item Type tags with nested structure
-%% \item A fully-connected type tree
-%% \item Dynamic multiple dispatch over all types % including parameters and varargs
-%% \item Data flow type inference
-%% \item Automatic code specialization
-%% \end{enumerate}
-%% \end{singlespace}
+\begin{singlespace}
+\begin{enumerate}
+\item A fully connected type tree
+\item Self-describing data model % aware of memory layout
+\item Type tags with nested structure
+\item Dynamic dispatch over all types % including parameters and varargs
+\item Data flow type inference
+\item Code specialization by default
+\item Make type parameters optional
+\item Types as ordinary values
+\end{enumerate}
+\end{singlespace}
 
-%% This list of features may appear somewhat ad-hoc. However, they turn out to be
+%- library writers can decide what to put at the type level without affecting users,
+%  dropping type parameters
+%- a single mechanism to cover overloading, dispatch, and specialization
+%%%- using types, but mostly for dispatch, where they can be used gradually
+%- specialize by default (makes static polymorphism less of a black art)
+%- types as ordinary values
+
+%% This list of features may appear somewhat ad hoc. However, they turn out to be
 %% remarkably strongly coupled, and deeply constrained by our ultimate goal.
 %% Each of these features has appeared in some form before, but never in a way
 %% that fully solves the problems described here.
@@ -751,32 +775,73 @@ immutable SubArray{T,N,P<:AbstractArray,I<:Tuple{Vararg{ViewIndex}},LD} <: Abstr
 %% powerful than previous ones in various ways.
 
 
-%% \subsection{Objections to dynamic typing}
+\section{Introduction to Julia}
 
-% there are run time things, and just flow-sensitive things
+This example will illustrate possible benefits of multiple dispatch and
+dynamic typing for mathematical computing.
+The benefits are not absolute, but notational and semantic:
+they involve code size and clarity, and the extent to which the entities
+provided by the language match a mental model of the domain.
 
-% coming up with examples where something needs to be done at
-% run time seems to be difficult. as soon as a concrete example
-% is raised, one immediately imagines doing it statically.
+A \emph{lattice} is an algebraic structure where some pairs of elements
+satisfy a reflexive, antisymmetric, and transitive relation $\leq$.
+For purposes of this example, we will consider lattices that have
+a greatest, or \emph{top}, element ($\top$), and a least, or \emph{bottom}
+element ($\bot$). When working with lattices one often wants to compute
+a least upper bound, or \emph{join} ($\sqcup$), or a greatest lower bound,
+or \emph{meet} ($\sqcap$).
+
+Several interesting concerns arise when modeling lattices in a programming
+language. First, the structure is very general, and so admits implementations
+for many different kinds of elements. We want to write code using
+the operators $\leq$, $\sqcup$, and $\sqcap$, and have it apply to any kind
+of lattice. Therefore some kind of overloading or object-oriented programming
+is desirable. Second, some properties apply to all lattices, and we would
+like to avoid implementing them repeatedly.
+
+Using ``duck typing'', the problem of modeling an abstraction like lattices
+disappears almost entirely. One may simply define methods for
+$\leq$, $\sqcup$, and $\sqcap$ at any time, for any type, and that type will
+function as a lattice. That is certainly convenient, but it also fails to
+provide any reusable functionality for those defining lattices.
+
+\begin{figure}[!t]
+\todo[inline]{what does $===$ mean here?}  
+  \begin{center}
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+abstract LatticeElement
+
+<=(x::LatticeElement, y::LatticeElement) = x===y
+==(x::LatticeElement, y::LatticeElement) = x<=y && y<=x
+< (x::LatticeElement, y::LatticeElement) = x<=y && !(y<=x)
+
+immutable TopElement <: LatticeElement; end
+immutable BotElement <: LatticeElement; end
+
+const ~$\top$~ = TopElement()
+const ~$\bot$~ = BotElement()
+
+<=(::BotElement, ::TopElement) = true
+<=(::BotElement, ::LatticeElement) = true
+<=(::LatticeElement, ::TopElement) = true
+
+~$\sqcup$~(x::LatticeElement, y::LatticeElement) =  # join
+    (x <= y ? y : y <= x ? x : ~$\top$~)
+
+~$\sqcap$~(x::LatticeElement, y::LatticeElement) =  # meet
+    (x <= y ? x : y <= x ? y : ~$\bot$~)
+\end{lstlisting}
+\end{singlespace}
+  \end{center}
+  \label{julialattices}
+  \caption{A small Julia library for lattices}
+\end{figure}
 
 
-%% it may be that the ``power'' of a language is equal to the complexity
-%% of the criteria used by the language's run time dispatch mechanisms.
-
-%% pre-OO: pointer indirection
-%% OO: single dispatch, class hierarchies
-
-%% Haskell: without typeclasses, a beautiful language, but one that nobody
-%% would use.
-
-%% I claim that compile time abstractions do not count. The problem is that
-%% at some point you have to *actually run the program*. Specifying the
-%% behavior of a program is hard; this is where we need help from the
-%% language.
-
-%% Scripting languages are often defended using the observation that most
-%% code is not performance-critical. However, this fact does not mean that
-%% it's ok for a language design to ignore performance, nor does it mean
-%% that performance should be the default priority of every line of code.
-%% Rather it means that the default should be convenience and safety, with
-%% a path to performance easily in reach for when it's needed.
+Figure~\ref{julialattices} shows a small Julia library for lattices.
+It defines an abstract class \texttt{LatticeElement} that may be subclassed
+by objects that will be used primarily as elements of some lattice.
+The library also provides standard
+\texttt{LatticeElement} provides some useful default method definitions.\todo{sentence grammar?}
+\todo[inline]{Join of two incomparables in general lattices does not have to be top}

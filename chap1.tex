@@ -163,6 +163,7 @@ productivity requirements of technical computing.
 %functional and performance requirements can become difficult to meet.
 
 \section{The technical computing problem}
+\label{sec:tcproblem}
 
 \begin{singlespace}
 \begin{table}
@@ -175,7 +176,7 @@ productivity requirements of technical computing.
       \hline
       separate compilation                 &  performance, inlining \\
       \hline
-      parametric polymorphism              &  ad-hoc polymorphism, extensibility \\
+      parametric polymorphism              &  ad hoc polymorphism, extensibility \\
       % - concrete reuse of generated code
       \hline
       static checking                      &  experimental computing \\
@@ -202,7 +203,7 @@ Table~\ref{PLpriorities} compares the general design priorities of mainstream
 programming languages to those of technical computing languages.
 The priorities in each row are not necessarily opposites or even mutually exclusive,
 but rather are a matter of emphasis.
-It is certainly possible to have both parametric and ad-hoc polymorphism within
+It is certainly possible to have both parametric and ad hoc polymorphism within
 the same language, but syntax, recommended idioms, and the design of the standard
 library will tend to emphasize one or the other.
 Of course, the features on the left side can also be useful for technical computing;
@@ -297,7 +298,7 @@ dispatch in order to do so.
 Most of the productivity languages mentioned above are designed
 entirely around this principle.
 But their view of code selection is incomplete: the dispatch
-mechanisms used are ad-hoc and not employed consistently.
+mechanisms used are ad hoc and not employed consistently.
 Even when an optimizing compiler for the source language is developed,
 it does not necessarily take all relevant forms of dispatch into
 account.
@@ -523,7 +524,7 @@ several complexities:
 \end{singlespace}
 
 \noindent
-These questions lead to practical problems like ad-hoc custom syntax,
+These questions lead to practical problems like ad hoc custom syntax,
 extra build steps, and excessive development effort (writing parsers and
 code generators might take more work than the core problem).
 If code needs to be generated based on run time information, then a
@@ -630,14 +631,16 @@ performance and expressiveness.
 
 % ?? % \item Easy polymorphism
 
-%- library writers can decide what to put at the type level without affecting users
+%- library writers can decide what to put at the type level without affecting users,
+%  dropping type parameters
 %- a single mechanism to cover overloading, dispatch, and specialization
 %%%- using types, but mostly for dispatch, where they can be used gradually
 %- specialize by default (makes static polymorphism less of a black art)
+%- types as ordinary values
 
 \item A type system and subtyping algorithm designed for describing
 method applicability and performance-critical aspects of data structures.
-This is the first system to apply the ``semantic subtyping'' approach
+This is the first system to apply the semantic subtyping approach
 to technical computing.
 We provide a simple implementation of our subtyping algorithm.
 This subtyping system is adoptable by dynamic languages that might

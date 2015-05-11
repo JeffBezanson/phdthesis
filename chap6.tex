@@ -12,7 +12,11 @@
 % to what extent is this a technical computing language?
 % it's not, really :)
 
-``I’ve yet to hear anyone explain how you decide what are the boundaries of a “domain-specific” language. Isn’t the “domain” mathematics and science itself?''~\cite{bobharperdsl}
+``I've yet to hear anyone explain how you decide what are the boundaries of a `domain-specific' language. Isn't the `domain' mathematics and science itself?''~\cite{bobharperdsl}
+
+% something about how ``information hiding'' is anathema to science,
+% and coincidentally is not the focus of t.c. languages or rigorous
+% functional languages.
 
 % \cite{meyerovich2012socio} about appealing to some domain first
 
@@ -28,6 +32,9 @@ generation will require its own new tools, such as partial evaluators (already
 under development in PyPy and Truffle). One can also imagine these future
 language designers wanting reusable program analyses, and tools for
 developing lattices and their operators.
+
+% actually not enough is done with dynamic typing: you give up type
+% checking, and all you get is untyped dictionaries in return?
 
 Julia encourages lattice-theoretic execution models to become integral
 parts of languages. dispatch was an especially natural way to do this,

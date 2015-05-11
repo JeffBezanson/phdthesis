@@ -190,6 +190,7 @@ and can be provided automatically at the language level.
 Here is how the above dispatch scheme might be implemented in Julia
 (mirroring the structure of the Python code as much as possible to
 facilitate comparison):
+% TODO explain MulFun, point to sec 4.6.3 possible solutions to higher-order
 
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
@@ -227,7 +228,7 @@ handles specializing and then invoking an efficient implementation of
 \texttt{accumulate} for each combination of argument types.
 
 % This code does not mention much about types or dispatch.
-% many behaviors are implicit. e.g. how does indexing work?
+% many behaviors are implicit. e.g.\ how does indexing work?
 % it's dispatch and specialization all the way down.
 
 Performance is shown in table~\ref{vanderperf}.
@@ -309,7 +310,8 @@ of use in mathematics, but technical users have voted with their code
 not to use languages that do this.
 A perennial debate occurs, for example, around the exact relationship
 between the notions of \emph{array}, \emph{matrix}, and \emph{tensor}.
-Informal interfaces, e.g. as provided by ``duck typing'', are a viable
+In MATLAB, scalars and $1\times 1$ matrices are indistinguishable.
+Informal interfaces, e.g.\ as provided by ``duck typing'', are a viable
 way to share code among disciplines with different interpretations of
 key abstractions.
 It is not too surprising that dynamic typing is popular in the
@@ -341,8 +343,8 @@ will be made at the type level, and once the choice is made
 we are restricted in how objects of different types can be used.
 In the domain of linear algebra, for example, it would be useful
 to have matrices that are considered different types for some
-purposes (e.g. having different representations), but not others
-(e.g. different types of matrices can be returned from the same
+purposes (e.g.\ having different representations), but not others
+(e.g.\ different types of matrices can be returned from the same
 function).
 
 
@@ -393,11 +395,11 @@ A good example is file I/O, where you might want to say ``read $n$ double precis
 numbers from this file''.
 In static languages the syntax and identifiers used to specify data types for
 these purposes are usually different from those used to specify ordinary types.
-A typical example is a constant like \texttt{MPI\_DOUBLE} \cite{snir1998mpi}, which
-is used to indicate the data type of an MPI message.
+A typical example is a constant like \texttt{MPI\_DOUBLE} \cite{snir1998mpi},
+used to indicate the data type of an MPI message.
 Many libraries, especially those for tasks like interacting with databases and file
 formats, have their own set of such tags.
-Using more than one of these libraries together can result in lots of boilerplate
+Using more than one of these libraries together can result in boilerplate
 code to map between tag systems.
 
 Polymorphic languages provide better interfaces in these cases.
@@ -507,9 +509,9 @@ The vectorized style has the following touted benefits:
 
 \begin{enumerate}
 \item One may write \texttt{sin(x)} to compute the sine of
-all elements of \texttt{x}, which is much more compact than writing a loop.
+all elements of \texttt{x}, which is more compact than writing a loop.
 \item Most execution time can be spent inside an expertly written library,
-taking advantage of special hardware (e.g. SIMD units or stream processors
+taking advantage of special hardware (e.g.\ SIMD units or stream processors
 like GPUs) and parallelism implicitly.
 \item The performance of the high-level language being used becomes less
 relevant.
@@ -746,7 +748,7 @@ In the ``dynamic'' data model, even though everything is a pointer,
 at least the code \emph{knows} that everything is a pointer, and so
 does not waste time switching between different representations.
 
-Interestingly, this intuition turns out not to be entirely true.
+Interestingly, this intuition turns out not to be accurate.
 As memory performance becomes a larger bottleneck, using less
 space and avoiding indirection becomes more important.
 Furthermore, most data in dynamic language programs is not as
@@ -803,7 +805,7 @@ their problem domains that are not matched elsewhere.
 In the long term, however, a proliferation of such projects would not be
 a good thing.
 It is substantially harder to reuse code between languages and compilers than
-to reuse library code within a language, and it is also harder to develop
+to reuse library code within a language, and it is harder to develop
 a compiler than a library.
 Mainstream languages have not been doing enough to facilitate these use
 cases.
@@ -826,9 +828,9 @@ Making the high-level language fast helps tremendously here, but there
 are also cultural differences between programmers who understand
 machine details and want more control, and those who are happy to use
 defaults chosen by somebody else.
-We will argue that Julia's
+We will argue that it is possible to
 %``easy polymorphism''
-design naturally blends these two styles, creating an effective compromise
+blend these styles, creating an effective compromise
 between the two camps.
 Evan Miller expressed this well as ``getting disparate groups of
 programmers to code in the same language...With Julia, it's the domain experts
@@ -855,8 +857,8 @@ Initially, \texttt{qr} and \texttt{lu} might both return pairs of matrices.
 Later, linear algebra library developers might decide that each function
 should return a specialized type to store its factorization in a more
 efficient format, and to provide dispatch to more efficient algorithms.
-This decision should not break the user's intuition that either object
-can be used in certain contexts.
+This decision should not break the user's intuition that the objects are
+interchangeable in certain contexts.
 We will discuss more extensive examples of such situations in
 chapter~\ref{chap:casestudies}.
 

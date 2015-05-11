@@ -592,7 +592,8 @@ Our dispatch mechanism permits a novel solution \cite{Bezanson2014}.
 Indexing behavior can be defined with method signatures, using a combination
 of variadic methods and argument ``splatting'' (the ability
 to pass a structure of $n$ values as $n$ separate arguments to a function,
-known as \texttt{apply} in Lisp dialects).
+known as \texttt{apply} in Lisp dialects, and written as \texttt{f(xs...)}
+in Julia).
 This solution is still a compromise among the factors outlined above,
 but it is a new compromise that provides a modest increment of power.
 % TODO more
@@ -772,7 +773,8 @@ axpy!{T<:BlasFloat}(alpha::Number,
 \iffalse
 QR factorization: want to support it on all input types, but many
 types (integer, rational) are not closed under the needed operations.
-compare to eigen: in C++, if you want a qrfact of an integer matrix,
+compare to eigen~\cite{guennebaud2014eigen}: in C++, if you want a qrfact
+of an integer matrix,
 you might get a compile time error, or it might work but all the values
 will be truncated when stored. this is a big generic programming
 challenge. you can't expect types to have a ``type to use for QR fact''
@@ -798,6 +800,18 @@ compiler could in fact determine the type of each call site.
 It just happens to be convenient to specify this behavior with a
 branch.
 \fi
+
+% matrix types not closed under operators:
+\iffalse
+function +(A::Bidiagonal, B::Bidiagonal)
+    if A.isupper==B.isupper
+        Bidiagonal(A.dv+B.dv, A.ev+B.ev, A.isupper)
+    else
+        Tridiagonal((A.isupper ? (B.ev,A.dv+B.dv,A.ev) : (A.ev,A.dv+B.dv,B.ev))...)
+    end
+end
+\fi
+
 
 \section{Units}
 
@@ -1096,7 +1110,7 @@ This worked well, but was difficult to implement and the resulting system
 is difficult to apply to new problems..
 We see the familiar pattern of using multiple languages and
 code-generation techniques, with coordination of the overall process done
-either manually or with ad-hoc scripts.
+either manually or with ad hoc scripts.
 To polish the implementation for use as a practical library, a likely next
 step would be to add a Python interface, adding yet another layer of complexity.
 Instead, we believe that the entire problem can be solved efficiently in Julia,

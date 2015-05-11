@@ -66,7 +66,7 @@ results of inference.
 %properties to track.
 In practice, \texttt{new} is always wrapped in a constructor function,
 abstracting away the inconvenience of constructing both a type and a value.
-In fact, \texttt{new} for \emph{user-defined} data types is syntactically
+In fact, \texttt{new} for user-defined data types is syntactically
 available only within the code block that defines the type.
 This provides some measure of data abstraction, since it is not possible
 for user code to construct arbitrary instances.
@@ -266,10 +266,10 @@ cannot also be an \texttt{Array\{Any\}}, since those types imply different
 representations.
 If we tried to use covariance despite this, there would have to be some \emph{other}
 notion of which type a value \emph{really} had, which would be unsatisfyingly
-complex
-(tuples are a special case where covariance works, because each component type need
+complex.
+Tuples are a special case where covariance works, because each component type need
 only refer to single value, so there is no need for concrete
-tuple types with non-concrete parameters).
+tuple types with non-concrete parameters.
 %We also find that most uses of covariance are more flexibly
 %handled by union type connectives (introduced below).
 
@@ -289,7 +289,7 @@ elements:
 \noindent
 $P_n^i$ represents $i$ repetitions of the final element $P_n$ of the type expression.
 
-The abstract tuple types ending in \texttt{...} correspond to variadic methods, which
+Abstract tuple types ending in \texttt{...} correspond to variadic methods, which
 provide convenient interfaces for tasks like concatenating any number of arrays.
 Multiple dispatch has been formulated as dispatch on tuple types before \cite{Leavens1998}.
 This formulation has the advantage that \emph{any} type that is a subtype of a
@@ -347,8 +347,7 @@ does not correctly represent the result.
 %if \texttt{C} is invariant.
 The correct result would be the union of all types \texttt{C\{}$T$\texttt{\}}
 where $T\leq S$.
-Interestingly, there is again a corresponding need for such types in method
-dispatch.
+There is again a corresponding need for such types in method dispatch.
 Often one has, for example, a method that applies to arrays of any
 kind of integer (\texttt{Array\{Int32\}}, \texttt{Array\{Int64\}}, etc.).
 These cases can be expressed using a \texttt{UnionAll} connective, which denotes
@@ -404,7 +403,7 @@ The following features would probably be fairly straightforward to add:
 \begin{itemize}
 \item Structurally subtyped records
 \item $\mu$-recursive types (regular trees)
-\item Regular types (allowing \texttt{...} in any position)
+\item General regular types (allowing \texttt{...} in any position)
 \end{itemize}
 \end{singlespace}
 
@@ -722,7 +721,7 @@ either this or that''):
 \vspace{-3ex}
 \begin{singlespace}
 \begin{align*}
-&\texttt{Tuple\{Vector\{Int\},Vector\{Vector\{Int\}\},Vector\{Int\}\},Vector\{Int\}\}}\ <\ \\
+&\texttt{Tuple\{Vector\{Int\},Vector\{Vector\{Int\}\},Vector\{Int\},Vector\{Int\}\}}\ <\ \\
 &\hspace{4ex}\exists\ S<:\texttt{Real}\ .\ \texttt{Tuple\{Union\{Vector\{}S\}\texttt{,Vector\{Vector\{}S\texttt{\}\}\}...\}}
 \end{align*}
 \end{singlespace}
@@ -983,7 +982,7 @@ In the Julia library ecosystem, method ambiguities are unfortunately
 common.
 Library authors have been forced to add many tedious and redundant
 disambiguating definitions.
-However most ambiguities have been mere nuisances rather than serious
+Most ambiguities have been mere nuisances rather than serious
 problems.
 A representative example is libraries that add new array-like
 containers.
@@ -991,8 +990,8 @@ Two such libraries are Images and DataArray (an array designed to
 hold statistical data, supporting missing values).
 Each library wants to be able to interoperate with other array-like
 containers, and so defines e.g.\ \texttt{+(::Image, ::AbstractArray)}.
-This definition is ambiguous with \texttt{+(::AbstractArray, ::DataArray)}.
-% TODO clarify why ambiguous
+This definition is ambiguous with \texttt{+(::AbstractArray, ::DataArray)}
+for arguments of type \texttt{Tuple\{Image, DataArray\}}.
 However in practice Images and DataArrays are not used together, so
 worrying about this is a bit of a distraction.
 Giving a run time error forcing the programmer to clarify intent
@@ -1067,7 +1066,7 @@ to simulate a kind of multiple inheritance.
 At a certain point in the development of Julia's standard library,
 it become apparent that there were object properties that it would be
 useful to dispatch on, but that were not reflected in the type hierarchy.
-For example, the array type hierarchy distinguished dense and sparse
+For example, the array type hierarchy distinguishes dense and sparse
 arrays, but not arrays whose memory layout is fully contiguous.
 This is important for algorithms that run faster using a single
 integer index instead of a tuple of indexes to reference array elements.
@@ -1087,6 +1086,8 @@ linearindexing(A::Array) = LinearFast()
 \end{singlespace}
 
 \noindent
+This allows describing the linear indexing performance of a type by adding
+a method to \texttt{linearindexing}.
 An algorithm can consume this information as follows:
 
 \begin{singlespace}
@@ -1469,6 +1470,7 @@ It is even possible to define a ``nominal arrow'' type, which uses this
 mechanism to impose a classification on functions based on argument and
 return types:
 
+\begin{samepage}
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
 immutable Arrow{A,B}
@@ -1478,6 +1480,7 @@ end
 call{A,B}(a::Arrow{A,B}, x::A) = a.f(x)::B
 \end{lstlisting}
 \end{singlespace}
+\end{samepage}
 
 \noindent
 Calling an \texttt{Arrow} will yield a no-method error if the argument
@@ -1700,6 +1703,18 @@ or limit specialization (e.g.\ \cite{Dragos:2009:CGT:1565824.1565830}).
 % it's interesting to note that java generics did not originally support
 % types like int and float as parameters. in T.C. those are practically
 % the only types you want to support!
+
+\iffalse
+\subsection{Method changes}
+% TODO
+You can always specialize on constants, but you might want to specialize
+on the current state of something that changes.
+This is really difficult to do.
+A system for adding methods as code is loaded provides this.
+Method tables can be seen as elaborate mutable hash tables that come with
+a protocol for keeping the system consistent under changes.
+\fi
+
 
 \subsection{Performance predictability}
 
