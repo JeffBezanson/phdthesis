@@ -702,6 +702,9 @@ more constrained than a type where variables appear only once:
 \exists\ T\ .\ \texttt{Pair}\{T,T\}\ <\ \exists\ T\ .\ \exists\ S\ .\ \texttt{Pair}\{T,S\}
 \]
 
+% TODO: if T=S=Any the types are equal, so the algorithm is being conservative here.
+% however this is exactly what we want for diagonal dispatch~\ref{sec:diagonal}
+
 \noindent
 However with sufficiently tight bounds that relationship no longer holds
 (here $x$ is any type):
@@ -733,6 +736,25 @@ And the algorithm understands that tuples distribute over unions:
 \[
 \texttt{Tuple\{Union\{A,B\},C\}}\ =\ \texttt{Union\{Tuple\{A,C\},Tuple\{B,C\}\}}
 \]
+
+% TODO decide whether to include this
+\iffalse
+\subsubsection{Pseudo-contravariance}
+
+Bounded existential types are contravariant in their lower bounds.
+However, the set denotations of our types give us that
+$(\exists\ T>:X\ .\ T) = \texttt{Any}$.
+By interposing an invariant constructor, we obtain a kind of contravariance:
+\[
+(\exists\ T>:X\ .\ \texttt{Ref}\{T\}) \leq (\exists\ T>:Y\ .\ \texttt{Ref}\{T\}) \implies Y\leq X
+\]
+This ability to ``flip'' types between sides of $\leq$ is one of the keys to
+the undecidability of subtyping with bounded quantification~\cite{Pierce1994131}.
+We conjecture that the presence of the invariant constructor blocks
+undecidability in our case.
+Types like this may be useful for describing nominal arrow types
+(see section~\ref{sec:nominalarrows}).
+\fi
 
 \subsubsection{Related work}
 
@@ -1398,6 +1420,7 @@ libraries for technical computing.
 
 
 \subsection{Possible solutions}
+\label{sec:nominalarrows}
 
 %identity-typing
 The general lack of sharing of generic function types suggests the first

@@ -78,6 +78,8 @@ end
 but the part that selects a matrix type can't be abstracted away.
 we want to be able to write solve(factorize(M), x).
 
+% TODO: or tagged unions, but then you have to handle every case
+
 %... no wonder people use prepackaged version of this functionality
 Given these constraints, the traditional design of technical
 computing systems makes sense: pre-generate a large number of
@@ -133,10 +135,13 @@ Usually changing a language's type system is a momentous event,
 but in the analysis-focused perspective the compiler can evolve
 rapidly, with ``as thoroughly as possible'' handling more cases
 all the time.
-Although we will not discuss it much, this approach is still
-compatible with static typing.
+This approach is still compatible with static typing, although we will not
+discuss it much.
 Nothing stops us from picking a well-defined subset of the system,
 or a separate type system, to give errors about.
+
+The notion of ``as thorough as possible'' analysis is formalized
+by domain theory.
 
 %Instead of a split between static and dynamic resolution, we can
 %instead focus on program \emph{analysis}.
@@ -161,17 +166,17 @@ For example, given a program computing the factorial function, we
 want a process by which we can assign the meaning ``factorial'' to it.
 This led to the invention of domain theory, which can be interpreted
 as modeling the behavior of a program without running it.
-A ``domain'' in this theory is a partial order of sets of values that a
+A ``domain'' is essentially a partial order of sets of values that a
 program might manipulate.
-Domain theory models computation as follows: a program starts with no
+The model works as follows: a program starts with no
 information, the lowest point in the partial order (``bottom'').
 Computation steps accumulate information, gradually moving higher through
 the order.
-The advantage of this model, in essence, is that it provides a
-way to think about the meaning of a program without running the program.
-Even the ``result'' of a non-terminating program has a representation ---
-the bottom element.
-Other elements of the partial order might refer to intermediate results.
+This model provides a way to think about the meaning of a program without
+running the program.
+Even the ``result'' of a non-terminating program has a representation
+(the bottom element).
+%Other elements of the partial order might refer to intermediate results.
 
 The idea of ``running a program without running it'' is of great interest
 in compiler implementation.
@@ -185,13 +190,12 @@ primitive operations in the language based on how they transform
 elements of this lattice.
 Then an input program can be executed, in an approximate sense, until
 it converges to a fixed point.
-% TODO should be a full example
-For example, given a program that outputs an integer, we might decide
-that we only care whether this integer is even or odd.
-Then our posets are the even and odd integers, and we will classify operations
-in the program according to whether they are evenness-preserving,
-evenness-inverting, always even, always odd, of uncertain evenness,
-etc. % TODO figure
+%For example, given a program that outputs an integer, we might decide
+%that we only care whether this integer is even or odd.
+%Then our posets are the even and odd integers, and we will classify operations
+%in the program according to whether they are evenness-preserving,
+%evenness-inverting, always even, always odd, of uncertain evenness,
+%etc.
 Most modern compilers use a technique like this
 (sometimes called abstract interpretation \cite{abstractinterp})
 to semi-decide
@@ -208,29 +212,28 @@ value is never used, and so on.
 %think of as type \emph{checking}.
 
 Given the general undecidability of questions about programs, analyses
-like these are \emph{conservative} in nature.
-For example, if our goal is to warn programmers about use of uninitialized
+like these are \emph{conservative}.
+If our goal is to warn programmers about use of uninitialized
 variables, we want to be ``better safe than sorry'' and print a warning
 if such a use \emph{might} occur.
 Such a use corresponds to any lattice element greater than or equal to
 the element representing ``uninitialized''.
 Such conservative analyses are the essence of compiler transformations
 for performance (optimizations): we only want to perform an optimization
-if the program property it relies on holds for sure, and not if there is
-any uncertainty.
+if the program property it relies on holds for sure.
+% and not if there is any uncertainty.
 
 The generality of this approach makes it a kind of ``ur type system'':
 we can discover a large variety of program properties as long as we are
 willing to accept some uncertainty.
-Of course, many programmers and language designers prefer to maximize
-safety, leading to different approaches that trade away some precision
-(e.g. syntactic type systems such as those in the ML language
-family \cite{hindley1969principal, MLtypeinf}).
+%Of course, many programmers and language designers prefer to maximize
+%safety, leading to different approaches that trade away some precision
+%(e.g. syntactic type systems such as those in the ML language
+%family \cite{hindley1969principal, MLtypeinf}).
 But if static guarantees are not the priority, or if a language considers
-itself unconcerned with ``types'', then we can take the domain-theoretic
-model as our type system.
-In some sense, it is our type system whether we like it or not
-(as implied by \cite{scott1976data})!
+itself unconcerned with ``types'', then the domain-theoretic model is
+still our type system in some sense, whether we like it or not
+(as implied by \cite{scott1976data}).
 
 %- make it easier to ``follow the lattice''
 % analyses don't work as well with programs not written to be
@@ -241,10 +244,60 @@ In some sense, it is our type system whether we like it or not
 % gain, but there is.
 % there are run time things, and just flow-sensitive things
 
-%relationship between programs and domains
+\subsection{Programs and domains}
 
 % - checking isbidiag() vs. having a type
 % - checking every array elt for integer - maybe for ^ function
+
+Program analyses of this kind have been applied to high-level
+languages many times.
+The common pitfall is that the analysis can easily \emph{diverge}
+for programs that make distinctions not modeled by the lattice.
+
+Consider the following program that repeatedly applies elementwise
+exponentiation (\texttt{.\^}) to an array:
+
+% TODO: what should `f` be?
+% maybe A = [sum(A.^A)]
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+A = [n] :: Array{Int}
+for i = 1:niter
+    A = f(A .^ A)
+end
+return A
+\end{lstlisting}
+\end{singlespace}
+
+\noindent
+We will try to analyze this program using the lattice in figure~\ref{fig:arraylattice}.
+
+% TODO maybe add Union(Array{Int},Array{BigInt}) to this
+\begin{figure}[!t]
+\begin{center}
+\begin{tikzpicture}[node distance=2cm]
+\node(top)   {$\top$};
+\node(Array)         [below=0.5cm of top] {\texttt{Array}};
+\node(ArrayInteger)  [below=0.5cm of Array] {$\exists\ T<:\texttt{Integer}\ \texttt{Array\{T\}}$};
+\node(ArrayInt)      [below left=1cm of ArrayInteger] {\texttt{Array\{Int\}}};
+\node(ArrayBigInt)   [below right=1cm of ArrayInteger] {\texttt{Array\{BigInt\}}};
+\node(ArrayFloat)    [right=1.25cm of ArrayBigInt] {\texttt{Array\{Float\}}};
+\node(bot)   [below=4.5cm of top] {$\bot$};
+\draw(top) -- (Array);
+\draw(Array) -- (ArrayInteger);
+\draw(ArrayInteger) -- (ArrayInt);
+\draw(ArrayInteger) -- (ArrayBigInt);
+\draw(Array) -- (ArrayFloat);
+\draw(ArrayInt) -- (bot);
+\draw(ArrayBigInt) -- (bot);
+\draw(ArrayFloat) -- (bot);
+\end{tikzpicture}
+\end{center}
+\caption{
+  A lattice of array types
+}
+\label{fig:arraylattice}
+\end{figure}
 
 \iffalse
 function diag(a)
@@ -263,6 +316,108 @@ function diag(a)
     end
 end
 \fi
+
+The result depends strongly on how the \texttt{.\^} and \texttt{\^} functions
+are defined (assume that \texttt{.\^} calls \texttt{\^} on every element of an array).
+We will provide the user-friendly behavior of automatically switching to the
+\texttt{BigInt} type on overflow.
+The code might look like this:
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+function ^(x, y)
+    if trunc(y) == y
+        # use repeated squaring
+        if overflows(x, y)
+            x = widen(x)
+        end
+        # ...
+    else
+        # floating point algorithm
+    end
+end
+
+function f(a)
+    if all(trunc(y) .== y)
+        # integer case
+    else
+        # general case
+    end
+end
+\end{lstlisting}
+\end{singlespace}
+
+Initially we know that \texttt{A} is an \texttt{Array\{Int\}}.
+Although \texttt{A} really does have this type (even if the
+type is only an artifact of the analysis), the code does not mention
+types anywhere.
+Next, the type of an element taken from \texttt{A} (\texttt{Int}) will
+flow to the \texttt{y} argument of \texttt{\^}.
+The function's behavior crucially depends on the test \texttt{trunc(y) == y}.
+It is always true for integer arguments, but it is unlikely that the
+analysis can determine this.
+Therefore \texttt{\^} might return an \texttt{Int}, \texttt{BigInt}, or
+\texttt{Float}, and we can only conclude that \texttt{A.\^{}A} is an
+\texttt{Array}.
+When function \texttt{f} is called, it performs a fairly expensive test
+to see if every element is an integer.
+Only through human reasoning about the whole program do we see that
+this test is unnecessary.
+However when the analysis considers \texttt{f} applied to type
+\texttt{Array}, our type information is likely to diverge further to
+\texttt{$\top$}, since we don't know anything about the array's elements.
+
+The problem here is that the program is not written in terms of the
+underlying value domain.
+How can we fix this?
+One solution is to add type annotations.
+But the author of the original code does not know the type of
+\texttt{A.\^{}A}, and might not even know the type of \texttt{n}.
+%%%%%  is this accurate?
+Another solution is to improve the analysis.
+But we will never finish adding cases to the compiler.
+Perhaps we can handle \texttt{trunc(y) == y}, but will we also be
+able to understand \texttt{trunc(y) == 1*y}?
+%%%%%
+Our solution is to give some simple tools to the library developer.
+In Julia, one can implement \texttt{\^} and \texttt{f} as follows:
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+function ^(x, y::Integer)
+    if overflows(x, y)
+        x = BigInt(x)
+    end
+    # ...
+end
+
+function f{T<:Integer}(a::Array{T})
+    # integer case
+end
+
+function f(a::Array)
+    # general case
+end
+\end{lstlisting}
+\end{singlespace}
+
+\noindent
+Now, from the exact same source program, we can conclude that only
+\texttt{\^{}(x, y::Integer)} is applicable, so we know that the
+result of \texttt{A.\^{}A} is some integer array.
+The library writer can then intercept this case with the definition
+\texttt{f\{T<:Integer\}(a::Array\{T\})}\footnote{
+Although the signature of this method looks exactly like a type we
+might statically infer, this is a coincidence.
+Method applicability is determined dynamically.
+}, avoiding the check \texttt{all(trunc(y) .== y)}.
+Since we started with an integer array, the whole program behaves
+exactly as before.
+
+
+% also the issue of reverse flow
+
+
 
 \iffalse
 \begin{tikzpicture}[node distance=2cm]
@@ -294,7 +449,6 @@ end
 
 
 
-
 % The loss of encapsulation due to multimethods weighed in \cite{binarymethods}
 % is less of a problem for technical computing, and in some cases even
 % advantageous.
@@ -302,16 +456,12 @@ end
 
 \section{Dispatch systems}
 
-% message of the table: you have to know a really large amount to
-% pick which one of these to use. there is no best one.
-% ``domain'' languages are all about avoiding knowledge of this table.
-
 It would be unpleasant if every piece of every program we wrote were forced
 to do only one specific task. Every time we wanted to do something slightly
 different, we'd have to write a different program. But if a language
 allows the same program element to do different things at different times,
 we can write whole classes of programs at once. This kind of capability is
-one of the main reasons \emph{object-oriented} programming is popular: it
+one of the main reasons object-oriented programming is popular: it
 provides a way to automatically select different behaviors according to
 some structured criteria
 (we use the non-standard term ``criteria'' deliberately, in order
@@ -650,6 +800,11 @@ Attributes of several code selection features. S.C.\ stands for separate compila
 %n = # arguments
 %m = amount of data in one argument
 
+% message of the table: you have to know a really large amount to
+% pick which one of these to use. there is no best one.
+% ``domain'' languages are all about avoiding knowledge of this table.
+
+
 Table~\ref{dispatchtable} compares nine language features.
 Each provides some sort of control flow indirection, packaged into a
 structure designed to facilitate reasoning (ideally human reasoning,
@@ -675,6 +830,10 @@ was quite a while before we discovered these papers and noticed the
 overlap. However if one substitutes ``symbolic expression'' for
 ``XML document'', the similarity becomes clearer.
 
+% our language is in many ways dual to ML. that family shuns subtyping,
+% but in the lattice theoretic model it's inescapable.
+%\cite{hindley1969principal, MLtypeinf}
+
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
 const ViewIndex = Union(Int, Colon, Range{Int}, UnitRange{Int},
@@ -693,8 +852,10 @@ The term \emph{polymorphism} refers generally to reuse of code or data
 structures in different contexts.
 A further distinction is often made between \emph{parametric} polymorphism
 and \emph{ad hoc} polymorphism.
-Parametric polymorphism refers to reusing the \emph{same} code for
-different purposes, while ad hoc polymorphism refers to selecting
+Parametric polymorphism refers to code that is reusable for many types
+because its behavior does not depend on argument types.
+%reusing the \emph{same} code for different purposes, while
+Ad hoc polymorphism refers to selecting
 \emph{different} code for different circumstances.
 
 %% Both forms occur frequently in technical computing.
@@ -712,6 +873,15 @@ different purposes, while ad hoc polymorphism refers to selecting
 %% send a network message instead.
 %% At a lower level, the machine code for \texttt{A[i]} needs to be
 %% different depending on the array's element type.
+
+In theory, a parametrically polymorphic function works on all data
+types.
+In practice, this can be achieved by forcing a uniform representation of
+data such as pointers, which can be handled by the same code regardless of
+what kind of data is pointed to.
+However this kind of representation is not the most efficient, and
+for good performance specialized code for different types must be
+generated.
 
 The idea of specialization unites parametric and ad hoc polymorphism.
 Beginning with a parametrically polymorphic function, one can imagine
@@ -733,22 +903,14 @@ entirely different behavior. But at this point separate ad hoc polymorphism
 is no longer necessary; we are using a single overloading feature for
 everything.
 
-
+\iffalse
 Parametric polymorphism describes code that works for any object precisely
 because it does not do anything meaningful to the object, for example the
 identity function. In contrast, programming with tagged data (e.g.
 symbolic expression systems, XML) permits code to work for any object
 because every object has the same structure, allowing meaningful
 operations.
-
-In theory, a parametrically polymorphic function works on all data
-types.
-In practice, this can be achieved by forcing a uniform representation of
-data such as pointers, which can be handled by the same code regardless of
-what kind of data is pointed to.
-However this kind of representation is not the most efficient, and
-for good performance specialized code for different types must be
-generated.
+\fi
 
 \subsection{Separate compilation vs.\ performance}
 
