@@ -707,7 +707,7 @@ et.al. \cite{lawn181}:
 \iffalse
 Multiple dispatch on special matrices
 
-29 LAPACK types via composition of 9 types, issue 8240
+28 LAPACK types via composition of 9 types, issue 8240
 
 storage formats:
 Matrix
@@ -1424,8 +1424,8 @@ than built-in functions in environments like MATLAB~\cite{matlab}.
 Here we collect a few examples.
 
 Special functions (e.g.\ Bessel functions, the error function, etc.) are
-often evaluated using polynomial approximations.
-Traditional libraries usually read polynomial coefficients from arrays.
+typically evaluated using polynomial approximations.
+Traditional libraries often read polynomial coefficients from arrays.
 When we wrote some of these functions in Julia we used a macro
 to expand the polynomials in line, storing the coefficients in the
 instruction stream, leading to better performance.

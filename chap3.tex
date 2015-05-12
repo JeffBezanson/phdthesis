@@ -7,6 +7,9 @@ design space of programming languages.
 It will discuss how the priorities introduced in section~\ref{sec:tcproblem}
 relate to type systems and dispatch systems.
 % concludes with an intro to julia etc.
+Our lofty goal is to preserve the flexibility and ease of popular high level
+languages, while adding the expressiveness needed for performant generic
+programming.
 
 % it is important to bear in mind the many meanings of the word ``type''
 % often people use it just when they want a different ``kind of thing'',
@@ -35,6 +38,7 @@ end
 \end{lstlisting}
 \end{singlespace}
 
+\noindent
 The code returns different structured matrix types based on the input
 data.
 % TODO a bit more about how it's used
@@ -61,9 +65,7 @@ This kind of computing is function-oriented.
 % other examples: CSC vs. CSR
 
 Let's try a different abstraction mechanism: templates and overloading.
-% TODO
-
-then you can write
+That would allow us to write code like this:
 
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
@@ -75,8 +77,11 @@ end
 \end{lstlisting}
 \end{singlespace}
 
-but the part that selects a matrix type can't be abstracted away.
-we want to be able to write solve(factorize(M), x).
+\noindent
+Here, structured matrix types are used to immediately select an
+implementation of \texttt{solve}.
+But the part that selects a matrix type can't be abstracted away.
+We would like to be able to write \texttt{solve(factorize(M), x)}.
 
 % TODO: or tagged unions, but then you have to handle every case
 
@@ -230,8 +235,8 @@ willing to accept some uncertainty.
 %safety, leading to different approaches that trade away some precision
 %(e.g. syntactic type systems such as those in the ML language
 %family \cite{hindley1969principal, MLtypeinf}).
-But if static guarantees are not the priority, or if a language considers
-itself unconcerned with ``types'', then the domain-theoretic model is
+Even if static guarantees are not the priority, or if a language considers
+itself unconcerned with ``types'', the domain-theoretic model is
 still our type system in some sense, whether we like it or not
 (as implied by \cite{scott1976data}).
 
@@ -245,6 +250,7 @@ still our type system in some sense, whether we like it or not
 % there are run time things, and just flow-sensitive things
 
 \subsection{Programs and domains}
+\label{sec:programsanddomains}
 
 % - checking isbidiag() vs. having a type
 % - checking every array elt for integer - maybe for ^ function
@@ -402,78 +408,81 @@ end
 \end{singlespace}
 
 \noindent
-Now, from the exact same source program, we can conclude that only
+Now, from the same source program, we can conclude that only
 \texttt{\^{}(x, y::Integer)} is applicable, so we know that the
 result of \texttt{A.\^{}A} is some integer array.
-The library writer can then intercept this case with the definition
+The library writer can intercept this case with the definition
 \texttt{f\{T<:Integer\}(a::Array\{T\})}\footnote{
-Although the signature of this method looks exactly like a type we
-might statically infer, this is a coincidence.
+Although the signature of this method happens to match one of the
+lattice elements in figure~\ref{fig:arraylattice}, this is a coincidence.
 Method applicability is determined dynamically.
 }, avoiding the check \texttt{all(trunc(y) .== y)}.
 Since we started with an integer array, the whole program behaves
 exactly as before.
 
+Notice that we have neither added restrictions, nor asked for
+redundant type annotations.
+All we did is add a dispatch system, and encourage people to use it.
+Using dispatch in this way is optional, but comes with benefits for
+structuring programs.
+For example, the function \texttt{f} above might perform much better
+on integer arrays.
+We can implement this case separately from the checks and extra logic
+that might be needed for other data types, leading to cleaner code
+and also making the core definition of \texttt{f} smaller and therefore
+more likely to be inlined.
 
-% also the issue of reverse flow
+The original version of this code can also be written in our system,
+though it probably will not perform as well.
+However, it might still perform better than one would expect, since the
+functions that it calls are in turn defined using the same dispatch
+mechanism.
+This mechanism is expressive enough to be used down to the lowest levels of
+the system, providing leverage one would not get from an object system
+or performance ``add on''.
 
+% two forms of ``gradualism'': adding methods and adding types to arguments
 
+% reverse flow
+Having type information attached to user or library definitions
+increases the value of \emph{reverse} data flow analysis.
+One way to describe why analyses of highly dynamic code diverge
+is that everything in the program monotonically increases the
+number of cases we need to consider; there is no way to
+narrow possibilities.
+But if we know that a function is only defined on type \texttt{T},
+every value that passes through its argument list is narrowed to
+\texttt{T}.
 
-\iffalse
-\begin{tikzpicture}[node distance=2cm]
-\title{A coarse lattice of array types.}
-\node(top)   {$\top$};
-\node(Dense)  [below left=0.8cm of top] {\texttt{Dense}};
-\node(Sparse) [below right=0.8cm of top] {\texttt{Sparse}};
-\node(bot)   [below=1.6cm of top] {$\bot$};
-\draw(top) -- (Dense);
-\draw(top) -- (Sparse);
-\draw(Dense) -- (bot);
-\draw(Sparse) -- (bot);
-\end{tikzpicture}
-
-\begin{tikzpicture}[node distance=2cm]
-\title{A coarse lattice of array types.}
-\node(top)   {$\top$};
-\node(Aint)  [below=0.5cm of top] {\texttt{SomeArray\{Int\}}};
-\node(Dense)  [below left=1cm of Aint] {\texttt{Dense\{Int\}}};
-\node(Sparse) [below right=1cm of Aint] {\texttt{Sparse\{Int\}}};
-\node(bot)   [below=2.8cm of top] {$\bot$};
-\draw(top) -- (Aint);
-\draw(Aint) -- (Dense);
-\draw(Aint) -- (Sparse);
-\draw(Dense) -- (bot);
-\draw(Sparse) -- (bot);
-\end{tikzpicture}
-\fi
-
-
-
-% The loss of encapsulation due to multimethods weighed in \cite{binarymethods}
-% is less of a problem for technical computing, and in some cases even
-% advantageous.
-
+% next we will consider how this dispatch system fits in
 
 \section{Dispatch systems}
 
 It would be unpleasant if every piece of every program we wrote were forced
-to do only one specific task. Every time we wanted to do something slightly
-different, we'd have to write a different program. But if a language
-allows the same program element to do different things at different times,
-we can write whole classes of programs at once. This kind of capability is
-one of the main reasons object-oriented programming is popular: it
-provides a way to automatically select different behaviors according to
-some structured criteria
+to do only one specific task.
+Every time we wanted to do something slightly different, we'd have to write
+a different program.
+But if a language allows the same program element to do different things at
+different times, we can write whole classes of programs at once.
+This kind of capability is one of the main reasons object-oriented programming
+is popular: it provides a way to automatically select different behaviors
+according to some structured criteria
 (we use the non-standard term ``criteria'' deliberately, in order
 to clarify our point of view, which is independent of any particular
 object system).
 
-In class-based OO there is essentially \emph{no way} to create an operation
-that dispatches on existing types (the expression problem \cite{wadler1998expression}).
-This clearly
-does not match technical computing, where most programs deal with the same
-few types (e.g. number, array), and might sensibly want to write new operations
-that dispatch on them.
+However in class-based OO there is essentially \emph{no way} to create an
+operation that dispatches on existing types.
+This has been called ``the expression problem''~\cite{wadler1998expression}).
+While many kinds of object-oriented programs can ignore or work around
+this problem, technical programs cannot.
+In this domain most programs deal with the same
+few types (e.g. numbers and arrays), and might sensibly want to write new
+operations that dispatch on them.
+
+% The loss of encapsulation due to multimethods weighed in \cite{binarymethods}
+% is less of a problem for technical computing, and in some cases even
+% advantageous.
 
 %Somewhat unfortunately, the term \emph{object-oriented} has many
 %connotations, and the \emph{object-oriented} methodology tries to address
@@ -484,8 +493,8 @@ that dispatch on them.
 
 \subsection{A hierarchy of dispatch}
 
-The sophistication of the available ``selection criteria'' account for a
-large part of the perceived ``power'' or leverage provided by a language.
+%The sophistication of the available ``selection criteria'' account for a
+%large part of the perceived ``power'' or leverage provided by a language.
 In fact it is possible to illustrate a hierarchy of such mechanisms.
 As an example, consider a simple simulation, and how it can be written
 under a series of increasingly powerful paradigms. First, written-out
@@ -509,10 +518,12 @@ end
 \end{singlespace}
 
 We can see how this would get tedious as we add more kinds of animals
-and more behaviors. Another problem is that the animal behavior is
+and more behaviors.
+Another problem is that the animal behavior is
 implemented directly inside the control loop, so it is hard to see
 what parts are simulation control logic and what parts are animal
-behavior. Adding a simple object system leads to a nicer implementation
+behavior.
+Adding a simple object system leads to a nicer implementation
 \footnote{A perennial problem with simple examples is that better
 implementations often make the code longer.}:
 
@@ -541,18 +552,17 @@ end
 \end{verbatim}
 \end{singlespace}
 
-Here all of the simulation's animal behavior has been essentially
+Here all of the simulation's animal behavior has been
 compressed into a single program point: \texttt{a.encounter(b)}
 leads to all of the behavior by selecting an implementation based
-on the first argument, \texttt{a}. This kind of criterion is
-essentially indexed lookup; we can imagine that \texttt{a} is
-simply an integer index into a table of operations.
+on the first argument, \texttt{a}.
+This kind of criterion is essentially indexed lookup; we can imagine
+that \texttt{a} could be an integer index into a table of operations.
 
 The next enhancement to ``selection criteria'' adds a hierarchy
-of behaviors, to provide further opportunities to avoid
-repetition:
-
-\todo[inline]{has  $<:$  been defined yet?}
+of behaviors, to provide further opportunities to avoid repetition.
+Here \texttt{A<:B} is used to declare a subclass relationship; it
+says that an \texttt{A} is a kind of \texttt{B}:
 
 \begin{singlespace}
 \begin{verbatim}
@@ -590,11 +600,13 @@ more structure: every \texttt{Animal} has the \texttt{nearby}
 method, and can inherit a general-purpose implementation.
 
 This brings us roughly to the level of most popular object-oriented
-languages. But in this example still more can be done. Notice that
-in the first step to objects we replaced one level of \texttt{if}
-statements with method lookup. However, inside of these methods
-a structured set of \texttt{if} statements remains. We can
-replace these by adding another level of dispatch.
+languages.
+But in this example still more can be done.
+Notice that in the first step to objects we replaced one level of \texttt{if}
+statements with method lookup.
+However, inside of these methods a structured set of \texttt{if} statements
+remains.
+We can replace these by adding another level of dispatch.
 
 \begin{singlespace}
 \begin{verbatim}
@@ -613,10 +625,9 @@ end
 We now have a \emph{double dispatch} system, where a method call
 uses two lookups, first on the first argument and then on the
 second argument.
-
 This syntax might be considered a bit nicer, but the design
-clearly begs a question: why is $n=2$ special?
-It isn't, and we could clearly consider even more method arguments as part of
+begs a question: why is $n=2$ special?
+It isn't, and we could consider even more method arguments as part of
 dispatch.
 But at that point, why is the first argument special?
 Why separate methods in a special way based on the first argument?
@@ -633,11 +644,11 @@ end
 class Wolf <: Animal
 end
 
-nearby(a: Animal) = # search
-encounter(a: Rabbit, b: Wolf) = run(a)
+nearby(a: Animal)               = # search
+encounter(a: Rabbit, b: Wolf)   = run(a)
 encounter(a: Rabbit, b: Rabbit) = mate(a,b)
-encounter(a: Wolf, b: Rabbit) = eat(a, b)
-encounter(a: Wolf, b: Wolf) = follow(a, b)
+encounter(a: Wolf, b: Rabbit)   = eat(a, b)
+encounter(a: Wolf, b: Wolf)     = follow(a, b)
 
 while running
     for a in animals
@@ -661,18 +672,21 @@ The shift to thinking about combinations of objects is fairly revolutionary.
 Many interesting properties only apply to combinations of objects, and not
 individuals.
 We are also now free to think of more exotic kinds of combinations.
-
 We can define a method on \emph{any number} of objects:
 
 \begin{verbatim}
 encounter(ws: Wolf...) = pack(ws)
 \end{verbatim}
 
-\todo[inline]{We can also do diagonal dispatch:}
+\noindent
+We can also abstract over more subtle properties, like whether the
+arguments are two animals of the same type:
 
 \begin{verbatim}
 encounter{T<:Animal}(a: T, b: T) = mate(a, b)
 \end{verbatim}
+
+% TODO more
 
 
 \subsection{Predicate dispatch}
@@ -685,9 +699,8 @@ encounter{T<:Animal}(a: T, b: T) = mate(a, b)
 
 Predicate dispatch is a powerful object-oriented mechanism that allows
 methods to be selected based on arbitrary predicates \cite{ErnstKC98}.
-It is, in some
-sense, the most powerful \emph{possible} dispatch system, since any
-computation may be done as part of method selection.
+It is, in some sense, the most powerful \emph{possible} dispatch system,
+since any computation may be done as part of method selection.
 Since a predicate denotes a set (the set of values for which it is true),
 it also denotes a set-theoretic type.
 Some type systems of this kind, notably that of Common
@@ -720,10 +733,9 @@ Another approach would be to separate predicates into a second ``level'' of the
 type system.
 The compiler would combine methods with the same ``first level'' type, and then
 generate branches to evaluate the predicates.
-Such a system would be very useful, and could be
-% TODO cite, as this has probably been done
+Such a system would be useful, and could be
 combined with a language like Julia or, indeed, most object-oriented
-languages.
+languages (this has been done for Java~\cite{Millstein:2009:EMP:1462166.1462168}).
 However this comes at the expense of making predicates second-class
 citizens of the type system.
 
@@ -732,6 +744,11 @@ we seem to be up against a fundamental obstacle: some sets of values are
 simply more robust under evaluation than others.
 Programs that map integers to integers abound, but programs that map, say,
 even integers to even integers are rare to the point of irrelevance.
+With predicate dispatch, the first version of the code in
+section~\ref{sec:programsanddomains} could have been rearranged to use
+dispatch instead of \texttt{if} statements.
+This might have advantages for readability and extensibility, but not for
+performance.
 
 
 \subsection{Symbolic programming}
@@ -740,35 +757,48 @@ There has always been a divide between ``numeric'' and ``symbolic''
 languages in the world of technical computing.
 To many people the distinction is fundamental, and we should happily live
 with both kinds of languages.
-But if one insists on an answer as to which approach
-is the right one, then the answer is: \todo{Love it!}  symbolic.
-% programs are ultimately symbolic artifacts
+But if one insists on an answer as to which approach is the right one,
+then the answer is: symbolic.
+Programs are ultimately symbolic artifacts.
+Computation is limited only by our ability to describe it, and
+symbolic tools are needed to generate, manipulate, and query these
+descriptions.
+For example in numerical computing, a successful approach has been to
+design high-performance kernels for important problems.
+From there, the limiting factor is knowing \emph{when} to use each
+kernel, which can depend on many factors from problem structure to
+data size.
+Symbolic approaches can be used to automate this.
+We will see some examples of this in chapter~\ref{chap:casestudies}.
 
 Systems based on symbolic rewrite rules arguably occupy a further tier of
-dispatch sophistication. In these systems, you can dispatch on essentially
-anything, including arbitrary values and structures. These systems are
-typically powerful enough to concisely define the kinds of behaviors we
-are interested in.
+dispatch sophistication.
+In these systems, you can dispatch on essentially anything, including arbitrary
+values and structures.
+Depending on details, their power is roughly equal to that of predicate
+dispatch.
+%These systems are typically powerful enough to concisely define the kinds of
+%behaviors we are interested in.
 
 However, symbolic programming lacks data abstraction: the concrete
-representations of values are exposed to the dispatch system
-(e.g. there is no difference between being a list and being something
-represented as a list).
-\todo{Wish you would say more!}
+representations of values are exposed to the dispatch system.
+In such a system, there is no difference between being a list and being
+something \emph{represented} as a list.
+If the representation of a value changes, the value can be inadvertently
+``captured'' by a dispatch rule that was not intended to apply to it,
+violating abstraction.
 
 
 \subsection{Choices, choices}
+\label{sec:choices}
 
 \newcommand{\chk}{{\Large \checkmark}}
-
-\makesavenoteenv{tabular}
-\makesavenoteenv{table}
 
 \begin{table}[!t]
 \begin{center}
 \begin{tabular}{|c||c|c|c|c|c|c|c|}
 \hline
-               & Domain &  Dynamic  & Spec. & ADTs & Pattern & Safety & S.C. \\
+               & Domain &  Dynamic  & Spec. & ADTs & Pattern & S.T.S. & S.C. \\
 \hline
 \hline
 Methods        & $O(1)$   &         &       & \chk &         & \chk   & \chk \\
@@ -783,29 +813,38 @@ Closures       & $O(1)$   & \chk    &       &      &         & \chk   & \chk \\
 \hline
 Multimethods   & $O(n)$   & \chk    &       & \chk &         & ?      & ?    \\
 \hline
-Predicates     & $O(n m)$ & \chk    &       & \chk &  \footnote{Depending on design details.}  & ? & ? \\
+Predicates     & $O(n m)$ & \chk    &       & \chk &  \small{1}  & ? & ? \\
 \hline
-Typeclasses    & $O(m)$   & \footnote{When combined with existential types.}    &  \footnote{Optionally, with declarations.}        & \chk &   \footnote{With the \texttt{FlexibleInstances} option.}  & \chk & \chk \\
+Typeclasses    & $O(m)$   & \small{2}    &  \small{3}        & \chk &     & \chk & \chk \\
 \hline
 Term rewriting & $O(n m)$ & \chk    &       &      & \chk    &        &      \\
 \hline
+Julia          & $O(n m)$ & \chk    & \chk  & \chk &         &        &      \\
+\hline
 \end{tabular}
 \end{center}
+\begin{singlespace}
 \caption[Attributes of code selection features]{
-Attributes of several code selection features. S.C.\ stands for separate compilation.
+\small{
+Attributes of several code selection features.
+Spec.\ stands for specialization.
+S.T.S.\ stands for statically type safe.
+S.C.\ stands for separate compilation.
+1.\ Depending on design details, 2.\ When combined with existential types,
+3.\ Optionally, with declarations,
+% no, because it can only pattern match on types
+%4.\ With the \texttt{FlexibleInstances} option.
 }
-\label{dispatchtable}
+}
+\label{table:dispatch}
+\end{singlespace}
 \end{table}
-
-%n = # arguments
-%m = amount of data in one argument
 
 % message of the table: you have to know a really large amount to
 % pick which one of these to use. there is no best one.
 % ``domain'' languages are all about avoiding knowledge of this table.
 
-
-Table~\ref{dispatchtable} compares nine language features.
+Table~\ref{table:dispatch} compares nine language features.
 Each provides some sort of control flow indirection, packaged into a
 structure designed to facilitate reasoning (ideally human reasoning,
 but often the compiler's reasoning is prioritized).
@@ -815,24 +854,49 @@ $m$ is the amount of relevant information per argument.
 $O(1)$ means each use of the feature considers basically the same
 amount of information.
 $O(n)$ is similar, but extends the process to every argument.
-$O(m)$ means that one value is considered, but its structure can be
+$O(m)$ means that one value is considered, but its structure is
 taken into account.
+``ADTs'' refers to support for abstract data types.
+Squares with question marks are either not fully understood, or too
+sensitive to design details to answer definitively.
 
 %% it may be that the ``power'' of a language is measured by the complexity
 %% of the criteria used by the language's run time dispatch mechanisms.
 
+This table illustrates how many combinations of dispatch semantics have
+been tried.
+Keeping track of these distinctions is a distraction when one is focused
+on a non-programming problem.
+Including more than one of these mechanisms makes a languge especially
+complex and difficult to learn.
+
 
 \section{Subtyping}
 
-Something about semantic subtyping and type systems for processing XML.
+So far we have seen some reasons why dispatch contributes so significantly
+to flexiblity and performance.
+However we have only actually dispatched on fairly simple properties like
+whether a value is an integer.
+How powerful should dispatch be, exactly?
+Each method signature describes some set of values to which it applies.
+Some signatures might be more specific than others.
+The theory governing such questions is subtyping.
+
+It turns out that a lot of relevant work on this has been done in the
+context of type systems for XML.
+%Something about semantic subtyping and type systems for processing XML.
 XML at first seems unrelated to numerical computing, and indeed it
 was quite a while before we discovered these papers and noticed the
-overlap. However if one substitutes ``symbolic expression'' for
-``XML document'', the similarity becomes clearer.
+overlap.
+However if one substitutes ``symbolic expression'' for ``XML document'',
+the similarity becomes clearer.
+\cite{hosoya2000xduce}
+\cite{BCF03}
 
 % our language is in many ways dual to ML. that family shuns subtyping,
 % but in the lattice theoretic model it's inescapable.
 %\cite{hindley1969principal, MLtypeinf}
+
 
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
@@ -853,7 +917,8 @@ structures in different contexts.
 A further distinction is often made between \emph{parametric} polymorphism
 and \emph{ad hoc} polymorphism.
 Parametric polymorphism refers to code that is reusable for many types
-because its behavior does not depend on argument types.
+because its behavior does not depend on argument types (for example,
+the identity function).
 %reusing the \emph{same} code for different purposes, while
 Ad hoc polymorphism refers to selecting
 \emph{different} code for different circumstances.
@@ -886,22 +951,23 @@ generated.
 The idea of specialization unites parametric and ad hoc polymorphism.
 Beginning with a parametrically polymorphic function, one can imagine
 a compiler specializing it for various cases, i.e.\ certain concrete argument
-values. These specializations could be stored in a lookup table, for use
+values.
+These specializations could be stored in a lookup table, for use
 either at compile time or at run time.
 
 Next we can imagine that the compiler might not optimally specialize
 certain definitions, and that the programmer would like to provide
 hints or hand-written implementations to speed up special cases.
-For example, imagine a function that traverses a generic array. A compiler-generated
-specialization might inline a specific array types's indexing operations, but a human
-might further realize that the loop order should be switched for certain
-arrays types based on their storage order.
+For example, imagine a function that traverses a generic array.
+A compiler-generated specialization might inline a specific array types's
+indexing operations, but a human might further realize that the loop order
+should be switched for certain arrays types based on their storage order.
 
 However, if we are going to let a human specialize a function for performance,
 we might as well allow them to specialize it for some other reason, including
-entirely different behavior. But at this point separate ad hoc polymorphism
-is no longer necessary; we are using a single overloading feature for
-everything.
+entirely different behavior.
+But at this point separate ad hoc polymorphism is no longer necessary; we are
+using a single overloading feature for everything.
 
 \iffalse
 Parametric polymorphism describes code that works for any object precisely
@@ -938,15 +1004,16 @@ public class breadth_first_search {
 \end{lstlisting}
 \end{singlespace}
 
-(other problems: primitive types int and double cannot be used,
-static parameters can only be inferred directly from arguments,
-not from constraints of other parameters. our subtyping system
-does not have this problem)
+%(other problems: primitive types int and double cannot be used,
+%static parameters can only be inferred directly from arguments,
+%not from constraints of other parameters. our subtyping system
+%does not have this problem)
 
 If, however, we are going to specialize the method, the compiler can analyze it
 using actual types from call sites, and see for itself whether the method works
-in each case (this is how C++ templates are type-checked; they are analyzed
-again for each instantiation).
+in each case.
+This is how C++ templates are type checked; they are analyzed again for each
+instantiation.
 
 It is quite interesting that performance and ease-of-use pull this design
 decision in the same direction.
@@ -986,39 +1053,38 @@ decision in the same direction.
 %% reflect on level of power: this dispatch system is both more and less
 %% powerful than previous ones in various ways.
 
+\iffalse
 
 \section{Introduction to Julia}
-
-This example will illustrate possible benefits of multiple dispatch and
-dynamic typing for mathematical computing.
-The benefits are not absolute, but notational and semantic:
-they involve code size and clarity, and the extent to which the entities
-provided by the language match a mental model of the domain.
 
 A \emph{lattice} is an algebraic structure where some pairs of elements
 satisfy a reflexive, antisymmetric, and transitive relation $\leq$.
 For purposes of this example, we will consider lattices that have
 a greatest, or \emph{top}, element ($\top$), and a least, or \emph{bottom}
-element ($\bot$). When working with lattices one often wants to compute
+element ($\bot$).
+When working with lattices one often wants to compute
 a least upper bound, or \emph{join} ($\sqcup$), or a greatest lower bound,
 or \emph{meet} ($\sqcap$).
 
-Several interesting concerns arise when modeling lattices in a programming
-language. First, the structure is very general, and so admits implementations
-for many different kinds of elements. We want to write code using
-the operators $\leq$, $\sqcup$, and $\sqcap$, and have it apply to any kind
-of lattice. Therefore some kind of overloading or object-oriented programming
-is desirable. Second, some properties apply to all lattices, and we would
+Several concerns arise when modeling lattices in a programming language.
+First, the structure is very general, and so admits implementations
+for many different kinds of elements.
+We want to write code using the operators $\leq$, $\sqcup$, and $\sqcap$, and
+have it apply to any kind of lattice.
+Therefore some kind of overloading or object-oriented programming
+is desirable.
+Second, some properties apply to all lattices, and we would
 like to avoid implementing them repeatedly.
 
 Using ``duck typing'', the problem of modeling an abstraction like lattices
-disappears almost entirely. One may simply define methods for
-$\leq$, $\sqcup$, and $\sqcap$ at any time, for any type, and that type will
-function as a lattice. That is certainly convenient, but it also fails to
-provide any reusable functionality for those defining lattices.
+disappears almost entirely.
+One may simply define methods for $\leq$, $\sqcup$, and $\sqcap$ at any time,
+for any type, and that type will function as a lattice.
+That is certainly convenient, but it also fails to provide any reusable
+functionality for those defining lattices.
 
 \begin{figure}[!t]
-\todo[inline]{what does $===$ mean here?}  
+% TODO what does $===$ mean here?
   \begin{center}
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
@@ -1050,10 +1116,10 @@ const ~$\bot$~ = BotElement()
   \caption{A small Julia library for lattices}
 \end{figure}
 
-
 Figure~\ref{julialattices} shows a small Julia library for lattices.
 It defines an abstract class \texttt{LatticeElement} that may be subclassed
 by objects that will be used primarily as elements of some lattice.
-The library also provides standard
-\texttt{LatticeElement} provides some useful default method definitions.\todo{sentence grammar?}
-\todo[inline]{Join of two incomparables in general lattices does not have to be top}
+\texttt{LatticeElement} provides some useful default method definitions.
+% TODO Join of two incomparables in general lattices does not have to be top
+
+\fi

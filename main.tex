@@ -7,17 +7,12 @@
 
 \documentclass[12pt,twoside]{mitthesis}
 \usepackage[top=1in, bottom=1.5in, left=1in, right=1in]{geometry}
-%\usepackage{lgrind}
-%\usepackage{algorithmic}
-%\usepackage{algorithm}
-\usepackage[colorinlistoftodos, textwidth=1.5\marginparwidth, shadow]{todonotes}
 \usepackage{stmaryrd}
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amsopn}
 \usepackage{amssymb}
 \usepackage{listings}
-\usepackage{footnote}
 \usepackage{url}
 \usepackage[nottoc]{tocbibind}
 \usepackage{appendix}
@@ -26,29 +21,9 @@
 \usepackage[lighttt]{lmodern}
 \usepackage{pgfplots}
 \pgfplotsset{width=5.0in,height=3.5in}
-\pagestyle{plain}
+\usetikzlibrary{positioning}
 
-\DeclareMathOperator{\find}{find}
-\DeclareMathOperator{\conform}{conform}
-\DeclareMathOperator{\subtype}{subtype}
-\DeclareMathOperator{\typeof}{typeof}
-\DeclareMathOperator{\eval}{eval}
-\DeclareMathOperator{\interpret}{interpret}
-\DeclareMathOperator{\incomplete}{incomplete}
-%\DeclareMathOperator{\choose}{choose}
-\DeclareMathOperator{\length}{length}
-\DeclareMathOperator{\recall}{recall}
-%\DeclareMathOperator{\empty}{empty}
-\DeclareMathOperator{\tail}{tail}
-\DeclareMathOperator{\Frame}{Frame}
-\DeclareMathOperator{\extend}{extend}
-\DeclareMathOperator{\super}{super}
-\DeclareMathOperator{\p}{p}
-\DeclareMathOperator{\last}{last}
-\DeclareMathOperator{\typename}{typename}
-\DeclareMathOperator{\intersect}{intersect}
-\DeclareMathOperator{\formals}{formals}
-\DeclareMathOperator{\superdecl}{super\_decl}
+\pagestyle{plain}
 
 \newcommand{\code}[1]{\texttt{#1}}
 
@@ -74,7 +49,6 @@
 \begin{document}
 
 \include{cover}
-\pagestyle{plain}
 \include{contents}
 
 \include{chap1}
