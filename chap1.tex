@@ -185,7 +185,7 @@ productivity requirements of technical computing.
       \hline
       eliminating tags                     &  self-describing data, acceptance of tags \\
       \hline
-      data hiding                          &  explicit memory layout \\
+      data hiding                          &  direct manipulation of data \\
       \hline
     \end{tabular}
   \end{center}
@@ -427,7 +427,8 @@ At one end of the spectrum are mechanisms like static overloading
 in C++, where the compiler simply insists that it be possible to
 resolve definitions at compile time.
 At the other end of the spectrum, we might dispatch on arbitrary
-predicates.
+predicates (as in the SCMUTILS system~\cite{Sussman:2001:SIC:375178}).
+% TODO more about scmutils
 We do neither of these.
 Instead, our dispatch is based on \emph{sets of values that are robust
 under evaluation}: abstract evaluation over such sets is less likely
@@ -677,7 +678,7 @@ more easily solve a difficult computational problem.
 % systems, object systems, and type systems
 
 \item Finally, we contribute the Julia software system, currently a
-growing open source project.
+growing free software project.
 To our knowledge, this is the first technical computing system written in a
 single language.
 This demonstrates that our approach is both practical and appealing to a

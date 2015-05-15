@@ -1,24 +1,15 @@
 \chapter{Conclusion}
 
-%Here is a snapshot of Julia in April, 2014
-
-%Show all the stuff that will be fun to look at because it\textquoteright{}ll
-%be so antiquated by 2019
-
-%by following this kind of approach computer scientists can have it
-%both ways, and make new interesting things that are also immediately
-%useful.
-
 % to what extent is this a technical computing language?
 % it's not, really :)
 
 ``I've yet to hear anyone explain how you decide what are the boundaries of a `domain-specific' language. Isn't the `domain' mathematics and science itself?''~\cite{bobharperdsl}
 
+% \cite{meyerovich2012socio} about appealing to some domain first
+
 % something about how ``information hiding'' is anathema to science,
 % and coincidentally is not the focus of t.c. languages or rigorous
 % functional languages.
-
-% \cite{meyerovich2012socio} about appealing to some domain first
 
 A generation of dynamic languages have been designed by trying variants of
 the class-based object oriented paradigm. This process has been aided by
@@ -39,10 +30,13 @@ developing lattices and their operators.
 Julia encourages lattice-theoretic execution models to become integral
 parts of languages. dispatch was an especially natural way to do this,
 are there others?
+What else can we do with partial information as part of a programming
+model?
 % talk about partial information
 % somehow being dual to ML-family languages; what's hard for them is
 % easy for us and vice versa.
 
+\iffalse
 It is interesting to observe that the data model of a language like Julia
 consists of two key relations: the subtype relation, which is relatively
 well understood and enjoys useful properties like transitivity, but also
@@ -59,16 +53,33 @@ speculated that this could be done using types based on non-well-founded
 set theory, combining the subset-of and element-of relations using
 self-containing sets. We are not yet sure what a practical language based
 on this idea might look like.
+\fi
 
+%There are several key aspects of performance programming that our design
+%does not directly address, e.g. storage and in-place optimizations.
 
-There are several key aspects of performance programming that our design
-does not directly address, e.g.  storage and in-place optimizations.
+\section{Performance}
 
-future work:
-product domains
+If we are interested in abstraction, then type specialization is the
+first priority for getting performance.
+However in a broader view there is much more to performance.
 
-how to incorporate finer types more smoothly
+% algorithmic choice
 
+\section{Implementation issues}
+
+\section{Future work}
+
+\begin{itemize}
+\item formalize more details of dispatch, meet, join, widen
+\item product domains, how to incorporate finer types more smoothly
+\item how to incorporate static checks? \cite{typecheckjl}
+\item separate compilation
+\item function types
+\item shared memory, cilk
+\item can we implement BLAS?
+\item incorporate autotuning?
+\end{itemize}
 
 % steve j suggestions:
 % Precompilation?  Issues with type-inference?  Inlining anonymous functions?
@@ -106,3 +117,5 @@ how to incorporate finer types more smoothly
 % - static comp, separate comp
 % - functions
 % - static typing, TypeCheck.jl
+
+\section{Project status}

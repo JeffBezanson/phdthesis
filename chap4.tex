@@ -110,8 +110,8 @@ data\ ::=\ &\ bit^n\ |\ ref\ |\ data*
 \noindent
 where $bit^n$ represents a string of $n$ bits, and $ref$ represents a reference
 to a tagged data value.
-Data is automatically laid out according to the platform ABI for proper
-alignment.
+Data is automatically laid out according to the platform's application binary
+interface (ABI).
 Currently all compound types and heterogeneous tuples use the C struct ABI, and
 homogeneous tuples use the array ABI.
 Data may be declared mutable, in which case its representation is implicitly
@@ -131,8 +131,9 @@ matching the tag of argument $e_2$ is called.
 We use the keyword \texttt{function} for method definitions for the sake of
 familiarity, though \texttt{method} is arguably more appropriate. Method
 definitions subsume lambda expressions. Each method definition modifies a
-generic function named by the argument $x_{name}$. The function to extend is
-specified by name rather than by value in order to make it easier to syntactically
+generic function named by the argument $x_{name}$. The generic function to extend is
+specified by its name rather than by the value of an expression in order to make it
+easier to syntactically
 restrict where functions can be extended. This, in turn, allows the language to
 specify when new method definitions take effect, providing useful windows of
 time within which methods do not change, allowing programs to be optimized more
@@ -263,10 +264,10 @@ Invariance preserves the property that the only subtypes of a concrete type are 
 and itself.
 This is important given how we map types to data representations: an \texttt{Array\{Int\}}
 cannot also be an \texttt{Array\{Any\}}, since those types imply different
-representations.
-If we tried to use covariance despite this, there would have to be some \emph{other}
-notion of which type a value \emph{really} had, which would be unsatisfyingly
-complex.
+representations (an \texttt{Array\{Any\}} is an array of pointers).
+%If we tried to use covariance despite this, there would have to be some \emph{other}
+%notion of which type a value \emph{really} had, which would be unsatisfyingly
+%complex.
 Tuples are a special case where covariance works, because each component type need
 only refer to single value, so there is no need for concrete
 tuple types with non-concrete parameters.
@@ -466,7 +467,7 @@ type at a particular parameter value.
     \begin{tabular}{|c|}\hline
       \begin{tabular}{ccc}
         \AxiomC{$_A^B X^L, \Gamma\ \vdash\ T \leq S$}
-        \UnaryInfC{$\Gamma\ \vdash\ \exists$ $_A^B X . T\ \leq\ S$}
+        \UnaryInfC{$\Gamma\ \vdash\ \exists$ $_A^B X\ T\ \leq\ S$}
         \DisplayProof
 
         \hspace{3ex}
@@ -474,7 +475,7 @@ type at a particular parameter value.
         &
 
         \AxiomC{$_A^BX^R, \Gamma\ \vdash\ T \leq S$}
-        \UnaryInfC{$\Gamma\ \vdash\ T\ \leq\ \exists$ $_A^B X . S$}
+        \UnaryInfC{$\Gamma\ \vdash\ T\ \leq\ \exists$ $_A^B X\ S$}
         \DisplayProof
 
         \hspace{3ex}
@@ -636,18 +637,20 @@ These subtyping rules are likely $\Pi_2^{\textrm{P}}$-hard.
 Checking a subtype relation with unions requires checking that for all choices
 on the left, there exists a choice on the right that makes the relation hold.
 This matches the quantifier structure of 2-TQBF problems of the form
-$\forall x_i . \exists y_i . F$ where $F$ is a boolean formula. If the formula
-is written in conjunctive normal form, it corresponds to subtype checking
-between two tuple types, where the relation must hold for each pair of
-corresponding types. Now use a type \texttt{N\{}$x$\texttt{\}} to
-represent $\neg x$. The clause $(x_i \vee y_i)$ can be translated to
+$\forall x_i . \exists y_i . F$ where $F$ is a boolean formula.
+If the formula is written in conjunctive normal form, it corresponds to subtype
+checking between two tuple types, where the relation must hold for each pair of
+corresponding types.
+Now use a type \texttt{N\{}$x$\texttt{\}} to represent $\neg x$.
+The clause $(x_i \vee y_i)$ can be translated to
 $x_i\ \texttt{<:\ Union\{N\{}y_i\texttt{\}, True\}}$ (where the $x_i$ and
 $y_i$ are type variables bound by \texttt{UnionAll} on the left and right,
 respectively).
 We have not worked out the details, but this sketch is reasonably
-convincing. $\Pi_2^{\textrm{P}}$ is only the most obvious
-reduction to try; it is possible our system equals PSPACE or even greater,
-as has often been the case for subtyping systems like ours.
+convincing.
+$\Pi_2^{\textrm{P}}$ is only the most obvious reduction to try; it is possible our
+system equals PSPACE or even greater, as has often been the case for subtyping
+systems like ours.
 
 \subsubsection{Implementation}
 
@@ -813,6 +816,7 @@ arguments is an \texttt{Int}.
 The majority of types that occur in practice are \emph{simple}.
 A simple type is a tag, tuple, or abstract type, all of whose parameters
 are simple types or non-type values.
+For example \texttt{Pair\{Int,Float64\}} is a simple type.
 Structural equality of simple types is equivalent to type equality,
 so simple types are easy to compare, hash, and sort.
 Another important set of types is the \emph{concrete} types, which
@@ -822,7 +826,8 @@ identifier to each.
 These integer identifiers are used to look up methods efficiently
 in a hash table.
 
-Some types are concrete but not simple.
+Some types are concrete but not simple, for example
+\texttt{Array\{Union\{Int,String\},1\}}.
 The hash-consing process uses linear search for these types.
 Fortunately, such types tend to make up less than 10\% of the total
 type population.
@@ -899,7 +904,7 @@ in the Cecil language~\cite{cecilspec}.
 However, Cecil (along with its successor, Diesel~\cite{chambers2006diesel})
 does not allow methods to differ only in type parameters.
 In the semantic subtyping framework we use, such definitions have a
-natural interpretation (in terms of sets), and so are allowed.
+natural interpretation in terms of sets, and so are allowed.
 In fact, they are used extensively in Julia.
 % TODO point to examples in chap 5
 
@@ -1304,7 +1309,7 @@ and in a more recent development version with more functionality, it has
 An intersection of 150 types would be unwieldy, even if only
 inspected when debugging the compiler.
 
-A slightly different approach we might try would be to immitate
+A slightly different approach we might try would be to imitate
 the types of higher-order functions in traditional
 statically typed functional languages.
 Consider the classic \texttt{map} function, which creates a new container
@@ -1703,7 +1708,7 @@ definitions $g$ within generic function $f$.
 
 \subsection{Specialization}
 
-It might be thought that Julia is fast because our compiler is very well
+It might be thought that Julia is fast because our compiler is well
 engineered, perhaps using ``every trick in the book''.
 At risk of being self-deprecating, this is not the case.
 After type inference we apply standard optimizations: static method

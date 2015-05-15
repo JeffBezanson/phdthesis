@@ -92,7 +92,9 @@ optimized routines for various cases, and be able to dispatch
 to them at run time.
 
 It's clear what's going on here: mathematics is dependently typed.
-Knowing what a given object \emph{is} in a relevant sense would
+If a compiler could prove that a certain matrix were bidiagonal, or
+symmetric, there would be no problem.
+But knowing what a given object \emph{is} in a relevant sense can
 require arbitrary proofs, and in research computing these proofs
 might refer to objects that are not yet well understood.
 % In numerical computing, if \emph{anybody} were able to prove the
@@ -228,8 +230,8 @@ for performance (optimizations): we only want to perform an optimization
 if the program property it relies on holds for sure.
 % and not if there is any uncertainty.
 
-The generality of this approach makes it a kind of ``ur type system'':
-we can discover a large variety of program properties as long as we are
+The generality of this approach
+allows us to discover a large variety of program properties as long as we are
 willing to accept some uncertainty.
 %Of course, many programmers and language designers prefer to maximize
 %safety, leading to different approaches that trade away some precision
@@ -267,7 +269,7 @@ exponentiation (\texttt{.\^}) to an array:
 % maybe A = [sum(A.^A)]
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
-A = [n] :: Array{Int}
+A = [n]
 for i = 1:niter
     A = f(A .^ A)
 end
@@ -325,19 +327,16 @@ end
 
 The result depends strongly on how the \texttt{.\^} and \texttt{\^} functions
 are defined (assume that \texttt{.\^} calls \texttt{\^} on every element of an array).
-We will provide the user-friendly behavior of automatically switching to the
-\texttt{BigInt} type on overflow.
 The code might look like this:
 
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
 function ^(x, y)
     if trunc(y) == y
-        # use repeated squaring
         if overflows(x, y)
             x = widen(x)
         end
-        # ...
+        # use repeated squaring
     else
         # floating point algorithm
     end
@@ -353,7 +352,12 @@ end
 \end{lstlisting}
 \end{singlespace}
 
-Initially we know that \texttt{A} is an \texttt{Array\{Int\}}.
+\noindent
+This code implements the user-friendly behavior of automatically switching to the
+\texttt{BigInt} type on overflow, by calling \texttt{widen}.
+
+Assume we initially know that \texttt{n} is an \texttt{Int}, and therefore
+that \texttt{A} is an \texttt{Array\{Int\}}.
 Although \texttt{A} really does have this type (even if the
 type is only an artifact of the analysis), the code does not mention
 types anywhere.
@@ -374,7 +378,15 @@ However when the analysis considers \texttt{f} applied to type
 \texttt{$\top$}, since we don't know anything about the array's elements.
 
 The problem here is that the program is not written in terms of the
-underlying value domain.
+underlying value domain, even though it could be.
+We might have written \texttt{isa(y,Integer)} instead of \texttt{trunc(y) == y}.
+However, there are reasons that code like this might exist.
+The programmer might not be aware of the type system, or the conditional
+might refer to a property that was not originally reflected in the type system
+but is later, as the language and libraries evolve.
+
+
+\iffalse
 How can we fix this?
 One solution is to add type annotations.
 But the author of the original code does not know the type of
@@ -385,24 +397,34 @@ But we will never finish adding cases to the compiler.
 Perhaps we can handle \texttt{trunc(y) == y}, but will we also be
 able to understand \texttt{trunc(y) == 1*y}?
 %%%%%
-Our solution is to give some simple tools to the library developer.
+%% TODO: another solution is to write isa(y, Integer), but this also
+%% requires a type system
+%%%%%
+\fi
+
+Our solution is to give some simple tools to the library developer
+(who, of course, might be the same person as the programmer).
 In Julia, one can implement \texttt{\^} and \texttt{f} as follows:
 
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
+function ^(x, y)
+    # original code
+end
+
 function ^(x, y::Integer)
     if overflows(x, y)
-        x = BigInt(x)
+        x = widen(x)
     end
     # ...
 end
 
-function f{T<:Integer}(a::Array{T})
-    # integer case
+function f(a)
+    # original code
 end
 
-function f(a::Array)
-    # general case
+function f{T<:Integer}(a::Array{T})
+    # integer case
 end
 \end{lstlisting}
 \end{singlespace}
@@ -432,6 +454,12 @@ that might be needed for other data types, leading to cleaner code
 and also making the core definition of \texttt{f} smaller and therefore
 more likely to be inlined.
 
+% TODO something about why we use an extensibility mechanism for collecting
+% type info.
+% 1 - the extra cases can be added by somebody else
+% 2 - a library can pick a type to return to user code, and later
+%     ``intercept'' operations on it
+
 The original version of this code can also be written in our system,
 though it probably will not perform as well.
 However, it might still perform better than one would expect, since the
@@ -441,7 +469,8 @@ This mechanism is expressive enough to be used down to the lowest levels of
 the system, providing leverage one would not get from an object system
 or performance ``add on''.
 
-% two forms of ``gradualism'': adding methods and adding types to arguments
+% three forms of ``gradualism'': adding methods, adding types to arguments,
+% adding parameters to types.
 
 % reverse flow
 Having type information attached to user or library definitions
