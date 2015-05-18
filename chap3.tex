@@ -384,6 +384,9 @@ However, there are reasons that code like this might exist.
 The programmer might not be aware of the type system, or the conditional
 might refer to a property that was not originally reflected in the type system
 but is later, as the language and libraries evolve.
+Adding type declarations is not an ideal solution since it restricts
+polymorphism, and the programmer might not know the type of \texttt{A.\^{}A}
+or even the type of \texttt{n}.
 
 
 \iffalse
@@ -403,7 +406,7 @@ able to understand \texttt{trunc(y) == 1*y}?
 \fi
 
 Our solution is to give some simple tools to the library developer
-(who, of course, might be the same person as the programmer).
+(who, of course, is not necessarily a different person).
 In Julia, one can implement \texttt{\^} and \texttt{f} as follows:
 
 \begin{singlespace}
@@ -442,8 +445,7 @@ Method applicability is determined dynamically.
 Since we started with an integer array, the whole program behaves
 exactly as before.
 
-Notice that we have neither added restrictions, nor asked for
-redundant type annotations.
+We have neither added restrictions, nor asked for redundant type annotations.
 All we did is add a dispatch system, and encourage people to use it.
 Using dispatch in this way is optional, but comes with benefits for
 structuring programs.
@@ -467,10 +469,7 @@ functions that it calls are in turn defined using the same dispatch
 mechanism.
 This mechanism is expressive enough to be used down to the lowest levels of
 the system, providing leverage one would not get from an object system
-or performance ``add on''.
-
-% three forms of ``gradualism'': adding methods, adding types to arguments,
-% adding parameters to types.
+or performance add-on.
 
 % reverse flow
 Having type information attached to user or library definitions
@@ -482,6 +481,19 @@ narrow possibilities.
 But if we know that a function is only defined on type \texttt{T},
 every value that passes through its argument list is narrowed to
 \texttt{T}.
+
+% there seems to be some psychology to this: ``write method definitions''
+% is somehow an easier performance model than ``use conditions only involving
+% type checks''
+% instead of requiring that the compiler be able to resolve things, we
+% just want to make it more likely.
+
+% isa(x,Int) is simple enough, but for more complicated checks it becomes
+% much harder to predict. e.g. imagine testing for everything being the
+% same type.
+% there has to be a split between what is specialized on and what is not.
+% in c++ this requires switching to templates.
+
 
 % next we will consider how this dispatch system fits in
 
@@ -524,7 +536,7 @@ operations that dispatch on them.
 
 %The sophistication of the available ``selection criteria'' account for a
 %large part of the perceived ``power'' or leverage provided by a language.
-In fact it is possible to illustrate a hierarchy of such mechanisms.
+It is possible to illustrate a hierarchy of such mechanisms.
 As an example, consider a simple simulation, and how it can be written
 under a series of increasingly powerful paradigms. First, written-out
 imperative code:
@@ -602,14 +614,14 @@ abstract class Animal
 end
 
 class Rabbit <: Animal
-    method encounter(b: Animal)
+    method encounter(b::Animal)
         if b isa Wolf then run()
         if b isa Rabbit then mate(b)
     end
 end
 
 class Wolf <: Animal
-    method encounter(b: Animal)
+    method encounter(b::Animal)
         if b isa Rabbit then eat(b)
         if b isa Wolf then follow(b)
     end
@@ -630,8 +642,8 @@ method, and can inherit a general-purpose implementation.
 
 This brings us roughly to the level of most popular object-oriented
 languages.
-But in this example still more can be done.
-Notice that in the first step to objects we replaced one level of \texttt{if}
+But still more can be done.
+Notice that in the first transformation we replaced one level of \texttt{if}
 statements with method lookup.
 However, inside of these methods a structured set of \texttt{if} statements
 remains.
@@ -640,13 +652,13 @@ We can replace these by adding another level of dispatch.
 \begin{singlespace}
 \begin{verbatim}
 class Rabbit <: Animal
-    method encounter(b: Wolf) = run()
-    method encounter(b: Rabbit) = mate(b)
+    method encounter(b::Wolf) = run()
+    method encounter(b::Rabbit) = mate(b)
 end
 
 class Wolf <: Animal
-    method encounter(b: Rabbit) = eat(b)
-    method encounter(b: Wolf) = follow(b)
+    method encounter(b::Rabbit) = eat(b)
+    method encounter(b::Wolf) = follow(b)
 end
 \end{verbatim}
 \end{singlespace}
@@ -673,11 +685,11 @@ end
 class Wolf <: Animal
 end
 
-nearby(a: Animal)               = # search
-encounter(a: Rabbit, b: Wolf)   = run(a)
-encounter(a: Rabbit, b: Rabbit) = mate(a,b)
-encounter(a: Wolf, b: Rabbit)   = eat(a, b)
-encounter(a: Wolf, b: Wolf)     = follow(a, b)
+nearby(a::Animal)               = # search
+encounter(a::Rabbit, b::Wolf)   = run(a)
+encounter(a::Rabbit, b::Rabbit) = mate(a,b)
+encounter(a::Wolf, b::Rabbit)   = eat(a, b)
+encounter(a::Wolf, b::Wolf)     = follow(a, b)
 
 while running
     for a in animals
@@ -701,10 +713,10 @@ The shift to thinking about combinations of objects is fairly revolutionary.
 Many interesting properties only apply to combinations of objects, and not
 individuals.
 We are also now free to think of more exotic kinds of combinations.
-We can define a method on \emph{any number} of objects:
+We can define a method for \emph{any number} of objects:
 
 \begin{verbatim}
-encounter(ws: Wolf...) = pack(ws)
+encounter(ws::Wolf...) = pack(ws)
 \end{verbatim}
 
 \noindent
@@ -712,7 +724,7 @@ We can also abstract over more subtle properties, like whether the
 arguments are two animals of the same type:
 
 \begin{verbatim}
-encounter{T<:Animal}(a: T, b: T) = mate(a, b)
+encounter{T<:Animal}(a::T, b::T) = mate(a, b)
 \end{verbatim}
 
 % TODO more
@@ -827,28 +839,30 @@ violating abstraction.
 \begin{center}
 \begin{tabular}{|c||c|c|c|c|c|c|c|}
 \hline
-               & Domain &  Dynamic  & Spec. & ADTs & Pattern & S.T.S. & S.C. \\
+               & Domain &  Dynamic  & Spec. & Pattern & S.T.S. & S.C. \\
 \hline
 \hline
-Methods        & $O(1)$   &         &       & \chk &         & \chk   & \chk \\
+Methods        & $O(1)$   &         &       &         & \chk   & \chk \\
 \hline
-Virt. methods  & $O(1)$   & \chk    &       & \chk &         & \chk   & \chk \\
+Virtual methods  & $O(1)$   & \chk    &       &         & \chk   & \chk \\
 \hline
-Overloading    & $O(n)$   &         &       & \chk &         & \chk   & \chk \\
+Overloading    & $O(n)$   &         &       &         & \chk   & \chk \\
 \hline
-Templates      & $O(n)$   &         & \chk  & \chk &         & \chk   &      \\
+Templates      & $O(n)$   &         & \chk  &         & \chk   &      \\
 \hline
-Closures       & $O(1)$   & \chk    &       &      &         & \chk   & \chk \\
+Closures       & $O(1)$   & \chk    &       &         & \chk   & \chk \\
 \hline
-Multimethods   & $O(n)$   & \chk    &       & \chk &         & ?      & ?    \\
+Duck typing    & $O(1)$   & \chk    &       &         &        & \chk \\
 \hline
-Predicates     & $O(n m)$ & \chk    &       & \chk &  \small{1}  & ? & ? \\
+Multimethods   & $O(n)$   & \chk    &       &         & ?      & ?    \\
 \hline
-Typeclasses    & $O(m)$   & \small{2}    &  \small{3}        & \chk &     & \chk & \chk \\
+Predicate dispatch & $O(n m)$ & \chk    &       &  \small{1}  & ? & ? \\
 \hline
-Term rewriting & $O(n m)$ & \chk    &       &      & \chk    &        &      \\
+Typeclasses    & $O(m)$   & \small{2} & \small{3} &   & \chk   & \chk \\
 \hline
-Julia          & $O(n m)$ & \chk    & \chk  & \chk &         &        &      \\
+Term rewriting & $O(n m)$ & \chk    &       & \chk    &        &      \\
+\hline
+Julia          & $O(n m)$ & \chk    & \chk  &         & ?      &      \\
 \hline
 \end{tabular}
 \end{center}
@@ -873,7 +887,7 @@ S.C.\ stands for separate compilation.
 % pick which one of these to use. there is no best one.
 % ``domain'' languages are all about avoiding knowledge of this table.
 
-Table~\ref{table:dispatch} compares nine language features.
+Table~\ref{table:dispatch} compares 11 language features.
 Each provides some sort of control flow indirection, packaged into a
 structure designed to facilitate reasoning (ideally human reasoning,
 but often the compiler's reasoning is prioritized).
@@ -882,10 +896,9 @@ by the dispatch system, where $n$ is the number of arguments and
 $m$ is the amount of relevant information per argument.
 $O(1)$ means each use of the feature considers basically the same
 amount of information.
-$O(n)$ is similar, but extends the process to every argument.
+$O(n)$ extends the process to every argument.
 $O(m)$ means that one value is considered, but its structure is
 taken into account.
-``ADTs'' refers to support for abstract data types.
 Squares with question marks are either not fully understood, or too
 sensitive to design details to answer definitively.
 
@@ -896,35 +909,41 @@ This table illustrates how many combinations of dispatch semantics have
 been tried.
 Keeping track of these distinctions is a distraction when one is focused
 on a non-programming problem.
-Including more than one of these mechanisms makes a languge especially
+Including more than one row of this table makes a languge especially
 complex and difficult to learn.
+
+% compare to julia tradeoffs
 
 
 \section{Subtyping}
 
-So far we have seen some reasons why dispatch contributes so significantly
+So far we have seen some reasons why dispatch contributes significantly
 to flexiblity and performance.
 However we have only actually dispatched on fairly simple properties like
 whether a value is an integer.
 How powerful should dispatch be, exactly?
 Each method signature describes some set of values to which it applies.
 Some signatures might be more specific than others.
-The theory governing such questions is subtyping.
+The theory governing such properties is subtyping.
+
+% TODO
+% informal convexity property. ``any # of integers'' is ok, but
+% ``any # of integers except 3'' is not.
+%% reflect on level of power: this dispatch system is both more and less
+%% powerful than previous ones in various ways.
 
 It turns out that a lot of relevant work on this has been done in the
-context of type systems for XML.
+context of type systems for XML~\cite{hosoya2000xduce, BCF03}.
 %Something about semantic subtyping and type systems for processing XML.
 XML at first seems unrelated to numerical computing, and indeed it
 was quite a while before we discovered these papers and noticed the
 overlap.
 However if one substitutes ``symbolic expression'' for ``XML document'',
 the similarity becomes clearer.
-\cite{hosoya2000xduce}
-\cite{BCF03}
-
-% our language is in many ways dual to ML. that family shuns subtyping,
-% but in the lattice theoretic model it's inescapable.
-%\cite{hindley1969principal, MLtypeinf}
+In XML processing, programs match documents against patterns in order
+to extract information of interest or validate document structure.
+These patterns resemble regular expressions, and so also denote sets
+and admit a subset (subtype) relation.
 
 
 \begin{singlespace}
@@ -935,6 +954,11 @@ immutable SubArray{T, N, P<:AbstractArray,
                    I<:Tuple{ViewIndex...}, LD} <: AbstractArray{T,N}
 \end{lstlisting}
 \end{singlespace}
+
+
+% our language is in many ways dual to ML. that family shuns subtyping,
+% but in the lattice theoretic model it's inescapable.
+%\cite{hindley1969principal, MLtypeinf}
 
 
 \section{Specialization}
@@ -1048,22 +1072,36 @@ It is quite interesting that performance and ease-of-use pull this design
 decision in the same direction.
 
 
-\section{Design summary}
+\section{Easy polymorphism}
 
 % conclude by summarizing the design decisions we end up with:
 
+% easy polymorphism recipe:
+
+The total effect of these design considerations is something more than the
+sum of the parts.
+We obtain what might be called ``easy polymorphism'', where many of the performance
+and expressiveness advantages of generic programming are available without
+their usual complexity.
+This design arises from the following five part recipe:
+
 \begin{singlespace}
 \begin{enumerate}
-\item A fully connected type tree
-\item Self-describing data model % aware of memory layout
-\item Type tags with nested structure
-\item Dynamic dispatch over all types % including parameters and varargs
-\item Data flow type inference
+%\item A fully connected type tree
+%\item Self-describing data model % aware of memory layout
+%\item Type tags with nested structure
+%\item Dynamic dispatch over all types % including parameters and varargs
+%\item Data flow type inference
+\item One mechanism for overloading, dispatch, and specialization
+\item Semantic subtyping
 \item Code specialization by default
 \item Make type parameters optional
 \item Types as ordinary values
 \end{enumerate}
 \end{singlespace}
+
+% three forms of ``gradualism'': adding methods, adding types to arguments,
+% adding parameters to types.
 
 %- library writers can decide what to put at the type level without affecting users,
 %  dropping type parameters
@@ -1079,8 +1117,6 @@ decision in the same direction.
 
 %% Challenges of this approach (why has this not been done before?)
 
-%% reflect on level of power: this dispatch system is both more and less
-%% powerful than previous ones in various ways.
 
 \iffalse
 

@@ -273,7 +273,15 @@ however we leave them to future work.
 %improve safety later.
 
 
-\subsection{Dispatch}
+\subsection{The importance of code selection}
+
+Most languages provide some means for selecting one of many pieces of code
+to run from a single point in the program.
+This process is often called \emph{dispatch}.
+High-level languages, especially ``dynamic'' languages tend to provide a
+lot of flexibility in their dispatch systems.
+This makes many sophisticated programs easier to express, but at a considerable
+performance cost.
 
 There has been a large amount of work on running dynamic languages faster
 (notable examples are Self~\cite{selflang}, and more recently PyPy~\cite{pypyjit}).

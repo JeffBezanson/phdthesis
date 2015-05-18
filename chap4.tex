@@ -360,16 +360,20 @@ specified bounds:
   \llbracket \texttt{UnionAll }L\texttt{<:T<:}U\ A \rrbracket = \bigcup_{L \leq T \leq U} \llbracket A[T/\texttt{T}] \rrbracket
 \]
 
+\noindent
+where $A[T/\texttt{T}]$ means $T$ is substituted for \texttt{T} in expression $A$.
+
 % TODO: The inclusion of lower bounds might make subtyping undecidable?
 % Note that giving up lower bounds might permit intersections or arrows,
 % but we prefer lower bounds.
 
-This is equivalent to an existential type \cite{boundedquant};
+This is similar to an existential type \cite{boundedquant};
 for each concrete subtype of it there exists a corresponding $T$.
 Anecdotally, programmers often find existential types confusing.
 We prefer the union interpretation because we are describing sets of values;
 the notion of ``there exists'' can be semantically misleading since it sounds like
 only a single $T$ value might be involved.
+However we will still use $\exists$ notation as a shorthand.
 
 %Conjecture: these types are intuitive to dispatch on because they correspond
 %to program behavior in the same way that data flow analysis approximates program
@@ -637,7 +641,7 @@ These subtyping rules are likely $\Pi_2^{\textrm{P}}$-hard.
 Checking a subtype relation with unions requires checking that for all choices
 on the left, there exists a choice on the right that makes the relation hold.
 This matches the quantifier structure of 2-TQBF problems of the form
-$\forall x_i . \exists y_i . F$ where $F$ is a boolean formula.
+$\forall x_i \exists y_i F$ where $F$ is a boolean formula.
 If the formula is written in conjunctive normal form, it corresponds to subtype
 checking between two tuple types, where the relation must hold for each pair of
 corresponding types.
@@ -671,7 +675,7 @@ The algorithm can determine that a type matches constraints specified by another
 \vspace{-5ex}
 \[
 \texttt{Tuple}\{\texttt{Array}\{\texttt{Integer},1\}, \texttt{Int}\}\ <\ 
-  (\exists\ T<:\texttt{Integer}\ .\ \exists\ S<:T\ .\ \texttt{Tuple}\{\texttt{Array}\{T,1\},S\})
+  (\exists\ T<:\texttt{Integer}\ \exists\ S<:T\ \texttt{Tuple}\{\texttt{Array}\{T,1\},S\})
 \]
 
 \vspace{-1ex}
@@ -681,7 +685,7 @@ It is not fooled by redundant type variables:
 \vspace{-2ex}
 \[
 \texttt{Array}\{\texttt{Int},1\}\ =\ 
-  \texttt{Array}\{(\exists\ T<:\texttt{Int}\ .\ T), 1\} \]
+  \texttt{Array}\{(\exists\ T<:\texttt{Int}\ T), 1\} \]
 
 \noindent
 Variables can have non-trivial bounds that refer to other variables:
@@ -690,7 +694,7 @@ Variables can have non-trivial bounds that refer to other variables:
 \begin{singlespace}
 \begin{align*}
 &\texttt{Pair}\{\texttt{Float32},\texttt{Array}\{\texttt{Float32},1\}\}\ <\ \\
-&\hspace{4ex}\exists\ T<:\texttt{Real}\ .\ \exists\ S<:\texttt{AbstractArray}\{T,1\}\ .\ \texttt{Pair}\{T,S\}
+&\hspace{4ex}\exists\ T<:\texttt{Real}\ \exists\ S<:\texttt{AbstractArray}\{T,1\}\ \texttt{Pair}\{T,S\}
 \end{align*}
 \end{singlespace}
 
@@ -703,7 +707,7 @@ more constrained than a type where variables appear only once:
 
 \vspace{-3ex}
 \[
-\exists\ T\ .\ \texttt{Pair}\{T,T\}\ <\ \exists\ T\ .\ \exists\ S\ .\ \texttt{Pair}\{T,S\}
+\exists\ T\ \texttt{Pair}\{T,T\}\ <\ \exists\ T\ \exists\ S\ \texttt{Pair}\{T,S\}
 \]
 
 % TODO: if T=S=Any the types are equal, so the algorithm is being conservative here.
@@ -715,7 +719,7 @@ However with sufficiently tight bounds that relationship no longer holds
 
 \vspace{-3ex}
 \[
-\exists\ x<:T<:x\ .\ \exists\ x<:S<:x\ .\ \texttt{Pair}\{T,S\}\ <\ \exists\ T\ .\ \texttt{Pair}\{T,T\}
+\exists\ x<:T<:x\ \exists\ x<:S<:x\ \texttt{Pair}\{T,S\}\ <\ \exists\ T\ \texttt{Pair}\{T,T\}
 \]
 
 %    @test issub_strict((@UnionAll T @UnionAll S<:T inst(PairT,T,S)),
@@ -729,7 +733,7 @@ either this or that''):
 \begin{singlespace}
 \begin{align*}
 &\texttt{Tuple\{Vector\{Int\},Vector\{Vector\{Int\}\},Vector\{Int\},Vector\{Int\}\}}\ <\ \\
-&\hspace{4ex}\exists\ S<:\texttt{Real}\ .\ \texttt{Tuple\{Union\{Vector\{}S\}\texttt{,Vector\{Vector\{}S\texttt{\}\}\}...\}}
+&\hspace{4ex}\exists\ S<:\texttt{Real}\ \texttt{Tuple\{Union\{Vector\{}S\}\texttt{,Vector\{Vector\{}S\texttt{\}\}\}...\}}
 \end{align*}
 \end{singlespace}
 
@@ -741,24 +745,27 @@ And the algorithm understands that tuples distribute over unions:
 \texttt{Tuple\{Union\{A,B\},C\}}\ =\ \texttt{Union\{Tuple\{A,C\},Tuple\{B,C\}\}}
 \]
 
-% TODO decide whether to include this
-\iffalse
 \subsubsection{Pseudo-contravariance}
 
-Bounded existential types are contravariant in their lower bounds.
-However, the set denotations of our types give us that
-$(\exists\ T>:X\ .\ T) = \texttt{Any}$.
+Bounded existential types are normally contravariant in their lower bounds.
+However, the set denotations of our types give us
+$(\exists\ T>:X\ T) = \texttt{Any}$.
 By interposing an invariant constructor, we obtain a kind of contravariance:
 \[
-(\exists\ T>:X\ .\ \texttt{Ref}\{T\}) \leq (\exists\ T>:Y\ .\ \texttt{Ref}\{T\}) \implies Y\leq X
+(\exists\ T>:X\ \texttt{Ref}\{T\}) \leq (\exists\ T>:Y\ \texttt{Ref}\{T\}) \implies Y\leq X
 \]
-This ability to ``flip'' types between sides of $\leq$ is one of the keys to
-the undecidability of subtyping with bounded quantification~\cite{Pierce1994131}.
-We conjecture that the presence of the invariant constructor blocks
-undecidability in our case.
+\noindent
 Types like this may be useful for describing nominal arrow types
 (see section~\ref{sec:nominalarrows}).
-\fi
+This ability to swap types between sides of $\leq$ is one of the keys to
+the undecidability of subtyping with bounded quantification~\cite{Pierce1994131}.
+Nevertheless we conjecture that our system is decidable, since we treat
+left- and right-side variables asymmetrically.
+The bounds of left-side variables do not change, which might be sufficient to
+prevent the ``re-bounding'' process in system $F_{<:}$ from continuing.
+%We conjecture that the presence of the invariant constructor blocks
+%undecidability in our case.
+
 
 \subsubsection{Related work}
 
@@ -883,6 +890,33 @@ more specific than $B$'s, and $A$'s lower bound is not more specific than $B$'s.
 
 So far, specificity is clearly a less formal notion than subtyping.
 
+Specificity and method selection implicitly add a set difference operator to
+the type system.
+When a method is selected, all more specific definitions have not been, and
+therefore the more specific signatures have been subtracted.
+For example, consider the following definitions of a string concatenation
+function:
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+strcat(strs::ASCIIString...) = # an ASCIIString
+
+strcat(strs::Union{ASCIIString,UTF8String}...) = # a UTF8String
+\end{lstlisting}
+\end{singlespace}
+
+Inside the second definition, we know that at least one argument must be a
+\texttt{UTF8String}, since otherwise the first definition would have
+been selected.
+This encodes the type behavior that ASCII strings are closed under
+concatenation, while introducing a single UTF-8 string requires the result
+to be UTF-8 (since UTF-8 can represent strictly more characters than ASCII).
+The effect is that we obtain some of the power of set intersection and
+negation without requiring subtyping to reason explicitly about such types.
+%The tradeoff is a slight loss of type precision when analyzing such
+%definitions.
+
+
 \subsection{Parametric dispatch}
 
 We use the following syntax to express methods whose signatures
@@ -929,7 +963,7 @@ we have not yet formalized it as part of subtyping.
 For example, the subtyping algorithm presented here concludes that
 \texttt{Tuple\{Int,String\}} is a subtype of
 \texttt{UnionAll T Tuple\{T,T\}}, since \texttt{T} might equal
-\texttt{Any} or \texttt{Union(Int,String)}.
+\texttt{Any} or \texttt{Union\{Int,String\}}.
 We believe this hurts the accuracy of static type deductions, but
 not their soundness, as long as we are careful in the compiler to
 treat all types as over-estimates of run time types.

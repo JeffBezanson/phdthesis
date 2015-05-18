@@ -35,18 +35,18 @@ end
 \vspace{-3ex}
 \begin{lstlisting}[language=julia]
 ## Any, Bottom, and Tuple
-const AnyT = TagT(TypeName(), ());  AnyT.name.super = AnyT
+const AnyT = TagT(TypeName(),(),false); AnyT.name.super = AnyT
 type BottomTy <: Ty; end; const BottomT = BottomTy()
 const TupleName = TypeName(); TupleName.super = AnyT
+
+super(t::TagT) =
+  t.name===TupleName ? AnyT : inst(t.name.super, t.params...)
 
 ## type application
 inst(t::TagT) = t
 inst(t::UnionAllT, param) = subst(t.T, Dict(t.var => param))
 inst(t::UnionAllT, param, rest...) = inst(inst(t,param), rest...)
-super(t::TagT) =
-  t.name===TupleName ? AnyT : inst(t.name.super, t.params...)
 
-extend(d::Dict, k, v) = merge(d, Dict(k=>v))
 subst(t,          env) = t
 subst(t::TagT,    env) =
   t===AnyT ? t : TagT(t.name, map(x->subst(x,env), t.params),
@@ -55,7 +55,7 @@ subst(t::UnionT,  env) = UnionT(subst(t.a,env), subst(t.b,env))
 subst(t::Var,     env) = get(env, t, t)
 function subst(t::UnionAllT, env)
   newVar = Var(subst(t.var.lb,env), subst(t.var.ub,env))
-  UnionAllT(newVar, subst(t.T, extend(env, t.var, newVar)))
+  UnionAllT(newVar, subst(t.T, merge(env, Dict(t.var=>newVar))))
 end
 
 rename(t::UnionAllT) = let v = Var(t.var.lb, t.var.ub)
