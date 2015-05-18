@@ -1192,12 +1192,17 @@ end
 \end{lstlisting}
 \end{singlespace}
 
-%TODO explain quote syntax fully
+\noindent
+Here the syntax \texttt{:(  )} is a quotation: a representation of the
+expression inside is returned, instead of being evaluated.
+The syntax \texttt{quote ... end} is an alternative for quoting multi-line
+expressions.
+The value of an expression can be interpolated into a quotatation using
+prefix \texttt{\$}.
 
 % where the rest of the language is about running code efficiently,
 % this is about running code not at all.
 
-\noindent
 This simple example implements indexing with \texttt{N} arguments
 in terms of linear indexing, by generating a fully unrolled expression
 for the index of the element.
@@ -1256,20 +1261,34 @@ At the same time, staged programming is easy to overuse, leading to obscure
 programs that could have been written with basic language constructs
 instead.
 
-This feature also makes static compilation even more difficult.
+This feature also makes static compilation more difficult.
 If an unanticipated call to a staged method occurs in a statically
 compiled program, two rather poor options are available: stop with an
 error, or run the generated code in an interpreter (we could compile
 code at run time, but presumably the purpose of static compilation was
-to avoid this).
+to avoid that).
 Ordinarily, the worst case for performance is to dynamically dispatch
 every call.
-Constructing expressions and then evaluating them with an interpreter is
-far worse, especially considering that performance is the only reason
+Constructing expressions and evaluating them with an interpreter is
+even worse, especially considering that performance is the only reason
 to use staged programming in the first place.
 This issue will need to be addressed through enhanced static analysis
 and error reporting tools.
 
+It would be nice to be able to perform staging based on any types,
+including abstract types.
+This would provide a way to generate fewer specializations, and could
+aid static compilation (by generating code for the most general type
+\texttt{Tuple\{Any...\}}).
+Unfortunately this appears to be impractical, due to the need for
+the type domain behavior of functions to be monotonic.
+The soundness and termination of data flow analysis depend on the
+property that given lattice elements $a$ and $b$, we must have
+$a\subseteq b\ \implies\ f(a)\subseteq f(b)$ for all $f$.
+Since staged methods can generate arbitrarily different code for
+different types, it is easy to violate this property.
+For the time being, we are forced to invoke staging only on concrete
+types.
 
 \section{Higher-order programming}
 
@@ -1700,7 +1719,7 @@ loaded code to be processed.
 
 The algorithmic components needed for this process to work are subtyping
 (already covered), join (which can be computed by forming a union type),
-meet ($\sqcap$), widening operators, and type-domain implementations
+meet ($\sqcap$), widening operators, and type domain implementations
 (also known as transfer functions) of core language constructs.
 
 Meets are challenging to compute, and we do not yet have an algorithm for

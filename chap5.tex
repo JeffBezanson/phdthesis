@@ -685,6 +685,78 @@ et.al. \cite{lawn181}:
 \end{small}
 \end{singlespace}
 
+Organizing this functionality has been a challenge.
+LAPACK is associated with dense matrices, but in reality supports 28
+matrix data types (e.g.\ diagonal, tridiagonal, symmetric, symmetric
+positive definite, triangular, triangular packed, and other combinations).
+Considerable gains in performance and accuracy are possible by exploiting
+these structured cases.
+LAPACK exposes these data types by assigning each a 2-letter code used to
+prefix function names.
+This approach, while lacking somewhat in abstraction, has the highly redeeming
+feature of making LAPACK easy to call from almost any language.
+Still there is a usability cost, and an abstraction layer is needed.
+
+\begin{singlespace}
+\begin{table}[!t]
+\begin{center}
+\begin{tabular}{|l|ll|}\hline
+Structured matrix types & \multicolumn{2}{|c|}{Factorization types} \\
+\hline
+Bidiagonal             &  Cholesky         &  GeneralizedSchur \\
+Diagonal               &  CholeskyPivoted  &  LDLt \\
+SymmetricRFP           &  QR               &  LU \\
+TriangularRFP          &  QRCompactWY      &  CholeskyDenseRFP \\
+Symmetric              &  QRPivoted & \\
+Hermitian              &  QRPackedQ & \\
+AbstractTriangular     &  QRPackedWYQ & \\
+LowerTriangular        &  QRCompactWYQ & \\
+UnitLowerTriangular    &  Hessenberg & \\
+UpperTriangular        &  HessenbergQ & \\
+UnitUpperTriangular    &  Eigen & \\
+SymTridiagonal         &  GeneralizedEigen & \\
+Tridiagonal            &  SVD & \\
+UniformScaling         &  Schur & \\
+\hline
+\end{tabular}
+\end{center}
+\caption[Structured matrices and factorizations]{
+\small{
+Left column: structured array storage formats currently defined in Julia's
+standard library.
+Right column: data types representing the results of various matrix
+factorizations.
+}
+}
+\label{tab:matrixtypes}
+\end{table}
+\end{singlespace}
+
+Table~\ref{tab:matrixtypes} lists some types that have been defined in
+Julia (largely by Andreas Jensen) for working with structured matrices
+and matrix factorizations.
+The structured matrix types can generally be used anywhere a 2-d
+array is expected.
+The factorization types are generally used for efficiently re-solving
+systems.
+% ? Cholesky has inv
+
+% there are two uses: manual and automatic
+
+
+% also embedding of bidiagonal in tridiagonal
+% matrix types not closed under operators:
+\iffalse
+function +(A::Bidiagonal, B::Bidiagonal)
+    if A.isupper==B.isupper
+        Bidiagonal(A.dv+B.dv, A.ev+B.ev, A.isupper)
+    else
+        Tridiagonal((A.isupper ? (B.ev,A.dv+B.dv,A.ev) : (A.ev,A.dv+B.dv,B.ev))...)
+    end
+end
+\fi
+
+
 \iffalse
 Multiple dispatch on special matrices
 
@@ -739,18 +811,6 @@ LU{T,S<:AbstractMatrix} <: Factorization{T}
 CholeskyDenseRFP{T<:BlasFloat} <: Factorization{T}
 \fi
 
-Describing the applicability of BLAS:
-
-\begin{singlespace}
-\begin{lstlisting}[language=julia]
-const BlasFloat = Union(Float64,Float32,Complex128,Complex64)
-
-axpy!{T<:BlasFloat}(alpha::Number,
-                    x::Union(DenseArray{T},StridedVector{T}),
-                    y::Union(DenseArray{T},StridedVector{T}))
-\end{lstlisting}
-\end{singlespace}
-
 \iffalse
 QR factorization: want to support it on all input types, but many
 types (integer, rational) are not closed under the needed operations.
@@ -782,18 +842,19 @@ It just happens to be convenient to specify this behavior with a
 branch.
 \fi
 
-% matrix types not closed under operators:
-\iffalse
-function +(A::Bidiagonal, B::Bidiagonal)
-    if A.isupper==B.isupper
-        Bidiagonal(A.dv+B.dv, A.ev+B.ev, A.isupper)
-    else
-        Tridiagonal((A.isupper ? (B.ev,A.dv+B.dv,A.ev) : (A.ev,A.dv+B.dv,B.ev))...)
-    end
-end
-\fi
 
-% also embedding of bidiagonal in tridiagonal
+Describing the applicability of BLAS:
+
+\begin{singlespace}
+\begin{lstlisting}[language=julia]
+const BlasFloat = Union(Float64,Float32,Complex128,Complex64)
+
+axpy!{T<:BlasFloat}(alpha::Number,
+                    x::Union(DenseArray{T},StridedVector{T}),
+                    y::Union(DenseArray{T},StridedVector{T}))
+\end{lstlisting}
+\end{singlespace}
+
 
 \section{Units}
 
