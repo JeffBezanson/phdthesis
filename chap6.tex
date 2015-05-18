@@ -55,9 +55,6 @@ self-containing sets. We are not yet sure what a practical language based
 on this idea might look like.
 \fi
 
-%There are several key aspects of performance programming that our design
-%does not directly address, e.g. storage and in-place optimizations.
-
 \section{Performance}
 
 If we are interested in abstraction, then type specialization is the
@@ -66,7 +63,21 @@ However in a broader view there is much more to performance.
 
 % algorithmic choice
 
+%There are several key aspects of performance programming that our design
+%does not directly address, e.g. storage and in-place optimizations.
+
 \section{Implementation issues}
+
+% steve j suggestions:
+% Precompilation?  Issues with type-inference?  Inlining anonymous functions?
+% \section{Separate compilation}
+% Technically julia does not support it, but that's never stopped anybody
+% from doing it anyway. e.g. C++
+
+% issues
+% - static comp, separate comp
+% - functions
+% - static typing, TypeCheck.jl
 
 \section{Future work}
 
@@ -81,11 +92,6 @@ However in a broader view there is much more to performance.
 \item incorporate autotuning?
 \end{itemize}
 
-% steve j suggestions:
-% Precompilation?  Issues with type-inference?  Inlining anonymous functions?
-% \section{Separate compilation}
-% Technically julia does not support it, but that's never stopped anybody
-% from doing it anyway. e.g. C++
 
 % oscar:
 % - what we have now is the ``minimal julia''
@@ -113,9 +119,5 @@ However in a broader view there is much more to performance.
 % making everything a method, and everything glued together by types
 % gives certain reflective properties.
 
-% issues
-% - static comp, separate comp
-% - functions
-% - static typing, TypeCheck.jl
 
 \section{Project status}

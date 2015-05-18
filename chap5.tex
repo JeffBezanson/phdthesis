@@ -114,8 +114,8 @@ section we will take advantage of this to implement ``automatic'' type promotion
 We might prefer ``number'' to be a single, concrete concept, but the history of
 mathematics has seen the concept extended many times, from integers to rationals to
 reals, and then to complex, quaternion, and more.
-These constructions tend to follow a pattern: a new set of numbers is constructed
-around a subset isomorphic to an existing set of numbers.
+These constructions tend to follow a pattern: each new set of numbers has a subset
+isomorphic to an existing set.
 For example, the reals are isomorphic to the complex numbers with zero imaginary part.
 
 Human beings happen to be good at equating and moving between isomorphic sets,
@@ -245,6 +245,7 @@ default definition of \texttt{+} circular.
 The following definitions accomplish this, by promoting to the larger
 numeric type if one is a subtype of the other:
 
+\begin{samepage}
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
 promote_result{T<:Number,S<:Number}(::Type{T}, ::Type{S},
@@ -261,7 +262,7 @@ promote_sup{T<:Number,S<:Number}(::Type{T},::Type{S},::Type) =
     error("no promotion exists for ", T, " and ", S)
 \end{lstlisting}
 \end{singlespace}
-
+\end{samepage}
 
 \subsubsection{Application to ranges}
 
@@ -383,7 +384,7 @@ violence to our ``everything is a method call'' semantics.
 We feel that it is worth giving up these features for a simpler
 mental model.
 We also believe that the ability to provide so much ``magic'' numeric
-type behavior only through method definitions is interesting and novel.
+type behavior only through method definitions is compelling.
 
 \subsubsection{Number-like types in practice}
 
@@ -632,26 +633,6 @@ to infer the rank of the result array.
 These definitions are concise, easy to write, and possible for a
 compiler to understand fully using straightforward techniques.
 
-% TODO: point out how this combines the ``object part'' and the
-% ``array part'' into a coherent whole.
-
-%% Here is a sample derivation for the call \texttt{index\_shape(1:m,1,1:n)}
-%% (the argument type tuple is \texttt{(Range1,Int,Range1)}), using the first
-%% definition above (dropping scalar-indexed dimensions):
-
-%% \begin{verbatim}
-%% index_shape(1:n, 1, 1:m) => tuple(length(::Range1)::Int, index_shape((::Int, ::Range1)...)...)
-%% index_shape((::Int, ::Range1)...) => index_shape(::Int, ::Range1)
-%% index_shape(::Int, ::Range1) => index_shape((::Range1,)...)
-%% index_shape((::Range1,)...) => index_shape(::Range1)
-%% index_shape(::Range1) => tuple(length(::Range1)::Int, index_shape(()...)...)
-%% index_shape(()...) => index_shape()::()
-%% back substitute => tuple(length(::Range1)::Int, index_shape(()...)::()...)::(Int,)
-%% back substitute => tuple(length(::Range1)::Int, ::(Int,)...)
-%% tuple(::Int, ::(Int,)...) => tuple(::Int, ::Int)
-%% ::(Int, Int)
-%% \end{verbatim}
-
 The result type is determined using only data flow type inference, plus a
 rule for splicing an immediate container (the type of \texttt{f((a,b)...)} is
 the type of \texttt{f(a,b)}). Argument list destructuring takes place inside
@@ -894,6 +875,7 @@ If all elements have the same units, the symbolic unit information is
 stored only once in the array's type tag, and the array data uses a
 compact representation:
 
+\vspace{-2ex}
 \begin{singlespace}
 \begin{verbatim}
 julia> a = [1m,2m,3m]
@@ -914,6 +896,7 @@ julia> reinterpret(Int,a)
 If different units are present, a wider type is chosen via the array
 constructor invoking \texttt{promote\_type}:
 
+\vspace{-2ex}
 \begin{singlespace}
 \begin{verbatim}
 julia> a = [1m,2s]
@@ -1035,6 +1018,7 @@ addConstraint(m, Constraint(aff,"=="))
 \noindent
 \texttt{addToExpression} includes the following methods (plus others):
 
+\begin{samepage}
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
 addToExpression(ex::Number,   c::Number,   x::Number)
@@ -1049,6 +1033,7 @@ addToExpression(aff::AffExpr, c::Number,   x::AffExpr)
 addToExpression(aff::AffExpr, c::Number,   x::QuadExpr)
 \end{lstlisting}
 \end{singlespace}
+\end{samepage}
 
 When the arguments are all numbers, \texttt{ex + c*x} is computed directly.
 Or, given an \texttt{AffExpr} and a variable, the \texttt{AffExpr}'s lists of

@@ -194,6 +194,7 @@ Here is how the above dispatch scheme might be implemented in Julia
 facilitate comparison):
 % TODO explain MulFun, point to sec 4.6.3 possible solutions to higher-order
 
+\begin{samepage}
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
 function vander(x, N::Int)
@@ -205,7 +206,7 @@ function vander(x, N::Int)
   end
   if N > 1
     for i = 2:N; v[:, i] = x; end
-    accumulate(MulFun(), v, v)
+    accumulate(multiply, v, v)
   end
   return v
 end
@@ -220,6 +221,7 @@ function accumulate(op, input, output)
 end
 \end{lstlisting}
 \end{singlespace}
+\end{samepage}
 
 \noindent
 This code implements the entire \texttt{vander} computation
@@ -328,6 +330,7 @@ However, in mathematical code most values are numbers or number-like.
 Numerical properties (such as positive, negative, even, odd, greater
 than one, etc.) are what matter, and these are highly dynamic.
 
+% TODO also mention multi-valued nature of sqrt
 The classic example is square root (\texttt{sqrt}), whose result is complex
 for negative arguments.
 Including a number's sign in its type is a possibility, but this quickly gets

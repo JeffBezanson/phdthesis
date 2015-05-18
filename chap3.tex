@@ -541,6 +541,7 @@ As an example, consider a simple simulation, and how it can be written
 under a series of increasingly powerful paradigms. First, written-out
 imperative code:
 
+\vspace{-3ex}
 \begin{singlespace}
 \begin{verbatim}
 while running
@@ -568,6 +569,7 @@ Adding a simple object system leads to a nicer implementation
 \footnote{A perennial problem with simple examples is that better
 implementations often make the code longer.}:
 
+\vspace{-3ex}
 \begin{singlespace}
 \begin{verbatim}
 class Rabbit
@@ -605,6 +607,7 @@ of behaviors, to provide further opportunities to avoid repetition.
 Here \texttt{A<:B} is used to declare a subclass relationship; it
 says that an \texttt{A} is a kind of \texttt{B}:
 
+\vspace{-3ex}
 \begin{singlespace}
 \begin{verbatim}
 abstract class Animal
@@ -649,6 +652,7 @@ However, inside of these methods a structured set of \texttt{if} statements
 remains.
 We can replace these by adding another level of dispatch.
 
+\vspace{-3ex}
 \begin{singlespace}
 \begin{verbatim}
 class Rabbit <: Animal
@@ -674,6 +678,7 @@ But at that point, why is the first argument special?
 Why separate methods in a special way based on the first argument?
 It seems arbitrary, and indeed we can remove the special treatment:
 
+\vspace{-3ex}
 \begin{singlespace}
 \begin{verbatim}
 abstract class Animal
@@ -932,6 +937,9 @@ The theory governing such properties is subtyping.
 %% reflect on level of power: this dispatch system is both more and less
 %% powerful than previous ones in various ways.
 
+% normally this is used for type safety
+% in our case it is used to form an ``analyzable subset'' of the language
+
 It turns out that a lot of relevant work on this has been done in the
 context of type systems for XML~\cite{hosoya2000xduce, BCF03}.
 %Something about semantic subtyping and type systems for processing XML.
@@ -942,19 +950,41 @@ However if one substitutes ``symbolic expression'' for ``XML document'',
 the similarity becomes clearer.
 In XML processing, programs match documents against patterns in order
 to extract information of interest or validate document structure.
-These patterns resemble regular expressions, and so also denote sets
-and admit a subset (subtype) relation.
+These patterns resemble regular expressions, and so also denote sets.
+%and admit a subset (subtype) relation.
 
+In our context, some argument lists and the properties of some data
+structures are sufficiently complex to warrant such a treatment.
+For example, consider a \texttt{SubArray} type that describes a
+selection or ``view'' of part of another array.
+Here is part of its definition in Julia's standard library:
 
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
 const ViewIndex = Union(Int, Colon, Range{Int}, UnitRange{Int},
                         Array{Int,1})
 immutable SubArray{T, N, P<:AbstractArray,
-                   I<:Tuple{ViewIndex...}, LD} <: AbstractArray{T,N}
+                   I<:Tuple{ViewIndex...}} <: AbstractArray{T,N}
 \end{lstlisting}
 \end{singlespace}
 
+\noindent
+The properties of the \texttt{SubArray} type are declared within curly
+braces.
+A \texttt{SubArray} has an element type, number of dimensions,
+underlying storage type, and a tuple of indexes (one index per dimension).
+Limiting indexes to the types specified by \texttt{ViewIndex}
+documents what kind of indexes can be supported efficiently.
+Different index tuples can yield drastically different performance
+characteristics.
+
+Without the ability to describe these properties at the type level,
+it would be difficult to implement an efficient \texttt{SubArray}.
+In section~\ref{sec:programsanddomains} we only needed to test fairly
+simple conditions, but the checks here would involve looping over
+indexes to determine which dimensions to drop, or to determine whether
+stride-1 algorithms can be used, and so on.
+% TODO more
 
 % our language is in many ways dual to ML. that family shuns subtyping,
 % but in the lattice theoretic model it's inescapable.
@@ -1004,7 +1034,7 @@ generated.
 The idea of specialization unites parametric and ad hoc polymorphism.
 Beginning with a parametrically polymorphic function, one can imagine
 a compiler specializing it for various cases, i.e.\ certain concrete argument
-values.
+values or types.
 These specializations could be stored in a lookup table, for use
 either at compile time or at run time.
 
@@ -1031,7 +1061,7 @@ because every object has the same structure, allowing meaningful
 operations.
 \fi
 
-\subsection{Separate compilation vs.\ performance}
+\subsection{Separate compilation}
 
 Writing the signature of a generic method that needs to be separately compiled,
 as in Java, can be a difficult exercise.
@@ -1085,6 +1115,7 @@ and expressiveness advantages of generic programming are available without
 their usual complexity.
 This design arises from the following five part recipe:
 
+\vspace{-3ex}
 \begin{singlespace}
 \begin{enumerate}
 %\item A fully connected type tree
@@ -1094,14 +1125,22 @@ This design arises from the following five part recipe:
 %\item Data flow type inference
 \item One mechanism for overloading, dispatch, and specialization
 \item Semantic subtyping
-\item Code specialization by default
 \item Make type parameters optional
+\item Code specialization by default
 \item Types as ordinary values
 \end{enumerate}
 \end{singlespace}
 
-% three forms of ``gradualism'': adding methods, adding types to arguments,
-% adding parameters to types.
+\noindent
+The first three items provide three forms of ``gradualism'':
+adding methods, adding more detailed type specifications to arguments,
+and adding parameters to types.
+The last two items alleviate some of the difficulty of type-level
+programming.
+The last item is especially controversial, but need not be.
+Consistent and practical formulations allowing types to be values of
+type \texttt{Type} have been demonstrated~\cite{cardelli1986polymorphic}.
+
 
 %- library writers can decide what to put at the type level without affecting users,
 %  dropping type parameters

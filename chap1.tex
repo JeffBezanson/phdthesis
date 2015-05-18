@@ -441,6 +441,7 @@ We do neither of these.
 Instead, our dispatch is based on \emph{sets of values that are robust
 under evaluation}: abstract evaluation over such sets is less likely
 to diverge.
+% TODO: needs to be clearer
 For example, consider the set $\{1,2\}$.
 This set is not closed under ``natural'' functions.
 As we evaluate a recursive function over this abstract value, the
@@ -543,6 +544,7 @@ If code needs to be generated based on run time information, then a
 staged library might need to implement its own dispatch mechanism
 for invoking its generated code.
 
+% TODO needs to be clearer
 We find that our particular style of dynamic type-based dispatch provides
 an unusually good substrate for staged programming.
 The reason is that the language, though dynamically typed,

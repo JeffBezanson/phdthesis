@@ -710,9 +710,6 @@ more constrained than a type where variables appear only once:
 \exists\ T\ \texttt{Pair}\{T,T\}\ <\ \exists\ T\ \exists\ S\ \texttt{Pair}\{T,S\}
 \]
 
-% TODO: if T=S=Any the types are equal, so the algorithm is being conservative here.
-% however this is exactly what we want for diagonal dispatch~\ref{sec:diagonal}
-
 \noindent
 However with sufficiently tight bounds that relationship no longer holds
 (here $x$ is any type):
@@ -1254,7 +1251,25 @@ will occur before run time.
 
 \subsubsection{Tradeoffs of staged programming}
 
-% TODO
+Code that generates code is more difficult to write, read, and debug.
+At the same time, staged programming is easy to overuse, leading to obscure
+programs that could have been written with basic language constructs
+instead.
+
+This feature also makes static compilation even more difficult.
+If an unanticipated call to a staged method occurs in a statically
+compiled program, two rather poor options are available: stop with an
+error, or run the generated code in an interpreter (we could compile
+code at run time, but presumably the purpose of static compilation was
+to avoid this).
+Ordinarily, the worst case for performance is to dynamically dispatch
+every call.
+Constructing expressions and then evaluating them with an interpreter is
+far worse, especially considering that performance is the only reason
+to use staged programming in the first place.
+This issue will need to be addressed through enhanced static analysis
+and error reporting tools.
+
 
 \section{Higher-order programming}
 
@@ -1505,7 +1520,13 @@ immutable Polynomial{N,R}
     coeffs::Vector{R}
 end
 
-call{N}(p::Polynomial{N}, x) = sum([p.coeffs[i+1]*x^i for i=0:N])
+function call{N}(p::Polynomial{N}, x)
+    v = p.coeffs[end]
+    for i = N:-1:1
+        v = v*x + p.coeffs[i]
+    end
+    return v
+end
 \end{lstlisting}
 \end{singlespace}
 
