@@ -704,20 +704,20 @@ Still there is a usability cost, and an abstraction layer is needed.
 \begin{tabular}{|l|ll|}\hline
 Structured matrix types & \multicolumn{2}{|c|}{Factorization types} \\
 \hline
-Bidiagonal             &  Cholesky         &  GeneralizedSchur \\
-Diagonal               &  CholeskyPivoted  &  LDLt \\
-SymmetricRFP           &  QR               &  LU \\
-TriangularRFP          &  QRCompactWY      &  CholeskyDenseRFP \\
+Bidiagonal             &  Cholesky         &   \\
+Diagonal               &  CholeskyPivoted  &   \\
+SymmetricRFP           &  QR               &  \\
+TriangularRFP          &  QRCompactWY      &  \\
 Symmetric              &  QRPivoted & \\
-Hermitian              &  QRPackedQ & \\
-AbstractTriangular     &  QRPackedWYQ & \\
-LowerTriangular        &  QRCompactWYQ & \\
-UnitLowerTriangular    &  Hessenberg & \\
-UpperTriangular        &  HessenbergQ & \\
-UnitUpperTriangular    &  Eigen & \\
-SymTridiagonal         &  GeneralizedEigen & \\
-Tridiagonal            &  SVD & \\
-UniformScaling         &  Schur & \\
+Hermitian              &  Hessenberg & \\
+AbstractTriangular     &  Eigen & \\
+LowerTriangular        &  GeneralizedEigen & \\
+UnitLowerTriangular    &  SVD & \\
+UpperTriangular        &  Schur & \\
+UnitUpperTriangular    &  GeneralizedSchur & \\
+SymTridiagonal         &  LDLt & \\
+Tridiagonal            &  LU & \\
+UniformScaling         &  CholeskyDenseRFP  & \\
 \hline
 \end{tabular}
 \end{center}
@@ -732,6 +732,9 @@ factorizations.
 \label{tab:matrixtypes}
 \end{table}
 \end{singlespace}
+
+% matrixlike but not arrays or factorizations:
+% QRPackedQ QRPackedWYQ QRCompactWYQ HessenbergQ
 
 Table~\ref{tab:matrixtypes} lists some types that have been defined in
 Julia (largely by Andreas Jensen) for working with structured matrices

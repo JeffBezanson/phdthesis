@@ -3,36 +3,62 @@
 % to what extent is this a technical computing language?
 % it's not, really :)
 
-``I've yet to hear anyone explain how you decide what are the boundaries of a `domain-specific' language. Isn't the `domain' mathematics and science itself?''~\cite{bobharperdsl}
+%``I've yet to hear anyone explain how you decide what are the boundaries of a `domain-specific' language. Isn't the `domain' mathematics and science itself?''~\cite{bobharperdsl}
 
+%tc is not a domain, and doesnt need to be:
 % \cite{meyerovich2012socio} about appealing to some domain first
+% technical computing was ripe for such a treatment
 
 % something about how ``information hiding'' is anathema to science,
 % and coincidentally is not the focus of t.c. languages or rigorous
 % functional languages.
 
-A generation of dynamic languages have been designed by trying variants of
-the class-based object oriented paradigm. This process has been aided by
-the development of standard techniques (e.g. bytecode VMs) and reusable
-infrastructure such as code generators, garbage collectors, and whole VMs
-like the JVM and CLR.
+%% A generation of dynamic languages have been designed by trying variants of
+%% the class-based object oriented paradigm. This process has been aided by
+%% the development of standard techniques (e.g. bytecode VMs) and reusable
+%% infrastructure such as code generators, garbage collectors, and whole VMs
+%% like the JVM and CLR.
 
-It is possible to envision a future generation of languages that generalize
-this design to set-theoretic subtyping instead of just classes. This next
-generation will require its own new tools, such as partial evaluators (already
-under development in PyPy and Truffle). One can also imagine these future
-language designers wanting reusable program analyses, and tools for
-developing lattices and their operators.
+%% It is possible to envision a future generation of languages that generalize
+%% this design to set-theoretic subtyping instead of just classes. This next
+%% generation will require its own new tools, such as partial evaluators (already
+%% under development in PyPy and Truffle). One can also imagine these future
+%% language designers wanting reusable program analyses, and tools for
+%% developing lattices and their operators.
 
+
+% not a domain, just users whose priorities were left out
+We began by observing that technical computing users have priorities
+that have rarely been addressed directly by programming languages.
+Arguably, even many of the current technical computing languages only
+address these priorities for a subset of cases.
+% in particular, they want flexible notation, and code specialized
+% for information regardless of when that information is known.
+In some sense all that was missing was an appropriate notion of
+partial information.
+
+partial information implies
+- describing sets of values, therefore code applicability
+- a performance model, capturing what sorts of information the compiler
+  can determine
+- staging. the whole idea of generating code depends on knowing something
+  about what needs to be done, but not everything, so that it can be
+  reused enough to be worthwhile.
+  therefore partial information.
+
+of course this sounds a lot like a type system, but the point is that
+this idea can perform important roles at run time.
+
+% what's wrong with dynamic languages is not just a lack of static
+% guarantees, but that they don't seem to be pareto optimal.
 % actually not enough is done with dynamic typing: you give up type
 % checking, and all you get is untyped dictionaries in return?
 
-Julia encourages lattice-theoretic execution models to become integral
-parts of languages. dispatch was an especially natural way to do this,
-are there others?
-What else can we do with partial information as part of a programming
-model?
-% talk about partial information
+%exploiting partial information is key.
+%dispatch was an especially natural way to do this,
+%are there others?
+%What else can we do with partial information as part of a programming
+%model?
 % somehow being dual to ML-family languages; what's hard for them is
 % easy for us and vice versa.
 
@@ -60,13 +86,20 @@ on this idea might look like.
 If we are interested in abstraction, then type specialization is the
 first priority for getting performance.
 However in a broader view there is much more to performance.
+For example ``code selection'' appears in a different guise in the
+idea of \emph{algorithmic choice}~\cite{Ansel:2009:PLC:1542476.1542481,Ansel:2014:OEF:2628071.2628092}:
+at any point in a program, we might have a choice of several algorithms and
+want to automatically pick the fastest one.
 
-% algorithmic choice
 
 %There are several key aspects of performance programming that our design
 %does not directly address, e.g. storage and in-place optimizations.
 
 \section{Implementation issues}
+
+As with any practical system, we must begin the process of trying to get back
+what our design initially trades away.
+
 
 % steve j suggestions:
 % Precompilation?  Issues with type-inference?  Inlining anonymous functions?
@@ -76,7 +109,7 @@ However in a broader view there is much more to performance.
 
 % issues
 % - static comp, separate comp
-% - functions
+% - functions, the result of `map`
 % - static typing, TypeCheck.jl
 
 \section{Future work}

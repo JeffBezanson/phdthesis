@@ -271,8 +271,10 @@ representations (an \texttt{Array\{Any\}} is an array of pointers).
 Tuples are a special case where covariance works, because each component type need
 only refer to single value, so there is no need for concrete
 tuple types with non-concrete parameters.
-%We also find that most uses of covariance are more flexibly
-%handled by union type connectives (introduced below).
+% TODO: important, but maybe conflates subtyping and inheritance too much
+%Similarly, concrete inheritance conflicts somewhat with specialization.
+%Code cannot be maximally specialized for a given type if instances of that type might
+%have different representations.
 
 Next we add conventional product (tuple) types, which are used to represent the
 arguments to methods. These are almost identical to the nominal types defined above,
