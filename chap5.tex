@@ -486,7 +486,7 @@ or all operations will be dynamically dispatched.
 Other systems might provide flexibility only at compile time, for example a
 template library where the number of dimensions must be statically known.
 
-Whatever tradeoff is made, rules must be defined for how various operators
+Whatever trade-off is made, rules must be defined for how various operators
 act on dimensions.
 Here we focus on indexing, since selecting parts of arrays has particularly
 rich behavior with respect to dimensionality.
@@ -886,7 +886,7 @@ Units are symbolic objects, so attaching them to numbers can bring
 significant overhead.
 To restore peak performance, units need to be ``lifted'' into a type
 system of some kind, to move their overhead to compile time.
-However at that point we encounter a tradeoff similar to that present
+However at that point we encounter a trade-off similar to that present
 in multi-dimensional arrays.
 Will it be possible to have an array of numbers with different units?
 What if a program wants to return different units based on criteria
@@ -1010,7 +1010,7 @@ For simple uses of units, Julia's compiler will generally be able to
 infer result types.
 For more complex cases like \texttt{prod} it may not be able to, but
 this will only result in a loss of performance.
-This is the tradeoff a Julia programmer accepts.
+This is the trade-off a Julia programmer accepts.
 
 
 %\section{Dates}

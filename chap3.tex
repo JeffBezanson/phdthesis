@@ -117,19 +117,19 @@ A compiler could, for example, automatically generate a range of
 specialized routines and select among them at run time, falling back
 to slower generic code if necessary.
 
-Consider the tradeoff this entails.
+Consider the trade-off this entails.
 The programmer is liberated from worrying about the binding time of
 different language constructs.
 With a JIT compiler, performance will probably be good.
 But without JIT, performance will be unpredictable, with no clear
 syntactic rules for what is expected to be fast.
 So it is not surprising that software engineering languages shun this
-tradeoff.
-However we believe it is the tradeoff technical computing
+trade-off.
+However we believe it is the trade-off technical computing
 users want by default, and it has not generally been available
 in any language.
 
-Designing for this tradeoff requires a change of perspective
+Designing for this trade-off requires a change of perspective
 within the compiler.
 Most compilers focus on, and make decisions according to, the
 language's source-level type system.
