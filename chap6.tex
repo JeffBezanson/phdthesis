@@ -90,7 +90,10 @@ For example ``code selection'' appears in a different guise in the
 idea of \emph{algorithmic choice}~\cite{Ansel:2009:PLC:1542476.1542481,Ansel:2014:OEF:2628071.2628092}:
 at any point in a program, we might have a choice of several algorithms and
 want to automatically pick the fastest one.
-
+Julia's emphasis on writing functions in small pieces and describing
+applicability seems naturally suited to this kind of approach.
+% could maybe be implemented by passing around an execution plan
+% and dispatching on aspects of it
 
 %There are several key aspects of performance programming that our design
 %does not directly address, e.g. storage and in-place optimizations.
@@ -100,6 +103,21 @@ want to automatically pick the fastest one.
 As with any practical system, we must begin the process of trying to get back
 what our design initially trades away.
 
+For example, the specialization-based polymorphism we use does not support
+separate compilation.
+Fortunately that's never stopped anyone before: C++ templates have the same
+problem, but separately compiled modules can still be generated.
+We plan to do the same, with the same cost of re-analyzing all relevant code
+for each module.
+Another approach is to use layering instead of fully separate modules.
+Starting with the core language, one next identifies and compiles a useful base
+library.
+That layer is then considered ``sealed'' and can no longer be extended ---
+it effectively becomes part of the language.
+Now applications using this library can be compiled more efficiently.
+More layers can be added (slowest-changing first) to support more specific
+use cases.
+This is essentially the ``telescoping languages'' approach~\cite{telescoping}.
 
 % steve j suggestions:
 % Precompilation?  Issues with type-inference?  Inlining anonymous functions?
