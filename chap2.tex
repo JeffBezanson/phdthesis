@@ -115,8 +115,8 @@ Even the Lisp tradition, which originated most of the convenience features
 enumerated above, has sought to separate functionality into small pieces.
 For example Scheme provides separate functions \texttt{list-ref} and
 \texttt{vector-ref} \cite{schemelang} for indexing lists and vectors.
-% TODO: notably, scheme extensions (SCMUTILS) for scientific computing
-% add generic functions.
+Notably, the SCMUTILS library~\cite{Sussman:2001:SIC:375178} for
+scientific computing adds generic functions.
 
 % now we will look at an example to motivate design discussion
 
@@ -564,15 +564,15 @@ this optimization.
     %title=Vectorization Performance,
     xlabel={Vector Size},
     ylabel={GFlops},
-    legend entries={Vectorized, Fused, Summed, All scalar},
-    legend style={
-      %at={(0.98,0.84)},
-      legend pos = outer north east,
-      anchor = north west,
-      reverse legend=true
-    },
+    %legend entries={Vectorized, Fused, Summed, All scalar},
+    %legend style={
+    %  %at={(0.98,0.84)},
+    %  legend pos = outer north east,
+    %  anchor = north west,
+    %  reverse legend=true
+    %},
 ]
-\addplot+[color=black,mark=*,mark options={fill=black}] coordinates {
+\addplot+[color=black,mark=x,mark options={scale=2,fill=black}] coordinates {
 (10, 0.0181)
 (100, 0.1390)
 (1000, 0.5001)
@@ -581,8 +581,9 @@ this optimization.
 (1000000, 0.4543)
 (10000000, 0.5208)
 
-};
-\addplot+[color=black,mark=*,mark options={fill=black},style=dotted] coordinates {
+}
+node [pos=1,above left] {Vectorized};
+\addplot+[color=black,mark=square*,mark options={fill=black},style=dotted] coordinates {
 (10, 0.5778)
 (100, 1.5960)
 (1000, 1.2126)
@@ -591,8 +592,9 @@ this optimization.
 (1000000, 1.5835)
 (10000000, 1.7621)
 
-};
-\addplot+[color=black,mark=*,mark options={fill=black},style=dashed] coordinates {
+}
+node [pos=1,above left] {Fused};
+\addplot+[color=black,style=dashed,mark=*,mark options={scale=1.1,fill=black}] coordinates {
 (10, 3.1693)
 (100, 3.8297)
 (1000, 3.8697)
@@ -601,8 +603,9 @@ this optimization.
 (1000000, 3.6670)
 (10000000, 3.7258)
 
-};
-\addplot+[color=black,mark=*,mark options={fill=black},style=dashdotted] coordinates {
+}
+node [pos=0.9,below right] {Summed};
+\addplot+[color=black,mark=diamond*,mark options={scale=1.6,fill=black},style=dashdotted] coordinates {
 (10, 1.1202)
 (100, 3.8186)
 (1000, 4.6531)
@@ -611,7 +614,8 @@ this optimization.
 (1000000, 4.8585)
 (10000000, 4.8718)
 
-};
+}
+node [pos=0.9,below right] {All scalar};
 \end{semilogxaxis}
 \end{tikzpicture}
 \caption[Performance of vectorized code]{
