@@ -117,19 +117,19 @@ A compiler could, for example, automatically generate a range of
 specialized routines and select among them at run time, falling back
 to slower generic code if necessary.
 
-Consider the tradeoff this entails.
+Consider the trade-off this entails.
 The programmer is liberated from worrying about the binding time of
 different language constructs.
 With a JIT compiler, performance will probably be good.
 But without JIT, performance will be unpredictable, with no clear
 syntactic rules for what is expected to be fast.
 So it is not surprising that software engineering languages shun this
-tradeoff.
-However we believe it is the tradeoff technical computing
+trade-off.
+However we believe it is the trade-off technical computing
 users want by default, and it has not generally been available
 in any language.
 
-Designing for this tradeoff requires a change of perspective
+Designing for this trade-off requires a change of perspective
 within the compiler.
 Most compilers focus on, and make decisions according to, the
 language's source-level type system.
@@ -915,7 +915,7 @@ This table illustrates how many combinations of dispatch semantics have
 been tried.
 Keeping track of these distinctions is a distraction when one is focused
 on a non-programming problem.
-Including more than one row of this table makes a languge especially
+Including more than one row of this table makes a language especially
 complex and difficult to learn.
 
 % compare to julia tradeoffs
@@ -924,7 +924,7 @@ complex and difficult to learn.
 \section{Subtyping}
 
 So far we have seen some reasons why dispatch contributes significantly
-to flexiblity and performance.
+to flexibility and performance.
 However we have only actually dispatched on fairly simple properties like
 whether a value is an integer.
 How powerful should dispatch be, exactly?
@@ -1043,7 +1043,7 @@ Next we can imagine that the compiler might not optimally specialize
 certain definitions, and that the programmer would like to provide
 hints or hand-written implementations to speed up special cases.
 For example, imagine a function that traverses a generic array.
-A compiler-generated specialization might inline a specific array types's
+A compiler-generated specialization might inline a specific array type's
 indexing operations, but a human might further realize that the loop order
 should be switched for certain arrays types based on their storage order.
 
