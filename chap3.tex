@@ -17,6 +17,7 @@ programming.
 % expression available.
 
 \section{A binding time dilemma}
+\label{sec:bindingtimedilemma}
 
 Consider the following fragment of a function called \texttt{factorize},
 which numerically analyzes a matrix to discover structure that
@@ -833,7 +834,7 @@ something \emph{represented} as a list.
 If the representation of a value changes, the value can be inadvertently
 ``captured'' by a dispatch rule that was not intended to apply to it,
 violating abstraction.
-
+% we use 2-part values instead; symbolic part and data part effectively
 
 \subsection{Choices, choices}
 \label{sec:choices}

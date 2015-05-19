@@ -110,6 +110,7 @@ section we will take advantage of this to implement ``automatic'' type promotion
 
 
 \section{Numeric types and embeddings}
+\label{sec:embeddings}
 
 We might prefer ``number'' to be a single, concrete concept, but the history of
 mathematics has seen the concept extended many times, from integers to rationals to
@@ -740,11 +741,21 @@ array is expected.
 The factorization types are generally used for efficiently re-solving
 systems.
 % ? Cholesky has inv
+Sections \ref{sec:whydynamictyping} and \ref{sec:bindingtimedilemma}
+alluded to some of the ways that these types interact with language
+features.
+There are essentially two modes of use: ``manual'', where a programmer
+explicitly constructs one of these types, and ``automatic'', where a
+library returns one of them to user code written only in terms of generic
+functions.
 
-% there are two uses: manual and automatic
+Structured matrices have their own algebra.
+There are embedding relationships like those discussed in section~\ref{sec:embeddings}:
+diagonal is embedded in bidiagonal, which is embedded in tridiagonal.
+Bidiagonal is also embedded in triangular.
+After promotion, these types are closed under \texttt{+} and \texttt{-}, but
+generally not under \texttt{*}.
 
-
-% also embedding of bidiagonal in tridiagonal
 % matrix types not closed under operators:
 \iffalse
 function +(A::Bidiagonal, B::Bidiagonal)
@@ -755,7 +766,6 @@ function +(A::Bidiagonal, B::Bidiagonal)
     end
 end
 \fi
-
 
 \iffalse
 Multiple dispatch on special matrices
@@ -843,7 +853,16 @@ branch.
 \fi
 
 
-Describing the applicability of BLAS:
+\subsubsection{Calling BLAS and LAPACK}
+\label{sec:callingblas}
+
+Writing interfaces to BLAS~\cite{blas} and LAPACK is an avowed tradition
+in technical computing language implementation.
+Julia's type system is capable of describing the cases where routines
+from these libraries are applicable.
+For example the \texttt{axpy} operation in BLAS (computing $y\leftarrow \alpha x + y$)
+supports arrays with a single stride, and four numeric types.
+In Julia this can be expressed as follows:
 
 \begin{singlespace}
 \begin{lstlisting}[language=julia]
@@ -855,13 +874,15 @@ axpy!{T<:BlasFloat}(alpha::Number,
 \end{lstlisting}
 \end{singlespace}
 
+%\noindent
+%TODO
 
 \section{Units}
 
 Despite their enormous importance in science, unit quantities have
 not reached widespread use in programming.
-This is not surprising, considering the technical difficulties involved:
-units are symbolic objects, so attaching them to numbers can bring
+This is not surprising considering the technical difficulties involved.
+Units are symbolic objects, so attaching them to numbers can bring
 significant overhead.
 To restore peak performance, units need to be ``lifted'' into a type
 system of some kind, to move their overhead to compile time.

@@ -936,8 +936,8 @@ However, Cecil (along with its successor, Diesel~\cite{chambers2006diesel})
 does not allow methods to differ only in type parameters.
 In the semantic subtyping framework we use, such definitions have a
 natural interpretation in terms of sets, and so are allowed.
-In fact, they are used extensively in Julia.
-% TODO point to examples in chap 5
+In fact, they are used extensively in Julia (see section~\ref{sec:callingblas}
+for an example).
 
 \subsection{Diagonal dispatch}
 \label{sec:diagonal}
@@ -1220,6 +1220,7 @@ the method's expression-generating code is invoked on the argument types
 just before type inference.
 The optimized version of the user-generated code is then stored in the method
 cache, and can be selected in the future like any other specialization.
+The generated code can even be inlined into call sites in library clients.
 The caller does not need to know anything about this, and the author
 of the function does not need to do any bookkeeping.
 
@@ -1234,7 +1235,7 @@ then it would be difficult to reuse the existing dispatch system.
 The types of arguments say something about their \emph{meaning},
 and so unlike syntax-based systems (macros) are independent of how
 the arguments are computed.
-A staged method of this kind is \emph{guaranteed} to produce the
+A staged method of this kind is guaranteed to produce the
 same results for arguments \texttt{2+2} and \texttt{4}.
 
 Another advantage of this approach is that the expression-generating
@@ -1249,10 +1250,6 @@ never again.
 This preserves the possibility of full static compilation, but due to
 dynamic typing the language cannot guarantee that all code generation
 will occur before run time.
-
-% TODO more disc. of related work
-%Our approach is closely related to exotypes
-%\cite{DeVito:2014:FRG:2594291.2594307}.
 
 \subsubsection{Tradeoffs of staged programming}
 
@@ -1281,7 +1278,7 @@ This would provide a way to generate fewer specializations, and could
 aid static compilation (by generating code for the most general type
 \texttt{Tuple\{Any...\}}).
 Unfortunately this appears to be impractical, due to the need for
-the type domain behavior of functions to be monotonic.
+functions to be monotonic in the type domain.
 The soundness and termination of data flow analysis depend on the
 property that given lattice elements $a$ and $b$, we must have
 $a\subseteq b\ \implies\ f(a)\subseteq f(b)$ for all $f$.
@@ -1289,6 +1286,23 @@ Since staged methods can generate arbitrarily different code for
 different types, it is easy to violate this property.
 For the time being, we are forced to invoke staging only on concrete
 types.
+
+\subsubsection{Related work}
+
+Our approach is closely related to Exotypes~\cite{DeVito:2014:FRG:2594291.2594307},
+and to generation of high performance code using lightweight modular staging
+(LMS)~\cite{Rompf:2010:LMS:1868294.1868314,Ofenbeck:2013:SST:2517208.2517228}.
+The primary difference is that in our case code generation is invoked
+implicitly, and integrated directly with the method cache.
+Unlike LMS, we do not do binding time analysis, so expression generation itself
+is more ``manual'' in our system.
+% we have not yet extended it to generating data types, only methods?
+
+% spiral in scala:
+% - uses types to do binding time analysis to decide what is staged
+% - still uses explicit code generation
+% our novelty: totally implicit, integrated with generic function method cache
+
 
 \section{Higher-order programming}
 
@@ -1743,16 +1757,17 @@ $(A\cup B)\sqcap C$ is computed as $(A\sqcap C) \cup (B\sqcap C)$.
 Due to the way meet is used, it is safe for it to over estimate its
 result.
 That will only cause us to conclude that more methods are applicable
-than really are, leading to coarser but still correct type inference.
+than really are, leading to coarser but still sound type inference.
 Note that for concrete type $T$, the rule
 $T\leq S \implies T\sqcap S = T$ suffices.
 
-Widening is needed in two places:
+Widening is needed in three places:
 
 \begin{itemize}
 \item Function argument lists that grow in length moving down the call stack.
 \item Computing the type of a field. Instantiating field types builds up
 other types, potentially leading to infinite chains.
+\item When types from two control flow paths are merged.
 \end{itemize}
 
 \noindent
@@ -1802,6 +1817,7 @@ This is undeniably expensive, and past work has often sought to avoid
 % user-directed type-based specialization in scala
 or limit specialization (e.g.\ \cite{Dragos:2009:CGT:1565824.1565830}).
 % we find it is the right default
+% TODO
 
 % it's interesting to note that java generics did not originally support
 % types like int and float as parameters. in T.C. those are practically
@@ -1820,6 +1836,19 @@ a protocol for keeping the system consistent under changes.
 
 
 \subsection{Performance predictability}
+
+Performance predictability is one of the main sacrifices of our design.
+There are three traps: widening (which is heuristic), changing the type
+of a variable, and heterogeneous containers (e.g.\ arrays of \texttt{Any}).
+These can cause significant slowdowns for reasons that may be unclear to
+the programmer.
+To address this, we provide a sampling profiler as well as the ability to
+examine the results of type inference.
+The package \texttt{TypeCheck.jl}~\cite{typecheckjl} can also be used to
+provide warnings about poorly-typed code.
+
+%- use dispatch wherever possible
+%- the values of parameters are specialized on
 
 
 \section{Dispatch utilization}
