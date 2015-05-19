@@ -43,7 +43,7 @@ for an appropriate \texttt{new} expression
 Although type expressions are quite often constants, one might also write
 \texttt{MyType\{x+y\}}, to construct a \texttt{MyType} with
 a parameter determined by computing \texttt{x+y}.
-This provides a tradeoff that we feel is highly desirable for our intended
+This provides a trade-off that we feel is highly desirable for our intended
 applications:
 
 \begin{itemize}
@@ -1199,7 +1199,7 @@ Here the syntax \texttt{:(  )} is a quotation: a representation of the
 expression inside is returned, instead of being evaluated.
 The syntax \texttt{quote ... end} is an alternative for quoting multi-line
 expressions.
-The value of an expression can be interpolated into a quotatation using
+The value of an expression can be interpolated into a quotation using
 prefix \texttt{\$}.
 
 % where the rest of the language is about running code efficiently,
@@ -1253,7 +1253,7 @@ This preserves the possibility of full static compilation, but due to
 dynamic typing the language cannot guarantee that all code generation
 will occur before run time.
 
-\subsubsection{Tradeoffs of staged programming}
+\subsubsection{Trade-offs of staged programming}
 
 Code that generates code is more difficult to write, read, and debug.
 At the same time, staged programming is easy to overuse, leading to obscure
@@ -1318,7 +1318,7 @@ Past work has often described the types of generic functions using the
 boundedquant, Castagna:1995:COF:203496.203510}.
 Since an ordinary function has an arrow type $A\rightarrow B$ describing how it
 maps arguments $A$ to results $B$, a function with multiple definitions can
-natually be considered to have multiple such types.
+naturally be considered to have multiple such types.
 For example, a \texttt{sin} function with the following two definitions:
 
 \begin{singlespace}
@@ -1543,7 +1543,7 @@ using a data object, and then allow that data object to be treated as a
 function, i.e.\ ``called''. Some object-oriented languages call such an object
 a \emph{functor}.
 
-Julia accomodates this approach with the \texttt{call} mechanism used for
+Julia accommodates this approach with the \texttt{call} mechanism used for
 constructors (see section \ref{sec:constructors}).
 
 As an example, we can define a type for polynomials of order $N$ over ring
