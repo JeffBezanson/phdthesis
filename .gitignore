@@ -1,10 +1,11 @@
 *.aux
 *.fdb_latexmk
 *.fls
+*.lof
 *.log
+*.lot
+*.out
 *.toc
 *.blg
 *.bbl
-main.dvi
-outline.dvi
-outline.pdf
+
