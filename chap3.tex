@@ -915,7 +915,7 @@ This table illustrates how many combinations of dispatch semantics have
 been tried.
 Keeping track of these distinctions is a distraction when one is focused
 on a non-programming problem.
-Including more than one row of this table makes a languge especially
+Including more than one row of this table makes a language especially
 complex and difficult to learn.
 
 % compare to julia tradeoffs
@@ -924,7 +924,7 @@ complex and difficult to learn.
 \section{Subtyping}
 
 So far we have seen some reasons why dispatch contributes significantly
-to flexiblity and performance.
+to flexibility and performance.
 However we have only actually dispatched on fairly simple properties like
 whether a value is an integer.
 How powerful should dispatch be, exactly?
@@ -1043,7 +1043,7 @@ Next we can imagine that the compiler might not optimally specialize
 certain definitions, and that the programmer would like to provide
 hints or hand-written implementations to speed up special cases.
 For example, imagine a function that traverses a generic array.
-A compiler-generated specialization might inline a specific array types's
+A compiler-generated specialization might inline a specific array type's
 indexing operations, but a human might further realize that the loop order
 should be switched for certain arrays types based on their storage order.
 
