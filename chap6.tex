@@ -27,7 +27,6 @@
 %% developing lattices and their operators.
 
 
-% not a domain, just users whose priorities were left out
 We began by observing that technical computing users have priorities
 that have rarely been addressed directly by programming languages.
 Arguably, even many of the current technical computing languages only
@@ -36,23 +35,32 @@ address these priorities for a subset of cases.
 % for information regardless of when that information is known.
 In some sense all that was missing was an appropriate notion of
 partial information.
+The idea of partial information implies many things if carried far
+enough.
+It describes sets of values, and therefore code applicability.
+It describes what sorts of information a compiler can determine,
+providing a performance model.
+It also leads to staged programming: the idea of generating code depends on
+knowing something about what needs to be computed, but not everything, so that
+code can be generated and then reused enough to be worthwhile.
 
-partial information implies
-- describing sets of values, therefore code applicability
-- a performance model, capturing what sorts of information the compiler
-  can determine
-- staging. the whole idea of generating code depends on knowing something
-  about what needs to be done, but not everything, so that it can be
-  reused enough to be worthwhile.
-  therefore partial information.
-
-of course this sounds a lot like a type system, but the point is that
-this idea can perform important roles at run time.
+% TODO
+%of course this sounds a lot like a type system, but the point is that
+%this idea can perform important roles at run time.
 
 % what's wrong with dynamic languages is not just a lack of static
 % guarantees, but that they don't seem to be pareto optimal.
 % actually not enough is done with dynamic typing: you give up type
 % checking, and all you get is untyped dictionaries in return?
+
+% we know these programs need more organization and type info.
+% this is the first truly viable approach
+%   - bad that they need to think about type stability, but
+%     also good that is relatively easy to grasp, and it gets
+%     people thinking about it who wouldn't normally
+%     - the types give people the tools to deal with it
+% - can't pretend that people wont have to worry about this stuff;
+%   it's fundamental
 
 %exploiting partial information is key.
 %dispatch was an especially natural way to do this,
@@ -62,105 +70,100 @@ this idea can perform important roles at run time.
 % somehow being dual to ML-family languages; what's hard for them is
 % easy for us and vice versa.
 
-\iffalse
-It is interesting to observe that the data model of a language like Julia
-consists of two key relations: the subtype relation, which is relatively
-well understood and enjoys useful properties like transitivity, but also
-the typeof relation, which relates individual values to their types
-(i.e. the `typeof` function). The typeof relation appears not to be
-transitive, and also has a degree of arbitrariness: a value is of a type
-merely because it is labeled as such, and because various bits of code
-conspire to ensure that this labeling makes sense according to various
-criteria.
-
-We have speculated about whether future languages will be able to do away
-with this distinction. One approach is $\lambda_{\aleph}$. We have also
-speculated that this could be done using types based on non-well-founded
-set theory, combining the subset-of and element-of relations using
-self-containing sets. We are not yet sure what a practical language based
-on this idea might look like.
-\fi
-
 \section{Performance}
 
 If we are interested in abstraction, then type specialization is the
 first priority for getting performance.
 However in a broader view there is much more to performance.
 For example ``code selection'' appears in a different guise in the
-idea of \emph{algorithmic choice}~\cite{Ansel:2009:PLC:1542476.1542481,Ansel:2014:OEF:2628071.2628092}:
-at any point in a program, we might have a choice of several algorithms and
+idea of \emph{algorithmic choice}~\cite{Ansel:2009:PLC:1542476.1542481,Ansel:2014:OEF:2628071.2628092}.
+At any point in a program, we might have a choice of several algorithms and
 want to automatically pick the fastest one.
 Julia's emphasis on writing functions in small pieces and describing
-applicability seems naturally suited to this kind of approach.
-% could maybe be implemented by passing around an execution plan
-% and dispatching on aspects of it
+applicability seems naturally suited to this functionality.
+A possible approach could be to dispatch on components of an execution plan
+object.
+
+High-performance code generators such as Spiral~\cite{Puschel:2004:SGP:1080647.1080687}
+often specialize on data size.
+Julia makes it easy to represent array sizes in the type system, and the
+usual pattern of dynamic dispatch to specialized code could be applicable
+in these cases as well.
+% immutable arrays, specializing on size
 
 %There are several key aspects of performance programming that our design
 %does not directly address, e.g. storage and in-place optimizations.
 
-\section{Implementation issues}
+While Julia includes a distributed computing library, we have not
+sufficiently explored shared memory parallelism.
+The Cilk model~\cite{Joerg96,Randall98} would be a good match for the
+level of performance and abstraction we aim for.
+
+
+\section{Future work}
 
 As with any practical system, we must begin the process of trying to get back
 what our design initially trades away.
-
 For example, the specialization-based polymorphism we use does not support
 separate compilation.
 Fortunately that's never stopped anyone before: C++ templates have the same
 problem, but separately compiled modules can still be generated.
 We plan to do the same, with the same cost of re-analyzing all relevant code
 for each module.
-Another approach is to use layering instead of fully separate modules.
+Another approach is to use layering instead of separate modules.
 Starting with the core language, one next identifies and compiles a useful base
 library.
 That layer is then considered ``sealed'' and can no longer be extended ---
 it effectively becomes part of the language.
-Now applications using this library can be compiled more efficiently.
+Applications using this library can be compiled more efficiently.
 More layers can be added (slowest-changing first) to support more specific
 use cases.
 This is essentially the ``telescoping languages'' approach~\cite{telescoping}.
 
-% steve j suggestions:
-% Precompilation?  Issues with type-inference?  Inlining anonymous functions?
-% \section{Separate compilation}
-% Technically julia does not support it, but that's never stopped anybody
-% from doing it anyway. e.g. C++
+An ideal approach to higher-order programming in Julia remains somewhat
+elusive.
+For example the \texttt{map} function in section~\ref{sec:implementingmap}
+always returns an array of element type \texttt{Bottom} when the input
+array is empty, which is fully defensible but still confusing and surprising
+to many programmers.
+It is possible the situation could be improved by some syntactic sugar for
+nominal arrow types.
 
-% issues
-% - static comp, separate comp
-% - functions, the result of `map`
-% - static typing, TypeCheck.jl
+Approaches to static type checking are also worth thinking about.
+Most importantly, we feel we have the priorities right: first introduce
+at least some kind of type information, then gradually add checks and
+tooling to improve safety.
+For example, a useful alternative form of the language could require
+types to match when control flow edges meet.
+Tools like \texttt{TypeCheck.jl}~\cite{typecheckjl} can be used to take
+better advantage of whatever type information we are able to infer.
 
-\section{Future work}
+%There are many opportunities to incorporate more detailed static analysis.
 
-\begin{itemize}
-\item formalize more details of dispatch, meet, join, widen
-\item product domains, how to incorporate finer types more smoothly
-\item how to incorporate static checks? \cite{typecheckjl}
-\item separate compilation
-\item function types
-\item shared memory, cilk
-\item can we implement BLAS?
-\item incorporate autotuning?
-\end{itemize}
+% higher resolution type info degrades SNR
 
+
+%% \begin{itemize}
+%% \item formalize more details of dispatch, meet, join, widen
+%% \item product domains, how to incorporate finer types more smoothly
+%% *\item how to incorporate static checks? \cite{typecheckjl}
+%% *\item separate compilation
+%% *\item function types
+%% \item shared memory, cilk
+%% \item can we implement BLAS?
+%% *\item incorporate autotuning?
+%% \end{itemize}
 
 % oscar:
 % - what we have now is the ``minimal julia''
 % - ``easy to write code that's easy to analyze statically''
 % - got non-programmer people to write easy to analyze code
-%   - bad that they need to think about type stability, but
-%     also good that is relatively easy to grasp, and it gets
-%     people thinking about it who wouldn't normally
-%     - the types give people the tools to deal with it
-% - can't pretend that people wont have to worry about this stuff;
-%   it's fundamental
 
 % mention lines of code
 %% How much of the past 30 years of handwritten Matlab internals can
 %% be autogenerated with a compiler? (A lot)
-
-% we know these programs need more organization and type info.
-% this is the first truly viable approach
+%% 70kLOC julia, 34kLOC c/c++, 6kLOC scheme
+% but this includes a REPL, package manager
 
 % easy polymorphism.
 % - starts with a very simple HLL
@@ -172,3 +175,13 @@ This is essentially the ``telescoping languages'' approach~\cite{telescoping}.
 
 
 \section{Project status}
+
+Not only is Julia free software, but we are especially interested in making
+the most of that 
+
+by writing more in a high-level language than before
+
+590 packages
+most packages written entirely in julia
+
+over 350 contributors

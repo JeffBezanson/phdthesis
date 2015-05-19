@@ -105,7 +105,7 @@ When such mechanisms are used in technical computing, there is nearly
 always a corresponding need to \emph{specialize} code for specific cases
 to obtain performance.
 Polymorphic languages sometimes support forms of specialization,
-but often only through a designated mechanism (e.g. templates), or
+but often only through a designated mechanism (e.g.\ templates), or
 deployed conservatively out of resource concerns.
 We intend to show that an equilibrium point in the design space can be found
 by combining selection and specialization into a single appropriately designed
@@ -116,7 +116,7 @@ dynamic type-based dispatch mechanism.
 \subsubsection{Thesis statement}
 
 Integrating code selection and specialization using
-type-based dynamic dispatch captures both the performance and
+type-based dynamic dispatch captures the performance and
 productivity requirements of technical computing.
 
 % how powerful should a dispatch system be? we have a way to find an
@@ -215,7 +215,7 @@ of specialized environments in this area.
 Imagine you want just the features on the left.
 Then there are many good languages available: Haskell, ML, Java, C\#, perhaps C++.
 Getting everything on the right, by comparison, seems to be awkward.
-The most popular approach is to use multiple languages, as in e.g. NumPy~\cite{numpy},
+The most popular approach is to use multiple languages, as in e.g.\ NumPy~\cite{numpy},
 with a high-level productivity language layered on top of libraries
 written in lower-level languages.
 Seeking a similar trade-off, others have gone as far as writing a C++
@@ -438,21 +438,27 @@ At the other end of the spectrum, we might dispatch on arbitrary
 predicates (as in the SCMUTILS system~\cite{Sussman:2001:SIC:375178}).
 % TODO more about scmutils
 We do neither of these.
-Instead, our dispatch is based on \emph{sets of values that are robust
-under evaluation}: abstract evaluation over such sets is less likely
-to diverge.
-% TODO: needs to be clearer
-For example, consider the set $\{1,2\}$.
-This set is not closed under ``natural'' functions.
-As we evaluate a recursive function over this abstract value, the
-set will typically grow, and the fixed point will be much larger
-than the original set.
-So while specializing a method for $\{1,2\}$ could in some rare
-cases be useful, it also leads to unpredictable performance.
-To find reasonably robust sets to dispatch on, we
-begin with structured type tags and take the closure under data flow
-operations.
+Instead, we only try to make it \emph{more likely} that types can be
+statically inferred.
+We do this by considering the kinds of types that arise in data flow
+type inference, and allowing dispatch on those.
 This will be developed in detail in section~\ref{sec:typesystem}.
+
+%Instead, our dispatch is based on \emph{sets of values that are robust
+%under evaluation}: abstract evaluation over such sets is less likely
+%to diverge.
+
+% TODO: needs to be clearer
+%% For example, consider the set $\{1,2\}$.
+%% This set is not closed under ``natural'' functions.
+%% As we evaluate a recursive function over this abstract value, the
+%% set will typically grow, and the fixed point will be much larger
+%% than the original set.
+%% So while specializing a method for $\{1,2\}$ could in some rare
+%% cases be useful, it also leads to unpredictable performance.
+%% To find reasonably robust sets to dispatch on, we
+%% begin with structured type tags and take the closure under data flow
+%% operations.
 
 %However as a dispatch system gets more powerful, its utility as a
 %performance model degrades.
@@ -544,26 +550,17 @@ If code needs to be generated based on run time information, then a
 staged library might need to implement its own dispatch mechanism
 for invoking its generated code.
 
-% TODO needs to be clearer
-We find that our particular style of dynamic type-based dispatch provides
-an unusually good substrate for staged programming.
-The reason is that the language, though dynamically typed,
-has a powerful standard notion of partial information that can be
-used to generate code based on semantic (not just syntactic) information.
-%has a canonical (and not optional!) type analysis stage.
-%This is a natural place to hook in code generators: semantic (not just
-%syntactic) information is available, but machine code has not been
-%generated yet.
-In general, this semantic information can also include run time (and
-always, at least, approximate run time) information.
-Since the types used by dispatch support nested structure, they
-convey enough information to drive code generation for a significant
-class of problems.
+We find that our style of dynamic type-based dispatch provides
+an unusually convenient substrate for staged programming.
+The reason is that the types we dispatch on contain enough
+information to drive code generation for a useful class of problems,
+while also allowing
+the dispatch mechanism to be reused for caching and invoking staged code.
 In this framework code generators are invoked automatically by
 the compiler, and the results can be called directly or even inlined
 into user code.
-Libraries can switch to using a staged implementation without affecting
-client code.
+Libraries can switch to staged implementations with method-level granularity
+without affecting client code.
 
 %past (static) type systems for dispatch were designed to ensure the absence of
 %no-method errors and ambiguities (completeness and uniqueness). our goal
@@ -620,10 +617,30 @@ Based on the theory that technical computing is characterized by complex
 operators and particular combinations of binding time behavior.
 \fi
 
+At a high level, our contribution is to identify the priorties
+that have been implicit in the designs of technical computing systems,
+and suggest fundamental design choices that would better serve those
+priorities.
+In the process, we make the following specific contributions:
+
 \begin{itemize}
-\item We introduce the idea of integrated code selection and specialization.
-This leads to a dispatch system that provides a novel combination of
-performance and expressiveness.
+\item To our knowledge, the first complete technical computing system
+developed by applying automatic, by-default type specialization over the
+entire system.
+%Past systems have applied specialization to a set of user-level routines.
+%We show that it can be used for an entire system.
+
+\item A novel dispatch system that supports a form of set-theoretic types
+including variadic methods.
+We contribute an answer to the question of how powerful dispatch systems
+should be, by suggesting that they reflect types discoverable by flow
+analysis.
+Interestingly, the resulting system seems to fall just short of the trap
+of undecidable subtyping.
+
+%We introduce the idea of integrated code selection and specialization.
+%This leads to a dispatch system that provides a novel combination of
+%performance and expressiveness.
 
 %It provides ``diagonal dispatch''
 %Using data flow types to drive the design leads to novel dispatch features:
@@ -648,13 +665,11 @@ performance and expressiveness.
 %- specialize by default (makes static polymorphism less of a black art)
 %- types as ordinary values
 
-\item A type system and subtyping algorithm designed for describing
-method applicability and performance-critical aspects of data structures.
-This is the first system to apply the semantic subtyping approach
-to technical computing.
-We provide a simple implementation of our subtyping algorithm.
-This subtyping system is adoptable by dynamic languages that might
-benefit from a richer abstract value domain.
+\item A simple subtyping algorithm for our system, including a straightforward
+implementation.
+This subtyping system is easily adoptable by dynamic languages that might
+benefit from a richer abstract value domain, for example for
+describing method applicability and performance-critical aspects of data structures.
 
 % we design a type system for this. and introduce the ``evaluate softly
 % and carry a big subtype relation'' school of thought.
@@ -670,27 +685,33 @@ benefit from a richer abstract value domain.
 
 %\item a novel form of staged programming?
 
+\item We demonstrate a novel combination of staged programming with generic
+functions.
+The design allows staging to be invoked implicitly, leading to improved
+usability.
+
+
 \item James Morris eloquently observed that
 ``One of the most fruitful techniques of language analysis is explication through
 elimination.
 The basic idea is that one explains a linguistic feature by showing
 how one could do without it.''~\cite{morris}
-An additional contribution of this thesis is the application of our approach to
-features of technical computing environments that have not been subject to such
-analysis before.
-We provide an example application that shows how to use our language to
-more easily solve a difficult computational problem.
+An additional contribution of this thesis is to show how to implement
+key features of technical computing environments using our dispatch system,
+eliminating the need for them to be built in.
+
+%the application of our approach to
+%features of technical computing environments that have not been subject to such
+%analysis before.
+%We provide an example application that shows how to use our language to
+%more easily solve a difficult computational problem.
 
 % hopefully will provide useful examples for evaluating future dispatch
 % systems, object systems, and type systems
 
 \item Finally, we contribute the Julia software system, currently a
 growing free software project.
-To our knowledge, this is the first technical computing system written in a
-single language.
 This demonstrates that our approach is both practical and appealing to a
 significant number of users.
-%Past systems have applied specialization to a set of user-level routines.
-%We show that it can be used for an entire system.
 
 \end{itemize}

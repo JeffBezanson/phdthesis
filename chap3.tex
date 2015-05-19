@@ -515,7 +515,7 @@ This has been called ``the expression problem''~\cite{wadler1998expression}).
 While many kinds of object-oriented programs can ignore or work around
 this problem, technical programs cannot.
 In this domain most programs deal with the same
-few types (e.g. numbers and arrays), and might sensibly want to write new
+few types (e.g.\ numbers and arrays), and might sensibly want to write new
 operations that dispatch on them.
 
 % The loss of encapsulation due to multimethods weighed in \cite{binarymethods}
@@ -764,7 +764,7 @@ undecidability of predicate dispatch is not a problem.
 Interestingly, it can also pose no problem for \emph{static} type systems
 that wish to prove that every call site has an applicable method.
 Even without evaluating predicates, one can prove that the available methods
-are exhaustive (e.g. methods for both $p$ and $\neg p$ exist).
+are exhaustive (e.g.\ methods for both $p$ and $\neg p$ exist).
 In contrast, and most relevant to this thesis, predicate types \emph{are} a
 problem for code \emph{specialization}.
 Static method lookup would require evaluating the predicates, and optimal code

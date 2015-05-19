@@ -43,8 +43,7 @@ for an appropriate \texttt{new} expression
 Although type expressions are quite often constants, one might also write
 \texttt{MyType\{x+y\}}, to construct a \texttt{MyType} with
 a parameter determined by computing \texttt{x+y}.
-This provides a trade-off that we feel is highly desirable for our intended
-applications:
+This provides a desirable trade-off for our intended applications:
 
 \begin{itemize}
 \item The compiler cannot always statically determine types.
@@ -257,7 +256,7 @@ cannot have direct instances.
 \end{align*}
 
 These types closely resemble the classes of an object-oriented language with
-generic (parametric) types, invariant type parameters, and no concrete inheritance.
+generic types, invariant type parameters, and no concrete inheritance.
 We prefer parametric \emph{invariance} partly for reasons that have been addressed in the
 literature \cite{Day:1995:SVC:217838.217852}.
 Invariance preserves the property that the only subtypes of a concrete type are \texttt{Bottom}
@@ -941,6 +940,20 @@ natural interpretation in terms of sets, and so are allowed.
 In fact, they are used extensively in Julia (see section~\ref{sec:callingblas}
 for an example).
 
+The system $\textrm{ML}_{\leq}$~\cite{Bourdoncle:1997:TCH:263699.263743} combined
+multiple dispatch with parametric polymorphism, however the parametricity
+appeared in types assigned to entire generic functions.
+This has benefits for program structure and type safety, but is a bit
+restrictive.
+In fact Julia does not directly use the concept of parametricity.
+Like Fortress~\cite{fortressmodular}, we allow more flexibility in method
+definitions.
+Our formulation of method signatures as existential types for purposes of
+applicability and specificity is similar to that used in Fortress.
+However unlike Fortress all of our types are first-class: all types
+(including union types) can be dispatched on and used in declarations.
+
+
 \subsection{Diagonal dispatch}
 \label{sec:diagonal}
 
@@ -1292,7 +1305,7 @@ types.
 \subsubsection{Related work}
 
 Our approach is closely related to Exotypes~\cite{DeVito:2014:FRG:2594291.2594307},
-and to generation of high performance code using lightweight modular staging
+and to generation of high-performance code using lightweight modular staging
 (LMS)~\cite{Rompf:2010:LMS:1868294.1868314,Ofenbeck:2013:SST:2517208.2517228}.
 The primary difference is that in our case code generation is invoked
 implicitly, and integrated directly with the method cache.
@@ -1618,6 +1631,7 @@ match.
 % (generic functions with declared overall types)
 
 \subsection{Implementing \texttt{map}}
+\label{sec:implementingmap}
 
 So, given typed containers and no arrow types, how do you implement
 \texttt{map}? The answer is that the type of container to return must
@@ -1820,6 +1834,8 @@ This is undeniably expensive, and past work has often sought to avoid
 or limit specialization (e.g.\ \cite{Dragos:2009:CGT:1565824.1565830}).
 % we find it is the right default
 % TODO
+
+% directed by method cache, widening
 
 % it's interesting to note that java generics did not originally support
 % types like int and float as parameters. in T.C. those are practically

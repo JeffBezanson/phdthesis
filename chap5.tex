@@ -464,7 +464,7 @@ Typically the overhead of a loop is unacceptable, and such code needs to be full
 unrolled.
 \item In some code the number of dimensions is a \emph{dynamic} property --- it is
 only known at run time.
-\item Programs may wish to treat arrays with different numbers of dimensions very
+\item Programs may wish to treat arrays with different numbers of dimensions
 differently.
 A vector (1d) might have rather different behaviors than a matrix (2d)
 (for example, when computing a norm).
@@ -558,7 +558,7 @@ might work best, but merely with how they can be specified, so that
 domain experts can experiment.
 In fact different domains want different things.
 Working with images, each dimension might be quite different, e.g.\ representing
-time, space, or color, so you don't want to drop or rearrange dimensions very often.
+time, space, or color, so you don't want to drop or rearrange dimensions.
 \fi
 
 %Here are our ground rules:
@@ -580,7 +580,7 @@ may be defined, or so that rules of similar complexity may be
 defined for other kinds of objects.
 In fact different domains want different things.
 Working with images, each dimension might be quite different, e.g.\ representing
-time, space, or color, so you don't want to drop or rearrange dimensions very often.
+time, space, or color, so you don't want to drop or rearrange dimensions.
 %But these kinds of rules are unusually difficult to implement in libraries.
 %If a library writes out its indexing logic using imperative code, the host
 %language compiler is not likely to be able to analyze it.
@@ -606,7 +606,7 @@ We show three versions, each implementing a different rule that users in
 different domains might want:
 
 % TODO: point out array = (shape, data), so those are the two parts
-% we need to handle. In julia the ``data'' part is not a first class
+% we need to handle. In julia the ``data'' part is not a first-class
 % object; it is not directly exposed to the user, but this is more
 % of an implementation detail.
 
