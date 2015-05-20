@@ -584,7 +584,7 @@ time, space, or color, so you don't want to drop or rearrange dimensions.
 %But these kinds of rules are unusually difficult to implement in libraries.
 %If a library writes out its indexing logic using imperative code, the host
 %language compiler is not likely to be able to analyze it.
-Using compile time abstracton (templates) provides better performance, but
+Using compile time abstraction (templates) provides better performance, but
 such libraries tend to be difficult to write (and read), and the full
 complement of indexing behavior expected by technical users strains the
 capabilities of such systems.
@@ -1430,7 +1430,7 @@ implement any kernel at all, but if it does not take the form of an
 \texttt{p} must be known, and cannot be easily extracted from an arbitrary
 opaque function.
 If the interface allowed an opaque function to be passed, the value of
-\texttt{p} would need to be passed separately, which de-couples the
+\texttt{p} would need to be passed separately, which decouples the
 property from the function, and requires a custom lookup table for caching
 generated code.
 
