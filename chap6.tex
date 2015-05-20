@@ -49,7 +49,7 @@ Partial information has many uses.
 It describes sets of values, and therefore code applicability.
 It describes what sorts of information a compiler can determine,
 contributing to a performance model.
-It leads to staged programming:\ generating code requires
+It leads to staged programming: generating code requires
 knowing something about what needs to be computed, but not everything, so that
 generated code can be reused enough to be worthwhile.
 Of course, this sounds a lot like a type system.
@@ -120,7 +120,7 @@ As with any practical system, we must begin the process of trying to get back
 what our design initially trades away.
 For example, the specialization-based polymorphism we use does not support
 separate compilation.
-Fortunately that's never stopped anyone before:\ C++ templates have the same
+Fortunately that's never stopped anyone before: C++ templates have the same
 problem, but separately compiled modules can still be generated.
 We plan to do the same, with the same cost of re-analyzing all relevant code
 for each module.
@@ -144,7 +144,7 @@ It is possible the situation could be improved by some syntactic sugar for
 nominal arrow types.
 
 Approaches to static type checking are also worth thinking about.
-Most importantly, we feel we have the priorities right:\ first introduce
+Most importantly, we feel we have the priorities right: first introduce
 at least some kind of type information, then gradually add checks and
 tooling to improve safety.
 For example, a useful alternative form of the language could require

@@ -49,13 +49,13 @@ and declaring \texttt{Diagonal}, \texttt{Bidiagonal}, and so on as
 subclasses.
 
 Unfortunately, there are several problems with this solution.
-Class-based OO ties together variation and dynamic dispatch:\ to allow
+Class-based OO ties together variation and dynamic dispatch: to allow
 a value's representation to vary, each use of it needs to perform an
 indirect call.
 A major reason to use structured matrix types like \texttt{Bidiagonal}
 is performance, so we'd rather avoid the overhead of indirect calls.
 %for operations like element access.
-Most code operating on \texttt{Bidiagonal} would
+A second problem is that most code operating on \texttt{Bidiagonal} would
 be implementing algorithms that exploit its representation.
 These algorithms would have to be implemented as methods of
 \texttt{Bidiagonal}.
@@ -65,7 +65,7 @@ one place.
 This kind of computing is function-oriented.
 % other examples: CSC vs. CSR
 
-Let's try a different abstraction mechanism:\ templates and overloading.
+Let's try a different abstraction mechanism: templates and overloading.
 That would allow us to write code like this:
 
 \begin{singlespace}
@@ -88,11 +88,11 @@ We would like to be able to write \texttt{solve(factorize(M), x)}.
 
 %... no wonder people use prepackaged version of this functionality
 Given these constraints, the traditional design of technical
-computing systems makes sense:\ pre-generate a large number of
+computing systems makes sense: pre-generate a large number of
 optimized routines for various cases, and be able to dispatch
 to them at run time.
 
-It's clear what's going on here:\ mathematics is dependently typed.
+It's clear what's going on here: mathematics is dependently typed.
 If a compiler could prove that a certain matrix were bidiagonal, or
 symmetric, there would be no problem.
 But knowing what a given object \emph{is} in a relevant sense can
@@ -145,7 +145,7 @@ rapidly, with ``as thoroughly as possible'' handling more cases
 all the time.
 This approach is still compatible with static typing, although we will not
 discuss it much.
-Nothing stops us from picking a well-defined subset of the system,
+We could pick a well-defined subset of the system,
 or a separate type system, to give errors about.
 
 The notion of ``as thorough as possible'' analysis is formalized
@@ -176,7 +176,7 @@ This led to the invention of domain theory, which can be interpreted
 as modeling the behavior of a program without running it.
 A ``domain'' is essentially a partial order of sets of values that a
 program might manipulate.
-The model works as follows:\ a program starts with no
+The model works as follows: a program starts with no
 information, the lowest point in the partial order (``bottom'').
 Computation steps accumulate information, gradually moving higher through
 the order.
@@ -227,7 +227,7 @@ if such a use \emph{might} occur.
 Such a use corresponds to any lattice element greater than or equal to
 the element representing ``uninitialized''.
 Such conservative analyses are the essence of compiler transformations
-for performance (optimizations):\ we only want to perform an optimization
+for performance (optimizations): we only want to perform an optimization
 if the program property it relies on holds for sure.
 % and not if there is any uncertainty.
 
@@ -260,7 +260,7 @@ still our type system in some sense, whether we like it or not
 
 Program analyses of this kind have been applied to high-level
 languages many times.
-The common pitfall is that the analysis can easily \emph{diverge}
+A common pitfall is that the analysis can easily \emph{diverge}
 for programs that make distinctions not modeled by the lattice.
 
 Consider the following program that repeatedly applies elementwise
@@ -308,29 +308,13 @@ We will try to analyze this program using the lattice in figure~\ref{fig:arrayla
 \label{fig:arraylattice}
 \end{figure}
 
-\iffalse
-function diag(a)
-    if ndims(a) == 1
-        n = length(a)
-        d = zeros(eltype(a), n, n)
-        for i=1:n; d[i,i] = a[i]; end
-        d
-    elseif ndims(a) == 2
-        n = min(size(a,1),size(a,2))
-        d = zeros(eltype(a), n)
-        for i=1:n; d[i] = a[i,i]; end
-        d
-    else
-        error("expected vector or matrix")
-    end
-end
-\fi
-
 The result depends strongly on how the \texttt{.\^} and \texttt{\^} functions
 are defined (assume that \texttt{.\^} calls \texttt{\^} on every element of an array).
 The code might look like this:
 
+\vspace{-4ex}
 \begin{singlespace}
+\begin{multicols}{2}
 \begin{lstlisting}[language=julia]
 function ^(x, y)
     if trunc(y) == y
@@ -343,6 +327,7 @@ function ^(x, y)
     end
 end
 
+
 function f(a)
     if all(trunc(y) .== y)
         # integer case
@@ -351,6 +336,7 @@ function f(a)
     end
 end
 \end{lstlisting}
+\end{multicols}
 \end{singlespace}
 
 \noindent
@@ -359,8 +345,7 @@ This code implements the user-friendly behavior of automatically switching to th
 
 Assume we initially know that \texttt{n} is an \texttt{Int}, and therefore
 that \texttt{A} is an \texttt{Array\{Int\}}.
-Although \texttt{A} really does have this type (even if the
-type is only an artifact of the analysis), the code does not mention
+Although \texttt{A} really does have this type, the code does not mention
 types anywhere.
 Next, the type of an element taken from \texttt{A} (\texttt{Int}) will
 flow to the \texttt{y} argument of \texttt{\^}.
@@ -378,14 +363,14 @@ However when the analysis considers \texttt{f} applied to type
 \texttt{Array}, our type information is likely to diverge further to
 \texttt{$\top$}, since we don't know anything about the array's elements.
 
-The problem here is that the program is not written in terms of the
+The problem is that the program is not written in terms of the
 underlying value domain, even though it could be.
 We might have written \texttt{isa(y,Integer)} instead of \texttt{trunc(y) == y}.
 However, there are reasons that code like this might exist.
 The programmer might not be aware of the type system, or the conditional
 might refer to a property that was not originally reflected in the type system
 but is later, as the language and libraries evolve.
-Adding type declarations is not an ideal solution since it restricts
+Adding type declarations is not an ideal solution since it can restrict
 polymorphism, and the programmer might not know the type of \texttt{A.\^{}A}
 or even the type of \texttt{n}.
 
@@ -430,6 +415,7 @@ end
 \end{singlespace}
 
 \noindent
+The syntax \texttt{y::Integer} for a function argument is a dispatch specification.
 Now, from the same source program, we can conclude that only
 \texttt{\^{}(x, y::Integer)} is applicable, so we know that the
 result of \texttt{A.\^{}A} is some integer array.
@@ -503,7 +489,7 @@ a different program.
 But if a language allows the same program element to do different things at
 different times, we can write whole classes of programs at once.
 This kind of capability is one of the main reasons object-oriented programming
-is popular:\ it provides a way to automatically select different behaviors
+is popular: it provides a way to automatically select different behaviors
 according to some structured criteria
 (we use the non-standard term ``criteria'' deliberately, in order
 to clarify our point of view, which is independent of any particular
@@ -593,7 +579,7 @@ end
 \end{singlespace}
 
 Here all of the simulation's animal behavior has been
-compressed into a single program point:\ \texttt{a.encounter(b)}
+compressed into a single program point: \texttt{a.encounter(b)}
 leads to all of the behavior by selecting an implementation based
 on the first argument, \texttt{a}.
 This kind of criterion is essentially indexed lookup; we can imagine
@@ -606,6 +592,7 @@ says that an \texttt{A} is a kind of \texttt{B}:
 
 \vspace{-3ex}
 \begin{singlespace}
+\begin{multicols}{2}
 \begin{verbatim}
 abstract class Animal
     method nearby()
@@ -634,10 +621,11 @@ while running
     end
 end
 \end{verbatim}
+\end{multicols}
 \end{singlespace}
 
 We are still essentially doing table lookup, but the tables have
-more structure:\ every \texttt{Animal} has the \texttt{nearby}
+more structure: every \texttt{Animal} has the \texttt{nearby}
 method, and can inherit a general purpose implementation.
 
 This brings us roughly to the level of most popular object-oriented
@@ -668,7 +656,7 @@ We now have a \emph{double dispatch} system, where a method call
 uses two lookups, first on the first argument and then on the
 second argument.
 This syntax might be considered a bit nicer, but the design
-begs a question:\ why is $n=2$ special?
+begs a question: why is $n=2$ special?
 It isn't, and we could consider even more method arguments as part of
 dispatch.
 But at that point, why is the first argument special?
@@ -702,7 +690,7 @@ end
 \end{verbatim}
 \end{singlespace}
 
-Here we made two major changes:\ the methods have been moved ``outside''
+Here we made two major changes: the methods have been moved ``outside''
 of any classes, and all arguments are listed explicitly.
 This is sometimes called \emph{external dispatch}.
 This change has significant implications.
@@ -710,6 +698,10 @@ Since methods no longer need to be ``inside'' classes, there is no syntactic
 limit to where definitions may appear.
 Now it is easier to add new methods after a class has been defined.
 Methods also now naturally operate on combinations of objects, not single objects.
+%There may be software engineering reasons to want ``ownership'' of methods
+%by objects, but strictly speaking this coupling does not seem correct.
+%It ought to be possible to define function behaviors independently of
+%data hiding concerns.
 
 The shift to thinking about combinations of objects is fairly revolutionary.
 Many interesting properties only apply to combinations of objects, and not
@@ -729,6 +721,8 @@ arguments are two animals of the same type:
 encounter{T<:Animal}(a::T, b::T) = mate(a, b)
 \end{verbatim}
 
+\noindent
+Some systems push dispatch expressiveness even further.
 % TODO more
 
 
@@ -783,7 +777,7 @@ However this comes at the expense of making predicates second-class
 citizens of the type system.
 
 In considering the problems of predicate dispatch for code specialization,
-we seem to be up against a fundamental obstacle:\ some sets of values are
+we seem to be up against a fundamental obstacle: some sets of values are
 simply more robust under evaluation than others.
 Programs that map integers to integers abound, but programs that map, say,
 even integers to even integers are rare to the point of irrelevance.
@@ -796,24 +790,6 @@ performance.
 
 \subsection{Symbolic programming}
 
-There has always been a divide between ``numeric'' and ``symbolic''
-languages in the world of technical computing.
-To many people the distinction is fundamental, and we should happily live
-with both kinds of languages.
-But if one insists on an answer as to which approach is the right one,
-then the answer is:\ symbolic.
-Programs are ultimately symbolic artifacts.
-Computation is limited only by our ability to describe it, and
-symbolic tools are needed to generate, manipulate, and query these
-descriptions.
-For example in numerical computing, a successful approach has been to
-design high-performance kernels for important problems.
-From there, the limiting factor is knowing \emph{when} to use each
-kernel, which can depend on many factors from problem structure to
-data size.
-Symbolic approaches can be used to automate this.
-We will see some examples of this in chapter~\ref{chap:casestudies}.
-
 Systems based on symbolic rewrite rules arguably occupy a further tier of
 dispatch sophistication.
 In these systems, you can dispatch on essentially anything, including arbitrary
@@ -823,7 +799,7 @@ dispatch.
 %These systems are typically powerful enough to concisely define the kinds of
 %behaviors we are interested in.
 
-However, symbolic programming lacks data abstraction:\ the concrete
+However, symbolic programming lacks data abstraction: the concrete
 representations of values are exposed to the dispatch system.
 In such a system, there is no difference between being a list and being
 something \emph{represented} as a list.
@@ -831,6 +807,24 @@ If the representation of a value changes, the value can be inadvertently
 ``captured'' by a dispatch rule that was not intended to apply to it,
 violating abstraction.
 % we use 2-part values instead; symbolic part and data part effectively
+
+There has always been a divide between ``numeric'' and ``symbolic''
+languages in the world of technical computing.
+To many people the distinction is fundamental, and we should happily live
+with both kinds of languages.
+But if one insists on an answer as to which approach is the right one,
+then the answer is: symbolic.
+Programs are ultimately symbolic artifacts.
+Computation is limited only by our ability to describe it, and
+symbolic tools are needed to generate, manipulate, and query these
+descriptions.
+For example in numerical computing, a successful approach has been to
+create high-performance kernels for important problems.
+From there, the limiting factor is knowing \emph{when} to use each
+kernel, which can depend on many factors from problem structure to
+data size.
+Symbolic approaches can be used to automate this.
+We will see some examples of this in chapter~\ref{chap:casestudies}.
 
 \subsection{Choices, choices}
 \label{sec:choices}
@@ -1138,7 +1132,7 @@ programming.
 The last item is especially controversial, but need not be.
 Consistent and practical formulations allowing types to be values of
 type \texttt{Type} have been demonstrated~\cite{cardelli1986polymorphic}.
-
+The next chapter will show how this design works in detail.
 
 %- library writers can decide what to put at the type level without affecting users,
 %  dropping type parameters

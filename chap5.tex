@@ -31,7 +31,7 @@ by writing \texttt{convert(typeof(y), x)}.
 What set of definitions must exist to make that call work in all reasonable cases?
 Clearly we don't want to write all $O(n^2)$ possibilities.
 We need abstract definitions that cover many points in the dispatch matrix.
-One such family of points is particularly important:\ those that describe converting
+One such family of points is particularly important: those that describe converting
 a value to a type it is already an instance of.
 In our system this can be handled by a single definition that performs ``triangular''
 dispatch:
@@ -42,13 +42,13 @@ convert{T,S<:T}(::Type{T}, x::S) = x
 
 \noindent
 ``Triangular'' refers to the rough shape of the dispatch matrix covered
-by such a definition:\ for all types \texttt{T} in the first argument slot,
+by such a definition: for all types \texttt{T} in the first argument slot,
 match values of any type less than it in the second argument slot.
 
 A similar trick is useful for defining equivalence relations.
 It is most likely unavoidable for programming languages to need multiple
 notions of equality.
-Two in particular are natural:\ an \emph{intensional}
+Two in particular are natural: an \emph{intensional}
 notion that equates objects that look identical, and an \emph{extensional}
 notion that equates objects that mean the same thing for some standard
 set of purposes.
@@ -115,7 +115,7 @@ section we will take advantage of this to implement ``automatic'' type promotion
 We might prefer ``number'' to be a single, concrete concept, but the history of
 mathematics has seen the concept extended many times, from integers to rationals to
 reals, and then to complex, quaternion, and more.
-These constructions tend to follow a pattern:\ each new set of numbers has a subset
+These constructions tend to follow a pattern: each new set of numbers has a subset
 isomorphic to an existing set.
 For example, the reals are isomorphic to the complex numbers with zero imaginary part.
 
@@ -127,14 +127,14 @@ that a real number is not complex, and a complex number is not real.
 And yet the close relationship between them is too compelling not to model in a
 computer somehow.
 Here we have a numerical analog to the famous ``circle and ellipse'' problem in
-object-oriented programming~\cite{cline1995c++}:\ the set of circles is
+object-oriented programming~\cite{cline1995c++}: the set of circles is
 isomorphic to the set of ellipses with equal axes, yet neither ``is a''
 relationship in a class hierarchy seems fully correct.
 An ellipse is not a circle, and in general a circle cannot serve as an ellipse
 (for example, the set of circles is not closed under the same operations that the
 set of ellipses is, so a program written for ellipses might not work on circles).
 This problem implies that a single built-in type hierarchy is not
-sufficient:\ we want to model custom \emph{kinds} of relationships between
+sufficient: we want to model custom \emph{kinds} of relationships between
 types (e.g.\ ``can be embedded in'' in addition to ``is a'').
 
 %% Two further problems should also be kept in mind. First, the natural isomorphisms
@@ -150,7 +150,7 @@ types (e.g.\ ``can be embedded in'' in addition to ``is a'').
 % \subsection{Current approaches}
 
 Numbers tend to be among the most complex features of a language.
-Numeric types usually need to be a special case:\ in a typical language with
+Numeric types usually need to be a special case: in a typical language with
 built-in numeric types, describing their behavior is beyond the expressive power
 of the language itself.
 For example, in C arithmetic operators like \texttt{+} accept multiple types of
@@ -205,7 +205,7 @@ don't want to redundantly define the behavior of \texttt{(T,S)} and \texttt{(S,T
 %in promoting fallback definitions of operators.
 \end{itemize}
 
-The core of the mechanism is three functions:\ \texttt{promote\_type}, which
+The core of the mechanism is three functions: \texttt{promote\_type}, which
 performs promotion in the type domain only, \texttt{promote\_rule}, which is
 the function defined by libraries, and a utility function \texttt{promote\_result}.
 The default definition of \texttt{promote\_rule} returns \texttt{Bottom},
@@ -307,7 +307,7 @@ we can construct a general range:
 colon{T}(start::T, step, stop::T) = StepRange(start, step, stop)
 \end{verbatim}
 
-Now there is a problem to fix:\ if the first and last arguments are of some
+Now there is a problem to fix: if the first and last arguments are of some
 non-floating-point numeric type, but the step is floating point, we want to
 promote all arguments to a common floating point type.
 We must also do this if the first and last arguments are floats, but the step
@@ -499,7 +499,7 @@ is the sum of the ranks of the indexes'' (as in APL).
 A significant amount of work has been done on inferring properties like these
 for existing array-based languages
 (e.g.\ \cite{Joisha:2006:AAS:1152649.1152651,Garg:2014:JSI:2627373.2627382},
-although these methods go farther and attempt to infer complete size
+although these methods go further and attempt to infer complete size
 information).
 
 C++ and Haskell are both examples of languages with sufficiently powerful
@@ -553,7 +553,7 @@ The second declaration says that given an \texttt{All} index,
 dimension \texttt{s} is kept.
 
 \iffalse
-Our goal here is a bit unusual:\ we are not concerned with which rules
+Our goal here is a bit unusual: we are not concerned with which rules
 might work best, but merely with how they can be specified, so that
 domain experts can experiment.
 In fact different domains want different things.
@@ -574,7 +574,7 @@ In a language with built-in multidimensional arrays, the compiler will
 analyze indexing expressions and determine an answer using hard-coded
 logic.
 % TODO: example from one of these compilers
-However, this approach is not satisfying:\ we would rather
+However, this approach is not satisfying: we would rather
 implement the behavior in libraries, so that different kinds of arrays
 may be defined, or so that rules of similar complexity may be
 defined for other kinds of objects.
@@ -723,9 +723,9 @@ UniformScaling         &  CholeskyDenseRFP  & \\
 \end{center}
 \caption[Structured matrices and factorizations]{
 \small{
-Left column:\ structured array storage formats currently defined in Julia's
+Left column: structured array storage formats currently defined in Julia's
 standard library.
-Right column:\ data types representing the results of various matrix
+Right column: data types representing the results of various matrix
 factorizations.
 }
 }
@@ -747,7 +747,7 @@ systems.
 Sections \ref{sec:whydynamictyping} and \ref{sec:bindingtimedilemma}
 alluded to some of the ways that these types interact with language
 features.
-There are essentially two modes of use:\ ``manual'', where a programmer
+There are essentially two modes of use: ``manual'', where a programmer
 explicitly constructs one of these types, and ``automatic'', where a
 library returns one of them to user code written only in terms of generic
 functions.
@@ -1070,7 +1070,7 @@ Using Julia, Miles Lubin and Iain Dunning solved this problem, creating the
 first embedded AML, JuMP~\cite{LubinDunningIJOC}, to match both the performance
 and notational advantages of specialized tools.
 
-The solution is a multi-stage program:\ first the input syntax is converted to
+The solution is a multi-stage program: first the input syntax is converted to
 conventional loops and function calls with a macro, then the types of
 arguments are used to decide how to update the model, and finally code
 specialized for the structure of the input problem runs.
@@ -1224,10 +1224,10 @@ Because the basis functions are localized and $\mathcal{L}$ consists of local op
 the matrix $L$ is sparse and $L_{mn}$ need only be computed for $m$ and $n$ corresponding
 to neighboring elements.
 Moreover, these integrals are straightforward to evaluate by standard cubature schemes
-because the integrands are \emph{nonsingular}:\ they typically have no divergences or
+because the integrands are \emph{nonsingular}: they typically have no divergences or
 discontinuities.
 In particular, because the functions $b_m$ and $c$ are usually smooth within a single
-element, one can use a fixed low-order cubature rule:\ you evaluate the integrand at a
+element, one can use a fixed low-order cubature rule: you evaluate the integrand at a
 handful of precomputed points within each element, multiply by precomputed weights, and
 sum to obtain the approximate integral.
 
@@ -1237,7 +1237,7 @@ so production FEM implementations in traditional high-level dynamic languages su
 Matlab and Python are forced to offload matrix assembly to external C and C++ code.
 For example, the popular FEniCS~\cite{LoggOlgaardEtAl2012a} and
 Firedrake~\cite{Rathgeber2015} FEM packages for
-Python both implement domain-specific compilers:\ a symbolic expression for the bilinear
+Python both implement domain-specific compilers: a symbolic expression for the bilinear
 form is combined with fragments of user-specified C++ code to define functions like
 $c(x)$, compiled to C++ code, and then compiled to object code which is dynamically
 loaded.
@@ -1292,7 +1292,7 @@ elements must typically be computed explicitly.
 \end{itemize}
 
 These difficulties are part of the reason why there is currently \emph{no}
-truly ``generic'' BEM software, analogous to FEniCS~\cite{FEniCS12} for FEM:\ essentially
+truly ``generic'' BEM software, analogous to FEniCS~\cite{FEniCS12} for FEM: essentially
 all practical BEM code is written for a specific integral kernel and
 a specific class of basis functions arising in a particular physical problem.
 Changing anything about the kernel or the basis---for example, going
@@ -1424,7 +1424,7 @@ end
 \end{lstlisting}
 \end{singlespace}
 
-The method signature reflects the shape of the problem:\ the user might
+The method signature reflects the shape of the problem: the user might
 implement any kernel at all, but if it does not take the form of an
 \texttt{APowerLaw\{p\}} then this numerical procedure is not useful.
 \texttt{p} must be known, and cannot be easily extracted from an arbitrary
@@ -1537,6 +1537,6 @@ original implementation in C++.
 An opportunity to do an unusually direct comparison arose when this
 code was ported to Julia~\cite{grisu}.
 The Julia implementation is at worst 20\% slower, but wins on
-productivity:\ the C++ code is around 6000 lines, the Julia code
+productivity: the C++ code is around 6000 lines, the Julia code
 around 1000 lines.
 % TODO can we say why?

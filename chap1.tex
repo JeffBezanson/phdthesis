@@ -8,11 +8,11 @@ the abstractions and generalizations they are capable of.
 
 Science as a whole evolves through the incorporation of specialized bits
 of knowledge into more powerful general theories.
-There is a parallel in the world of programming languages:\ special-purpose
+There is a parallel in the world of programming languages: special-purpose
 languages have been subsumed by more powerful and general
 languages.
 How has this trend affected scientific computing?
-The surprising answer is:\ not as much as we would like.
+The surprising answer is: not as much as we would like.
 We see scientists and technical users generally either turning away
 from the best new programming languages, or else pushing them
 to their limits in unusual ways.
@@ -74,7 +74,7 @@ issues that have made productive and performant technical computing
 so difficult to achieve.
 %We attempt to make the smallest
 %change that can be provided by a simple high-level language
-We ask:\ which general purpose language would \emph{also} be able to handle
+We ask: which general purpose language would \emph{also} be able to handle
 technical computing, such that the above workarounds would not have
 been necessary?
 
@@ -212,7 +212,7 @@ It is striking how different these priorities are.
 We believe these technical factors have contributed significantly to the persistence
 of specialized environments in this area.
 Imagine you want just the features on the left.
-Then there are many good languages available:\ Haskell, ML, Java, C\#, perhaps C++.
+Then there are many good languages available: Haskell, ML, Java, C\#, perhaps C++.
 Getting everything on the right, by comparison, seems to be awkward.
 The most popular approach is to use multiple languages, as in NumPy~\cite{numpy},
 with a high-level productivity language layered on top of libraries
@@ -243,7 +243,7 @@ let the user request specific types.
 It is also clear that such a language must strive for maximum convenience, or else
 the split between performance languages and productivity languages will persist.
 
-It is fair to say that two approaches to this problem are being tried:\ one is
+It is fair to say that two approaches to this problem are being tried: one is
 to design better statically typed languages, and the other is to apply
 program analysis techniques to dynamically typed languages.
 Static type systems are getting close to achieving the desired level
@@ -283,7 +283,7 @@ performance cost.
 There has been a large amount of work on running dynamic languages faster
 (notable examples are Self~\cite{selflang}, and more recently PyPy~\cite{pypyjit}).
 These efforts have been very successful, but arguably leave something
-out:\ a better interface to performance.
+out: a better interface to performance.
 % put differently: HLLs excel at providing certain features, but not at
 % defining other things like those that still perform well
 Performance-critical aspects of most dynamically typed languages (e.g.\ arithmetic)
@@ -304,7 +304,7 @@ optimized kernel for a problem that it is worth doing a slow dynamic
 dispatch in order to do so.
 Most of the productivity languages mentioned above are designed
 entirely around this principle.
-But their view of code selection is incomplete:\ the dispatch
+But their view of code selection is incomplete: the dispatch
 mechanisms used are ad hoc and not employed consistently.
 Even when an optimizing compiler for the source language is developed,
 it does not necessarily take all relevant forms of dispatch into
@@ -425,7 +425,7 @@ type information to the compiler.
 The remaining question is what exactly we should dispatch on.
 Naturally, it might be nice to be able to dispatch on any criteria
 at all.
-However there is a balancing act to perform:\ if dispatch signatures
+However there is a balancing act to perform: if dispatch signatures
 become too specific, it becomes difficult to predict whether they
 will be resolved statically.
 At one end of the spectrum are mechanisms like static overloading
@@ -630,7 +630,7 @@ written in a single high-level language.
 \item A novel dispatch system that supports a form of set-theoretic types
 including variadic methods.
 We contribute an answer to the question of how powerful a dynamic dispatch
-system should be:\ even if type checking is not done, dispatch should still
+system should be: even if type checking is not done, dispatch should still
 use types that could be inferred by data flow analysis.
 %The resulting system is both more and less powerful than most previous
 %dispatch systems.

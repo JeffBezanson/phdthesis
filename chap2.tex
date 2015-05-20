@@ -276,13 +276,13 @@ The dynamic dispatch logic exists in only one place in our code,
 where it can be extensively optimized.
 
 There is a perception that the performance of technical code is
-divided into two cases:\ array code and scalar code.
+divided into two cases: array code and scalar code.
 Array code is thought to perform well, and while scalar code has
 not traditionally performed well, it can be fixed with JIT
 compilation add-ons or by rewriting in C or by using extensions
 like Cython \cite{wilbers2009using,Behnel:2011}.
 The results here, though simple, demonstrate why we feel a
-different approach is needed instead:\ abstraction overhead
+different approach is needed instead: abstraction overhead
 is important and involves the whole program, not just
 inner loops.
 
@@ -442,7 +442,7 @@ to handle classifying data moving in and out of a program.
 \section{Trade-offs in current designs}
 
 Current systems accept certain design trade-offs to obtain flexibility.
-We will look at two examples:\ vectorization and data representation.
+We will look at two examples: vectorization and data representation.
 % TODO MORE
 
 \iffalse
@@ -627,7 +627,7 @@ Of course a real use case might require data to be read from memory or stored,
 so this comparison is unfair (though not entirely, since many numerical
 environments have represented even simple objects like linear ranges using
 dense vectors \cite{matlabman:linspace}).
-Still the point should be clear:\ vectors are not necessarily a good abstraction
+Still the point should be clear: vectors are not necessarily a good abstraction
 for high performance.
 The observation that memory is a bottleneck is not new, but for our purposes
 the important point is that languages that only support vectorized syntax
@@ -766,7 +766,7 @@ extra dispatch and occasionally changing the representation.
 % ``storage strategies'' is simultaneously a great idea, and also a crack
 % in the armor of typical dynamic languages big enough to tear them apart.
 
-In some sense, our work takes this idea to its logical conclusion:\
+In some sense, our work takes this idea to its logical conclusion:
 why not support a range of data representations from the beginning,
 managed by a single sufficiently powerful dispatch system?
 % so you need some type system, might as well be a good one
