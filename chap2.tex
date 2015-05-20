@@ -22,21 +22,11 @@ any mention of types like \code{int}, \code{float} or \code{double} that
 pervade statically typed languages such as C and Fortran.
 
 
-%How should a computer scientist approach this space?
-%We might try to maximize performance.
-
-% so what should a future TC lang be?
-% we cant just immitate and maximize the properties of existing
-% systems.
-% we have to look at the entire problem, and ask what can be
-% fundamentally changed.
-
 % these systems have many incidental features that have been
 % criticized, but you can't solve the problem just by
 % going through the design and fixing a few mistakes.
 % once a system is basically the right thing, users will
 % overlook flaws.
-
 
 %Unfortunately,  is all to easy to make unfounded assumptions about
 %what users want. But instead we should study the real world, see
@@ -59,7 +49,7 @@ consider a sufficiently critical argument.
 
 Some languages provide a ``convenient'' experience that is
 qualitatively different from ``inconvenient'' languages.
-We believe this can be made somewhat precise.
+%We believe this can be made somewhat precise.
 A large part of ``convenience'' is the reduction of the amount you need to know
 about any given piece of functionality in order to use it.
 This leads languages to adopt various forms of loose coupling,
@@ -115,7 +105,7 @@ Even the Lisp tradition, which originated most of the convenience features
 enumerated above, has sought to separate functionality into small pieces.
 For example Scheme provides separate functions \texttt{list-ref} and
 \texttt{vector-ref} \cite{schemelang} for indexing lists and vectors.
-Notably, the SCMUTILS library~\cite{Sussman:2001:SIC:375178} for
+Notably, the Scmutils library~\cite{Sussman:2001:SIC:375178} for
 scientific computing adds generic functions.
 
 % now we will look at an example to motivate design discussion
@@ -189,13 +179,24 @@ early-bound operations.
 A central message of this thesis is that this kind of program behavior
 is useful, highly characteristic of technical computing,
 and can be provided automatically at the language level.
-Here is how the above dispatch scheme might be implemented in Julia
+Figure~\ref{fig:juliavander} shows how the above dispatch scheme might be
+implemented in Julia
 (mirroring the structure of the Python code as much as possible to
-facilitate comparison):
+facilitate comparison).
 % TODO explain MulFun, point to sec 4.6.3 possible solutions to higher-order
+This code implements the entire \texttt{vander} computation
+(with some details left out, for example it does not provide the
+\texttt{axis} argument of \texttt{multiply.accumulate}).
+The C component is replaced by a general type-based dispatch system that
+handles specializing and then invoking an efficient implementation of
+\texttt{accumulate} for each combination of argument types.
 
-\begin{samepage}
+% This code does not mention much about types or dispatch.
+% many behaviors are implicit. e.g.\ how does indexing work?
+% it's dispatch and specialization all the way down.
+
 \begin{singlespace}
+\begin{figure}[!t]
 \begin{lstlisting}[language=julia]
 function vander(x, N::Int)
   x = convert(AbstractVector, x)
@@ -220,20 +221,10 @@ function accumulate(op, input, output)
   end
 end
 \end{lstlisting}
+\caption{Julia implementation of \texttt{vander}}
+\label{fig:juliavander}
+\end{figure}
 \end{singlespace}
-\end{samepage}
-
-\noindent
-This code implements the entire \texttt{vander} computation
-(with some details left out, for example it does not provide the
-\texttt{axis} argument of \texttt{multiply.accumulate}).
-The C component is replaced by a general type-based dispatch system that
-handles specializing and then invoking an efficient implementation of
-\texttt{accumulate} for each combination of argument types.
-
-% This code does not mention much about types or dispatch.
-% many behaviors are implicit. e.g.\ how does indexing work?
-% it's dispatch and specialization all the way down.
 
 Performance is shown in table~\ref{vanderperf}.
 When repeating the computation many times for small matrix sizes, the
@@ -285,13 +276,13 @@ The dynamic dispatch logic exists in only one place in our code,
 where it can be extensively optimized.
 
 There is a perception that the performance of technical code is
-divided into two cases: array code and scalar code.
+divided into two cases:\ array code and scalar code.
 Array code is thought to perform well, and while scalar code has
 not traditionally performed well, it can be fixed with JIT
 compilation add-ons or by rewriting in C or by using extensions
 like Cython \cite{wilbers2009using,Behnel:2011}.
 The results here, though simple, demonstrate why we feel a
-different approach is needed instead: abstraction overhead
+different approach is needed instead:\ abstraction overhead
 is important and involves the whole program, not just
 inner loops.
 
@@ -451,6 +442,7 @@ to handle classifying data moving in and out of a program.
 \section{Trade-offs in current designs}
 
 Current systems accept certain design trade-offs to obtain flexibility.
+We will look at two examples:\ vectorization and data representation.
 % TODO MORE
 
 \iffalse
@@ -527,7 +519,6 @@ by examining one scalar operation at a time.
 \end{enumerate}
 
 Under close inspection, this argument begins to break down.
-
 An equivocation takes place between being \emph{able} to write a loop
 as \texttt{sin(x)} and being \emph{required} to.
 The former is all we really want, and it is possible in any language that
@@ -636,7 +627,7 @@ Of course a real use case might require data to be read from memory or stored,
 so this comparison is unfair (though not entirely, since many numerical
 environments have represented even simple objects like linear ranges using
 dense vectors \cite{matlabman:linspace}).
-Still the point should be clear: vectors are not necessarily a good abstraction
+Still the point should be clear:\ vectors are not necessarily a good abstraction
 for high performance.
 The observation that memory is a bottleneck is not new, but for our purposes
 the important point is that languages that only support vectorized syntax
@@ -775,7 +766,7 @@ extra dispatch and occasionally changing the representation.
 % ``storage strategies'' is simultaneously a great idea, and also a crack
 % in the armor of typical dynamic languages big enough to tear them apart.
 
-In some sense, our work takes this idea to its logical conclusion:
+In some sense, our work takes this idea to its logical conclusion:\
 why not support a range of data representations from the beginning,
 managed by a single sufficiently powerful dispatch system?
 % so you need some type system, might as well be a good one

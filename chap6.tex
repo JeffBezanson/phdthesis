@@ -1,18 +1,5 @@
 \chapter{Conclusion}
 
-% to what extent is this a technical computing language?
-% it's not, really :)
-
-%``I've yet to hear anyone explain how you decide what are the boundaries of a `domain-specific' language. Isn't the `domain' mathematics and science itself?''~\cite{bobharperdsl}
-
-%tc is not a domain, and doesnt need to be:
-% \cite{meyerovich2012socio} about appealing to some domain first
-% technical computing was ripe for such a treatment
-
-% something about how ``information hiding'' is anathema to science,
-% and coincidentally is not the focus of t.c. languages or rigorous
-% functional languages.
-
 %% A generation of dynamic languages have been designed by trying variants of
 %% the class-based object oriented paradigm. This process has been aided by
 %% the development of standard techniques (e.g. bytecode VMs) and reusable
@@ -26,6 +13,29 @@
 %% language designers wanting reusable program analyses, and tools for
 %% developing lattices and their operators.
 
+It is probably not possible to define technical computing precisely.
+That is just as well, since being ``domain specific'' is not our goal.
+Programming languages want to be general purpose, and evidence suggests
+people want them to be as well.
+Recent analysis of programming language adoption~\cite{Meyerovich:2013:EAP:2509136.2509515}
+found that when a language is popular only within a certain niche, it is not
+usually the most popular language in that niche --- broadly popular,
+general languages are still preferred.
+We speculate that wherever this property fails to hold, there is an opportunity
+to improve our general purpose languages.
+As noted in the introduction, at least some forms of technical computing,
+however imprecisely defined, have surely been just such a case.
+This dissertation takes a small step towards understanding this niche in a
+more general framework.
+
+%we see it as a motivation, not a target
+%want to be more general, not domain specific
+
+%``I've yet to hear anyone explain how you decide what are the boundaries of a `domain-specific' language. Isn't the `domain' mathematics and science itself?''~\cite{bobharperdsl}
+
+%tc is not a domain, and doesnt need to be:
+% \cite{meyerovich2012socio} about appealing to some domain first
+% technical computing was ripe for such a treatment
 
 We began by observing that technical computing users have priorities
 that have rarely been addressed directly by programming languages.
@@ -35,18 +45,22 @@ address these priorities for a subset of cases.
 % for information regardless of when that information is known.
 In some sense all that was missing was an appropriate notion of
 partial information.
-The idea of partial information implies many things if carried far
-enough.
+Partial information has many uses.
 It describes sets of values, and therefore code applicability.
 It describes what sorts of information a compiler can determine,
-providing a performance model.
-It also leads to staged programming: the idea of generating code depends on
+contributing to a performance model.
+It leads to staged programming:\ generating code requires
 knowing something about what needs to be computed, but not everything, so that
-code can be generated and then reused enough to be worthwhile.
+generated code can be reused enough to be worthwhile.
+Of course, this sounds a lot like a type system.
+However programmers in our area of interest, and working in dynamic languages
+generally, have resisted this.
+In our view this can change as more uses of types are discovered and
+advocated.
+Surely there are many more ways to obtain useful run time behavior based on
+partial information.
 
-% TODO
-%of course this sounds a lot like a type system, but the point is that
-%this idea can perform important roles at run time.
+The rest of this concluding chapter will reflect on what more could be done.
 
 % what's wrong with dynamic languages is not just a lack of static
 % guarantees, but that they don't seem to be pareto optimal.
@@ -100,13 +114,13 @@ The Cilk model~\cite{Joerg96,Randall98} would be a good match for the
 level of performance and abstraction we aim for.
 
 
-\section{Future work}
+\section{Other future work}
 
 As with any practical system, we must begin the process of trying to get back
 what our design initially trades away.
 For example, the specialization-based polymorphism we use does not support
 separate compilation.
-Fortunately that's never stopped anyone before: C++ templates have the same
+Fortunately that's never stopped anyone before:\ C++ templates have the same
 problem, but separately compiled modules can still be generated.
 We plan to do the same, with the same cost of re-analyzing all relevant code
 for each module.
@@ -130,7 +144,7 @@ It is possible the situation could be improved by some syntactic sugar for
 nominal arrow types.
 
 Approaches to static type checking are also worth thinking about.
-Most importantly, we feel we have the priorities right: first introduce
+Most importantly, we feel we have the priorities right:\ first introduce
 at least some kind of type information, then gradually add checks and
 tooling to improve safety.
 For example, a useful alternative form of the language could require
@@ -141,7 +155,6 @@ better advantage of whatever type information we are able to infer.
 %There are many opportunities to incorporate more detailed static analysis.
 
 % higher resolution type info degrades SNR
-
 
 %% \begin{itemize}
 %% \item formalize more details of dispatch, meet, join, widen
@@ -176,12 +189,18 @@ better advantage of whatever type information we are able to infer.
 
 \section{Project status}
 
-Not only is Julia free software, but we are especially interested in making
-the most of that 
+Not only is Julia free software, but we want to make
+the most of it by facilitating reading and modifying its code.
+Most of Julia is defined in libraries, lowering the barrier to contributing
+to more aspects of the system.
+There are currently 590 packages listed in our package management system,
+and the majority of them are written entirely in Julia.
 
-by writing more in a high-level language than before
 
-590 packages
-most packages written entirely in julia
+%over 350 contributors
 
-over 350 contributors
+
+% something about how ``information hiding'' is anathema to science,
+% and coincidentally is not the focus of t.c. languages or rigorous
+% functional languages.
+

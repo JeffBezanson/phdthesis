@@ -261,7 +261,7 @@ We prefer parametric \emph{invariance} partly for reasons that have been address
 literature \cite{Day:1995:SVC:217838.217852}.
 Invariance preserves the property that the only subtypes of a concrete type are \texttt{Bottom}
 and itself.
-This is important given how we map types to data representations: an \texttt{Array\{Int\}}
+This is important given how we map types to data representations:\ an \texttt{Array\{Int\}}
 cannot also be an \texttt{Array\{Any\}}, since those types imply different
 representations (an \texttt{Array\{Any\}} is an array of pointers).
 %If we tried to use covariance despite this, there would have to be some \emph{other}
@@ -277,7 +277,7 @@ tuple types with non-concrete parameters.
 
 Next we add conventional product (tuple) types, which are used to represent the
 arguments to methods. These are almost identical to the nominal types defined above,
-but are different in two ways: they are \emph{covariant} in their parameters, and permit
+but are different in two ways:\ they are \emph{covariant} in their parameters, and permit
 a special form ending in three dots (\texttt{...}) that denotes any number of trailing
 elements:
 
@@ -549,6 +549,10 @@ type at a particular parameter value.
     $^R$ and $^L$ track whether a variable originated on the right or on the left of
     $\leq$.
     Rules are applied top to bottom.
+    Summary of the sequent notation used:
+    $\Gamma\vdash x$ means that $x$ is true in environment $\Gamma$.
+    Given the premises above a horizontal line, we can derive the conclusion
+    below it.
 }
   }
   \label{subtvars}
@@ -566,10 +570,10 @@ location.
 \item Checking for convergence during type inference.
 \end{itemize}
 
-Deciding subtyping for base types is straightforward: \texttt{Bottom} is
+Deciding subtyping for base types is straightforward:\ \texttt{Bottom} is
 a subtype of everything, everything is a subtype of \texttt{Any}, and
 tuple types are compared component-wise.
-The invariant parameters of tag types are compared in both directions: to check
+The invariant parameters of tag types are compared in both directions:\ to check
 $\texttt{A\{B\}}\leq \texttt{A\{C\}}$, check $\texttt{B}\leq\texttt{C}$ and
 then $\texttt{C}\leq\texttt{B}$.
 In fact, the algorithm depends on these checks being done in this order, as we
@@ -610,7 +614,7 @@ right-side variable appears on the \emph{left} side of a comparison,
 it must be because it occurs in invariant position, and the steps outlined
 in the first paragraph of this section have ``flipped'' the order
 (comparing both $\texttt{B}\leq\texttt{C}$ and $\texttt{C}\leq\texttt{B}$).
-This explains the odd rule for comparing two right-side variables:
+This explains the odd rule for comparing two right-side variables:\
 this case can only occur with differently nested \texttt{UnionAll}s and
 invariant constructors, in which case the relation holds only if
 all involved bounds are equal.
@@ -618,7 +622,7 @@ By symmetry, one would expect the rule in row 3, column 2 to
 update $X$'s upper bound to $B\cap T$. But because of invariance,
 $T\leq B$ has already been checked by rule in row 3, column 1.
 Therefore $B\cap T = T$. This is the reason the ``forward''
-direction of the comparison needs to be checked first: otherwise,
+direction of the comparison needs to be checked first:\ otherwise,
 we would have updated $B$ to equal $T$ already and the $T\leq B$
 comparison would become vacuous. Alternatively, we could actually
 compute $B\cap T$. However there is reason to suspect that
@@ -781,7 +785,7 @@ When declaring type $T$ a subtype of $S$, only the direct parameters of
 $T$ or $S$ can appear in the subtype declaration.
 We believe this leads to decidable subtyping.
 
-Dynamic typing provides a useful loophole: it is never truly
+Dynamic typing provides a useful loophole:\ it is never truly
 necessary to declare constraints on a type's parameters, since
 the compiler does not need to be able to prove that those
 parameters satisfy any constraints when instances of the type are
@@ -950,7 +954,7 @@ Like Fortress~\cite{fortressmodular}, we allow more flexibility in method
 definitions.
 Our formulation of method signatures as existential types for purposes of
 applicability and specificity is similar to that used in Fortress.
-However unlike Fortress all of our types are first-class: all types
+However unlike Fortress all of our types are first-class:\ all types
 (including union types) can be dispatched on and used in declarations.
 
 
@@ -1004,7 +1008,7 @@ call{T}(::Type{Complex{T}}, re::Real, im::Real) =
 \end{singlespace}
 
 \noindent
-This requires a small adjustment to the evaluation rules: in the application
+This requires a small adjustment to the evaluation rules:\ in the application
 syntax $e_1(e_2)$ when $e_1$ is not a function,
 evaluate $\texttt{call}(e_1,e_2)$ instead, where \texttt{call} is
 a particular generic function known to the system.
@@ -1208,7 +1212,7 @@ end
 \end{singlespace}
 
 \noindent
-Here the syntax \texttt{:(  )} is a quotation: a representation of the
+Here the syntax \texttt{:(  )} is a quotation:\ a representation of the
 expression inside is returned, instead of being evaluated.
 The syntax \texttt{quote ... end} is an alternative for quoting multi-line
 expressions.
@@ -1227,6 +1231,11 @@ Parameter values \texttt{T} and \texttt{N} are available as usual.
 The method returns a quoted expression.
 This expression will be used, verbatim, as if it were the body of
 a normal method definition for these argument types.
+
+As a more realistic example, the \texttt{SubArray} type mentioned in
+section~\ref{sec:chap3subtyping} is implemented using this technique.
+A \texttt{SubArray}'s tuple of index types is examined to generate
+efficient implementations of indexing functions.
 
 The remarkable thing about this is how seamlessly it integrates into
 the language.
@@ -1275,7 +1284,7 @@ instead.
 
 This feature also makes static compilation more difficult.
 If an unanticipated call to a staged method occurs in a statically
-compiled program, two rather poor options are available: stop with an
+compiled program, two rather poor options are available:\ stop with an
 error, or run the generated code in an interpreter (we could compile
 code at run time, but presumably the purpose of static compilation was
 to avoid that).
@@ -1349,7 +1358,7 @@ is expected and where a $\texttt{Vector}\rightarrow\texttt{Vector}$ function is 
 and therefore its type is the intersection of these types.
 
 This approach is effective for statically checking uses of generic
-functions: anywhere a function goes, we must keep track of which arrow
+functions:\ anywhere a function goes, we must keep track of which arrow
 types it ``contains'' in order to be sure that at least one matches
 every call site and allows the surrounding code to type check.
 However, despite the naturalness of this typing of generic functions,
@@ -1527,7 +1536,7 @@ libraries for technical computing.
 
 %identity-typing
 The general lack of sharing of generic function types suggests the first
-possible solution: give each generic function a new type that is uniquely
+possible solution:\ give each generic function a new type that is uniquely
 associated with it. For example, the type of \texttt{sin} would be
 \texttt{GenericFunction\{sin\}}. This type merely identifies the function
 in question, and says nothing more about its behavior. It is easy to read,
@@ -1636,13 +1645,13 @@ match.
 So, given typed containers and no arrow types, how do you implement
 \texttt{map}? The answer is that the type of container to return must
 also be computed. This should not be too surprising, since it is implied by
-the definition of \texttt{new} at the beginning of the chapter: each
+the definition of \texttt{new} at the beginning of the chapter:\ each
 value is created by computing a type part and a content part.
 % also recall the vandermonde example in chapter 2 explicitly
 % computed the result type. this is common in T.C.
 
 \begin{singlespace}
-\begin{figure}
+\begin{figure}[!t]
 \begin{lstlisting}[language=julia]
 function map(f, A::Array)
     isempty(A) && return Array(Bottom, 0)
@@ -1663,9 +1672,11 @@ function map(f, A::Array)
 end
 \end{lstlisting}
   \caption[An implementation of \texttt{map}]{
+\small{
     A Julia implementation of \texttt{map}.
     The result type depends only on the actual values computed, made
     efficient using an optimistic assumption.
+}
   }
   \label{fig:mapimpl}
 \end{figure}
@@ -1816,7 +1827,7 @@ definitions $g$ within generic function $f$.
 It might be thought that Julia is fast because our compiler is well
 engineered, perhaps using ``every trick in the book''.
 At risk of being self-deprecating, this is not the case.
-After type inference we apply standard optimizations: static method
+After type inference we apply standard optimizations:\ static method
 resolution, inlining, specializing variable storage, eliminating tuples
 that do not escape local scope, unboxing function arguments, and
 replacing known function calls with equivalent instruction sequences.
@@ -1856,7 +1867,7 @@ a protocol for keeping the system consistent under changes.
 \subsection{Performance predictability}
 
 Performance predictability is one of the main sacrifices of our design.
-There are three traps: widening (which is heuristic), changing the type
+There are three traps:\ widening (which is heuristic), changing the type
 of a variable, and heterogeneous containers (e.g.\ arrays of \texttt{Any}).
 These can cause significant slowdowns for reasons that may be unclear to
 the programmer.
@@ -1916,14 +1927,14 @@ To evaluate how dispatch is actually used in our application domain,
 we applied the following metrics \cite{multipledispatch}:
 
 \begin{enumerate}
-\item Dispatch ratio (DR): The average number of methods in a generic function.
-\item Choice ratio (CR): For each method, the total number of methods over all
+\item Dispatch ratio (DR):\ The average number of methods in a generic function.
+\item Choice ratio (CR):\ For each method, the total number of methods over all
 generic functions it belongs to, averaged over all methods.
 This is essentially the sum of the squares of the number of methods in each
 generic function, divided by the total number of methods.
 The intent of this statistic is to give more weight to functions with a large
 number of methods.
-\item Degree of specialization (DoS): The average number of type-specialized
+\item Degree of specialization (DoS):\ The average number of type-specialized
 arguments per method.
 \end{enumerate}
 

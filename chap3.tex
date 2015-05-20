@@ -49,7 +49,7 @@ and declaring \texttt{Diagonal}, \texttt{Bidiagonal}, and so on as
 subclasses.
 
 Unfortunately, there are several problems with this solution.
-Class-based OO ties together variation and dynamic dispatch: to allow
+Class-based OO ties together variation and dynamic dispatch:\ to allow
 a value's representation to vary, each use of it needs to perform an
 indirect call.
 A major reason to use structured matrix types like \texttt{Bidiagonal}
@@ -65,7 +65,7 @@ one place.
 This kind of computing is function-oriented.
 % other examples: CSC vs. CSR
 
-Let's try a different abstraction mechanism: templates and overloading.
+Let's try a different abstraction mechanism:\ templates and overloading.
 That would allow us to write code like this:
 
 \begin{singlespace}
@@ -88,11 +88,11 @@ We would like to be able to write \texttt{solve(factorize(M), x)}.
 
 %... no wonder people use prepackaged version of this functionality
 Given these constraints, the traditional design of technical
-computing systems makes sense: pre-generate a large number of
+computing systems makes sense:\ pre-generate a large number of
 optimized routines for various cases, and be able to dispatch
 to them at run time.
 
-It's clear what's going on here: mathematics is dependently typed.
+It's clear what's going on here:\ mathematics is dependently typed.
 If a compiler could prove that a certain matrix were bidiagonal, or
 symmetric, there would be no problem.
 But knowing what a given object \emph{is} in a relevant sense can
@@ -176,7 +176,7 @@ This led to the invention of domain theory, which can be interpreted
 as modeling the behavior of a program without running it.
 A ``domain'' is essentially a partial order of sets of values that a
 program might manipulate.
-The model works as follows: a program starts with no
+The model works as follows:\ a program starts with no
 information, the lowest point in the partial order (``bottom'').
 Computation steps accumulate information, gradually moving higher through
 the order.
@@ -227,7 +227,7 @@ if such a use \emph{might} occur.
 Such a use corresponds to any lattice element greater than or equal to
 the element representing ``uninitialized''.
 Such conservative analyses are the essence of compiler transformations
-for performance (optimizations): we only want to perform an optimization
+for performance (optimizations):\ we only want to perform an optimization
 if the program property it relies on holds for sure.
 % and not if there is any uncertainty.
 
@@ -503,7 +503,7 @@ a different program.
 But if a language allows the same program element to do different things at
 different times, we can write whole classes of programs at once.
 This kind of capability is one of the main reasons object-oriented programming
-is popular: it provides a way to automatically select different behaviors
+is popular:\ it provides a way to automatically select different behaviors
 according to some structured criteria
 (we use the non-standard term ``criteria'' deliberately, in order
 to clarify our point of view, which is independent of any particular
@@ -593,7 +593,7 @@ end
 \end{singlespace}
 
 Here all of the simulation's animal behavior has been
-compressed into a single program point: \texttt{a.encounter(b)}
+compressed into a single program point:\ \texttt{a.encounter(b)}
 leads to all of the behavior by selecting an implementation based
 on the first argument, \texttt{a}.
 This kind of criterion is essentially indexed lookup; we can imagine
@@ -637,8 +637,8 @@ end
 \end{singlespace}
 
 We are still essentially doing table lookup, but the tables have
-more structure: every \texttt{Animal} has the \texttt{nearby}
-method, and can inherit a general-purpose implementation.
+more structure:\ every \texttt{Animal} has the \texttt{nearby}
+method, and can inherit a general purpose implementation.
 
 This brings us roughly to the level of most popular object-oriented
 languages.
@@ -668,7 +668,7 @@ We now have a \emph{double dispatch} system, where a method call
 uses two lookups, first on the first argument and then on the
 second argument.
 This syntax might be considered a bit nicer, but the design
-begs a question: why is $n=2$ special?
+begs a question:\ why is $n=2$ special?
 It isn't, and we could consider even more method arguments as part of
 dispatch.
 But at that point, why is the first argument special?
@@ -702,7 +702,7 @@ end
 \end{verbatim}
 \end{singlespace}
 
-Here we made two major changes: the methods have been moved ``outside''
+Here we made two major changes:\ the methods have been moved ``outside''
 of any classes, and all arguments are listed explicitly.
 This is sometimes called \emph{external dispatch}.
 This change has significant implications.
@@ -783,7 +783,7 @@ However this comes at the expense of making predicates second-class
 citizens of the type system.
 
 In considering the problems of predicate dispatch for code specialization,
-we seem to be up against a fundamental obstacle: some sets of values are
+we seem to be up against a fundamental obstacle:\ some sets of values are
 simply more robust under evaluation than others.
 Programs that map integers to integers abound, but programs that map, say,
 even integers to even integers are rare to the point of irrelevance.
@@ -801,7 +801,7 @@ languages in the world of technical computing.
 To many people the distinction is fundamental, and we should happily live
 with both kinds of languages.
 But if one insists on an answer as to which approach is the right one,
-then the answer is: symbolic.
+then the answer is:\ symbolic.
 Programs are ultimately symbolic artifacts.
 Computation is limited only by our ability to describe it, and
 symbolic tools are needed to generate, manipulate, and query these
@@ -823,7 +823,7 @@ dispatch.
 %These systems are typically powerful enough to concisely define the kinds of
 %behaviors we are interested in.
 
-However, symbolic programming lacks data abstraction: the concrete
+However, symbolic programming lacks data abstraction:\ the concrete
 representations of values are exposed to the dispatch system.
 In such a system, there is no difference between being a list and being
 something \emph{represented} as a list.
@@ -918,6 +918,7 @@ complex and difficult to learn.
 
 
 \section{Subtyping}
+\label{sec:chap3subtyping}
 
 So far we have seen some reasons why dispatch contributes significantly
 to flexibility and performance.

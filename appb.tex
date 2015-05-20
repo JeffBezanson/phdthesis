@@ -15,9 +15,6 @@ type PowerLaw{p} <: APowerLaw{p,p}; end # r^p power law
 # N chebyshev points (order N) on the interval (-1,1)
 chebx(N) = [cos(~$\pi$~*(n+0.5)/N) for n in 0:N-1]
 
-import GSL
-exprel(n, x) = GSL.sf_exprel_n(n, x)
-
 # N chebyshev coefficients for vector of f(x) values on chebx
 # points x
 function chebcoef(f::AbstractVector)
