@@ -624,6 +624,8 @@ In the process, we make the following specific contributions:
 \item To our knowledge, the first complete technical computing system
 developed by applying automatic type specialization over libraries
 written in a single high-level language.
+Our system is the first to combine by-default specialization on all
+arguments with type widening to automatically limit specialization.
 %Past systems have applied specialization to a set of user-level routines.
 %We show that it can be used for an entire system.
 
@@ -631,7 +633,7 @@ written in a single high-level language.
 including variadic methods.
 We contribute an answer to the question of how powerful a dynamic dispatch
 system should be: even if type checking is not done, dispatch should still
-use types that could be inferred by data flow analysis.
+use types that support decidable subtyping.
 %The resulting system is both more and less powerful than most previous
 %dispatch systems.
 %should be, by suggesting that they reflect types discoverable by flow
@@ -668,7 +670,7 @@ use types that could be inferred by data flow analysis.
 
 \item A subtyping algorithm for our system, including a straightforward
 implementation.
-This subtyping system is adoptable by dynamic languages that might
+This subtyping system is adoptable by dynamically typed languages that might
 benefit from a richer abstract value domain, for example for
 describing method applicability or performance-critical aspects of data structures.
 
@@ -693,7 +695,7 @@ usability.
 
 \item We show how to implement key features of technical computing languages
 using our dispatch system, eliminating the need for them to be built in.
-This preserves flexibility while gaining efficiency and extensibility.
+We preserve flexibility while gaining efficiency and extensibility.
 (James Morris eloquently observed that
 ``One of the most fruitful techniques of language analysis is explication through
 elimination.

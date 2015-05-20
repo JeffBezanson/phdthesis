@@ -1749,7 +1749,7 @@ than what is usually considered in the context of those languages.
 % run time.
 
 
-\section{Performance model}
+\section{Performance}
 
 \subsection{Type inference}
 
@@ -1846,9 +1846,26 @@ This is undeniably expensive, and past work has often sought to avoid
 % user-directed type-based specialization in scala
 or limit specialization (e.g.\ \cite{Dragos:2009:CGT:1565824.1565830}).
 % we find it is the right default
-% TODO
+However, in our case specialization is a key feature of the performance
+model.
 
-% directed by method cache, widening
+Specialization is directed by the method cache; a specialization of a
+method is generated when a corresponding entry is added to the
+cache.
+In general, the purpose of the method cache is to implement a lookup
+table keyed by a subset of the type system that can support fast
+lookup.
+A basic implementation would support only concrete types.
+However this would imply specializing on every type signature
+without exception.
+We have found it effective to apply a carefully designed widening operator
+to type signatures to reduce the amount of specialization.
+The core of the idea is to enhance the method cache with support for
+variadic tuples and the types \texttt{Any} and \texttt{Type}.
+With this, we are able to avoid specializing methods for argument lists
+of every length and for all types \texttt{Type\{T\}}.
+Details of the heuristics and measurements of their effectiveness are
+given in \cite{bezansonmsthesis}.
 
 % it's interesting to note that java generics did not originally support
 % types like int and float as parameters. in T.C. those are practically
