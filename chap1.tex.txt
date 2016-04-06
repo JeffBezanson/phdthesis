@@ -1,0 +1,748 @@
+== \chapter{Introduction}
+== 
+++ 최초에 컴퓨팅(Computing)의 시작은 과학 분야에서였고, 그것은 처음 컴퓨터를 만든 목적과 이유이기도 하다.
+++ 이곳은 과학 계산과 같은 본질적인 문제를 주로 다루면서 진화해 왔다.
+++ 그동안 수많은 프로그래밍 도구는 보다 높은 추상화와 일반화를 이루려고 노력하였다.
+-- Scientific computing has evolved from being essentially the only kind of
+-- computing that existed, to being a small part of how and why computers
+-- are used.
+-- Over this period of time, programming tools have advanced in terms of
+-- the abstractions and generalizations they are capable of.
+== 
+++ 전문화된 특수한 지식을, 보다 보편적인 강력한 이론에서 받아들이는 식으로 과학은 진보해 왔다.
+++ 프로그래밍 언어의 세계에서도 마찬가지다: 특수한 목적으로만 사용되는 언어를
+++ 보다 강력하고 보편성을 갖는 언어에서 흡수하는 식이다.
+-- Science as a whole evolves through the incorporation of specialized bits
+-- of knowledge into more powerful general theories.
+-- There is a parallel in the world of programming languages: special-purpose
+-- languages have been subsumed by more powerful and general
+-- languages.
+++ 이런 경향은 과학 분야 컴퓨팅에선 어떠한가?
+++ 놀랍지만 우리가 기대한 만큼은 아직 아니다. 
+++ 과학자와 기술자는 새로운 프로그래밍 언어를 두고 신경끄고 살거나
+++ 그들이 당면한 문제에 억지로 구겨넣고 있는 수준이다.
+-- How has this trend affected scientific computing?
+-- The surprising answer is: not as much as we would like.
+-- We see scientists and technical users generally either turning away
+-- from the best new programming languages, or else pushing them
+-- to their limits in unusual ways.
+== 
+== \begin{singlespace}
+== \begin{figure}
+==   \begin{center}
+==     \begin{tabular}{|llll|l|}\hline
+==       \multicolumn{4}{|c|}{Productivity} & Performance \\
+==       \hline
+==       Matlab  &  Maple &  Mathematica & SciPy & Fortress\\
+==       SciLab  &  IDL   &  R  & Octave         & Chapel \\
+==       S-PLUS  & SAS & J & APL                 & X10 \\
+==       Maxima & Mathcad & Axiom & Sage         & SAC \\
+==       Lush & Ch & LabView & O-Matrix          & ZPL \\
+==       PV-WAVE & Igor Pro & OriginLab & FreeMat &\\
+==       Yorick & GAUSS & MuPad & Genius &\\
+==       SciRuby & Ox & Stata & JLab &\\
+==       Magma & Euler & Rlab & Speakeasy &\\
+==       GDL & Nickle & gretl & ana &\\
+==       Torch7 & A+ & PDL & Nial & \\
+==       \hline
+==     \end{tabular}
+==   \end{center}
+==   \caption[49 technical computing languages]{
+== \small{
+++     언어 설계에서 생산성과 성능의 측면으로 구분한 49개의 테크니컬 컴퓨팅 언어
+--     49 technical computing languages classified as primarily designed for productivity or performance
+== }
+==   }
+==   \label{gangof40}
+== \end{figure}
+== \end{singlespace}
+== 
+++ 사실 우리는 과학 분야를 위해 설계된 \emph{49}가지 프로그래밍 언어를 찾아보았다.
+++ 포트란부터 (figure~\ref{gangof40}) 시작해서 말이다.
+++ 이렇게나 많은 까닭은 무엇인가.
+-- In fact, we have discovered at least \emph{49} programming languages
+-- designed for technical computing since Fortran (figure~\ref{gangof40}).
+-- This high number begs for an explanation.
+++ 연구자들에게는 고도로 추상화하여 설계한 언어로,
+++ 그들의 문제를 쉽고 유연하게 기술할 도구가 간절한 것이다.
+++ 이것이 우리의 제안이다.
+-- We propose that technical users crave the flexibility to pick notation
+-- for their problems, and language design --- the highest level of
+-- abstraction --- is where you go when you need this level of flexibility.
+== %Language design is associated with the highest level of abstraction.
+++ 수학과 과학에서 새로운 표기법을 발명하는 것처럼
+++ 과학자들은 그들의 코드를 다시 짜고 싶은 불만이 있다.
+-- The desire for scientists to rework their code is not so surprising when one reflects
+-- on the tradition of inventing new notation in mathematics and science.
+== %This certainly
+== %helps distinguish scientific programming from other application areas.
+== 
+++ 언어적 유연성의 요구는 테크니컬 컴퓨팅 영역에서조차
+++ 일반적으로 쓰이는 언어를 선호하는 현상으로 확실해 진다.
+-- The need for language-level flexibility is corroborated by
+-- the ways that the technical computing domain uses general purpose
+-- languages.
+++ 효과적인 과학 라이브러리는 다양한 타입을 지원하는 다형성,
+++ 사용자가 정의한 연산자, 컴파일 시점에서의 추상화를 만족해야 한다.
+-- Effective scientific libraries extensively employ
+-- polymorphism, custom operators, and compile time abstraction.
+++ 다른 프로그램의 코드를 생성하는 방식으로는 통상적으로 맞지 않고.
+-- Code generation approaches (writing programs that write programs)
+-- are unusually common.
+++ 대부분의 이러한 기법들은 사용하기가 번거롭고 어려워,
+++ 프로그래머는 이쯤에서 해당 목적으로 설계된 언어가 주는 표기적 간편함을 포기하고 만다.
+-- Most of these techniques are presently fairly difficult to use, and so
+-- programmers working at this level give up the notational conveniences
+-- of the purpose-built languages above.
+== 
+++ 이 논문의 목표는 생산적이며 효율적인 테크니컬 컴퓨팅을 이루는 것이
+++ 너무나 어렵다는, 근본적인 이슈를 확인하고 설명하기 위해서다.
+-- The goal of this thesis is to identify and address the fundamental
+-- issues that have made productive and performant technical computing
+-- so difficult to achieve.
+== %We attempt to make the smallest
+== %change that can be provided by a simple high-level language
+++ 물어봅시다: 앞서 언급한 방법을 하지 않고서 테크니컬 컴퓨팅을 다룰 수 있는
+++ 일반적인 언어가 \emph{또한} 뭐가 있나요?
+-- We ask: which general purpose language would \emph{also} be able to handle
+-- technical computing, such that the above workarounds would not have
+-- been necessary?
+== 
+== % our theory is that t.c. is not just about matrices and numbers
+== % but a specific pattern of code specialization and dispatch that
+== % can be automated.
+== 
+== \iffalse
+== Compiler techniques, library design, high-performance
+== computational kernels, new algorithms, and approaches to parallelism are
+== all important to technical computing.
+== However these sorts of technologies can usually be applied to multiple
+== languages, as has happened in the C and Fortran language families.
+== %They do not by themselves insist that a new language be developed.
+== However in conjunction with a new language, these technologies can flourish.
+== Indeed, we believe that language design
+== has reached a level of importance that even (perhaps temporarily) supersedes
+== the traditional focus of cache utilization and the use of matrix operations.
+== \fi
+== 
+== In brief, our answer is to \emph{integrate code selection and specialization}.
+== The aforementioned flexibility requirement can be explained as
+== a sufficiently powerful means for \emph{selecting} which piece of code
+== to run.
+== %This notion subsumes method dispatch, function overloading,
+== %and potentially even branches.
+== When such mechanisms are used in technical computing, there is nearly
+== always a corresponding need to \emph{specialize} code for specific cases
+== to obtain performance.
+== Polymorphic languages sometimes support forms of specialization,
+== but often only through a designated mechanism (e.g.\ templates), or
+== deployed conservatively out of resource concerns.
+== We intend to show that an equilibrium point in the design space can be found
+== by combining selection and specialization into a single appropriately designed
+== dynamic type-based dispatch mechanism.
+== %The specific design is identified via subtyping theories and closure under
+== %data flow operations.
+== 
+== 
+== %\subsubsection{Thesis statement}
+== 
+== %Integrating code selection and specialization using
+== %type-based dynamic dispatch captures the performance and
+== %productivity requirements of technical computing.
+== 
+== 
+== % why dynamic dispatch?
+== %% somewhat counter-intuitively, dynamic dispatch can be good for performance
+== %% since it permits invoking the most specialized possible method.
+== %% static overloading can lead to calling a sub-optimal case when multiple
+== %% overloads exist for the sake of performance.
+== 
+== %Extensive code specialization is a key feature of
+== %technical computing. ``what to specialize on'' has been an open problem.
+== %our types are a possible solution to this for two reasons:
+== 
+== %the amazing thing about programming languages it that a better
+== %explanation can directly lead to better performance!)
+== 
+== %% Specialization entails program analysis. By necessity, a language's
+== %% code selection mechanisms must inform this process, to ensure the
+== %% correctness of the analysis. A central argument of this thesis is that
+== %% specialization should feed back into selection, allowing the
+== %% \emph{approximate values} processed by a compiler to be used in the
+== %% source language for dispatch. We argue that this is the key feature
+== %% missing from the present generation of dynamically typed languages.
+== %This conclusion would not be surprising to advocates of static
+== %type systems, but the approach we propose is actually a run time
+== %mechanism that does not restrict the class of valid programs.
+== 
+== %Why integrate code specialization and code selection?
+== %\begin{itemize}
+== %\item specialization requires selection anyway
+== %\item simpler system
+== %\item can sometimes collapse 2 layers of dispatch into 1
+== %\item can replace library code with a code generator without either changing
+== %  client code *or* any extra overhead
+== %\end{itemize}
+== 
+== %Instead we intend to argue that, at a
+== %deeper level, it is about certain kinds of flexibility, particularly
+== %flexibility in the behavior of key operators and functions. This flexibility
+== %is needed to maximize composability and reusability in scientific code.
+== %Without it, certain programs may be easy to write today, but changing
+== %functional and performance requirements can become difficult to meet.
+== 
+== \section{The technical computing problem}
+== \label{sec:tcproblem}
+== 
+== \begin{singlespace}
+== \begin{table}
+==   \begin{center}
+==     \def\arraystretch{1.25}
+==     \begin{tabular}{|l|l|}\hline
+==       \textbf{Mainstream PL} & \textbf{Technical computing} \\
+==       \hline \hline
+==       classes, single dispatch             &  complex operators \\
+==       \hline
+==       separate compilation                 &  performance, inlining \\
+==       \hline
+==       parametric polymorphism              &  ad hoc polymorphism, extensibility \\
+==       % - concrete reuse of generated code
+==       \hline
+==       static checking                      &  experimental computing \\
+==       \hline
+==       modularity, encapsulation            &  large vocabularies \\
+==       \hline
+==       eliminating tags                     &  self-describing data, acceptance of tags \\
+==       \hline
+==       data hiding                          &  direct manipulation of data \\
+==       \hline
+==     \end{tabular}
+==   \end{center}
+==   \caption[Programming language priorities]{
+== \small{
+== Priorities of mainstream object-oriented and functional programming language research and
+== implementation compared to those of the technical computing domain.
+== }
+==   }
+==   \label{PLpriorities}
+== \end{table}
+== \end{singlespace}
+== 
+== Table~\ref{PLpriorities} compares the general design priorities of mainstream
+== programming languages to those of technical computing languages.
+== The priorities in each row are not necessarily opposites or even mutually exclusive,
+== but rather are a matter of emphasis.
+== It is certainly possible to have both parametric and ad hoc polymorphism within
+== the same language, but syntax, recommended idioms, and the design of the standard
+== library will tend to emphasize one or the other.
+== Of course, the features on the left side can also be useful for technical computing;
+== we exaggerate to help make the point.
+== 
+== It is striking how different these priorities are.
+== We believe these technical factors have contributed significantly to the persistence
+== of specialized environments in this area.
+== Imagine you want just the features on the left.
+== Then there are many good languages available: Haskell, ML, Java, C\#, perhaps C++.
+== Getting everything on the right, by comparison, seems to be awkward.
+== The most popular approach is to use multiple languages, as in NumPy~\cite{numpy},
+== with a high-level productivity language layered on top of libraries
+== written in lower-level languages.
+== Seeking a similar trade-off, others have gone as far as writing a C++
+== interpreter \cite{vasilev2012cling}.
+== 
+== % something about complicated architecture and not-always-good performance
+== %technical computing systems have an unusually large amount of
+== %``failure of abstraction'' --- manual duplication of facts
+== %all over the system. imagine changing from column-major to
+== %row-major.
+== 
+== %problem of finding connections between array programming and OOP.
+== %array programming is a powerful paradigm for describing computational
+== %kernels operating over potentially large amounts of data.
+== 
+== %an ``object system'' in this context is often considered a separate
+== %part of the language, to be used only when arrays no longer
+== %suffice.
+== 
+== It is clear that any future scientific computing language will need to be able to
+== match the performance of C, C++, and Fortran.
+== To do that, it is almost certain that speculative optimizations such as tracing
+== \cite{tracingjit} will not be sufficient ---
+== the language will need to be able to \emph{prove} facts about types, or at least
+== let the user request specific types.
+== It is also clear that such a language must strive for maximum convenience, or else
+== the split between performance languages and productivity languages will persist.
+== 
+== It is fair to say that two approaches to this problem are being tried: one is
+== to design better statically typed languages, and the other is to apply
+== program analysis techniques to dynamically typed languages.
+== Static type systems are getting close to achieving the desired level
+== of flexibility (as in Fortress \cite{fortresspec} or Polyduce \cite{polyduce1},
+== for instance),
+== %, but it is still too early to call a winner between these two
+== %approaches (if, indeed, there even needs to be a winner).
+== but here we will use a dynamically typed approach.
+== We are mostly interested in types in the sense of \emph{data types} and
+== \emph{partial information}
+== (for an excellent discussion of the many meanings of the word ``type''
+== see \cite{Kell2014}).
+== Additionally, some idioms in this domain appear to be inherently, or at least
+== naturally, dynamically typed (as we will explore in chapter~\ref{chap:2}).
+== The mechanism we will explore provides useful run time behavior and, we hope,
+== performance improvements.
+== Many approaches to statically checking its properties are likely possible,
+== however we leave them to future work.
+== 
+== %Second, insufficient static checking is most likely not the current limiting
+== %factor in scientific computing productivity.
+== %In our view the first priority is to get the combination of
+== %performance and flexibility we already know users want, and then try to
+== %improve safety later.
+== 
+== 
+== \section{The importance of code selection}
+== 
+== Most languages provide some means for selecting one of many pieces of code
+== to run from a single point in the program.
+== This process is often called \emph{dispatch}.
+== High-level languages, especially ``dynamic'' languages tend to provide a
+== lot of flexibility in their dispatch systems.
+== This makes many sophisticated programs easier to express, but at a considerable
+== performance cost.
+== 
+== There has been a large amount of work on running dynamic languages faster
+== (notable examples are Self~\cite{selflang}, and more recently PyPy~\cite{pypyjit}).
+== These efforts have been very successful, but arguably leave something
+== out: a better interface to performance.
+== % put differently: HLLs excel at providing certain features, but not at
+== % defining other things like those that still perform well
+== Performance-critical aspects of most dynamically typed languages (e.g.\ arithmetic)
+== have fixed behavior, and it is not clear what to do when your code does not
+== perform as well as it could.
+== Adding type annotations can work, but raises questions about how powerful
+== the type system should be, and how it relates to the rest of the language.
+== We speculate that this relative lack of control keeps experts away,
+== perpetuating the split between performance and productivity languages.
+== 
+== According to our theory, the issue is not really just a lack of types,
+== but an exclusive focus on specialization, and not enough on selection.
+== %Code selection is crucial to performance at all levels: at the lowest
+== %level, it means picking the best machine instruction,
+== %and at the highest level it means picking the best algorithm.
+== In technical computing, it is often so important to select the best
+== optimized kernel for a problem that it is worth doing a slow dynamic
+== dispatch in order to do so.
+== Most of the productivity languages mentioned above are designed
+== entirely around this principle.
+== But their view of code selection is incomplete: the dispatch
+== mechanisms used are ad hoc and not employed consistently.
+== Even when an optimizing compiler for the source language is developed,
+== it does not necessarily take all relevant forms of dispatch into
+== account.
+== For example, NumPy has its own dispatch system underneath Python's,
+== and so is not helped as much as it could be by PyPy, which only
+== understands Python method selection.
+== 
+== A dispatch specification, for example a method signature in a
+== multimethod system, describes when a piece of code is applicable.
+== %A more powerful dispatch system brings many benefits.
+== A more expressive dispatch system then allows code to be written
+== in smaller pieces, helping the compiler remove irrelevant code
+== from consideration.
+== It is also more extensible, providing more opportunities to
+== identify special cases that deserve tailored implementations.
+== Method-at-a-time JIT compilers
+== (e.g.\ \cite{grcevski2004java, Suganuma:2005:DED:1075382.1075386})
+== can specialize method bodies on all arguments, and so are
+== arguably already equipped to implement and optimize multiple dispatch
+== (even though most object-oriented languages do not offer it).
+== At the same time, dispatch specifications are a good way to provide
+== type information to the compiler.
+== %For example an optimizing compiler for Self~\cite{Dean:1994:TBI:182590.182489}
+== %tracked all argument types per call site to help guide inlining.
+== %Such a system might even use multiple dispatch internally to
+== %select optimized methods.
+== %In that case, why not expose that capability to the programmer?
+== 
+== %%%%%%%%%
+== %compilation is expensive, so traditional languages have forced the equation
+== %(what you can generate code for) = (known at compile time)
+== %wanting specialized code for more dynamic properties is the issue.
+== %%%%%%%%
+== 
+== %how to write things so they perform, and how to
+== %add algorithms for special cases in an extensible way
+== 
+== %performance is related to dispatch since it lets you describe when some
+== %efficient kernel is applicable.
+== 
+== % also for linking purposes the compiler will want to leave some
+== % record of what it has done, i.e. what assumptions it has made to
+== % generate the code it left behind.
+== % here you will want a type system.
+== 
+== %% Why do we prefer method signatures to imperative logic?
+== %% - it's extensible
+== %% - its declarative style is more compact
+== %% - allows writing functions in small pieces
+== %%   the more descriptive the types, the smaller the pieces
+== %%   might make compiler more efficient; removes large bits of code from
+== %%   consideration just from looking at types. don't need to analyze a
+== %%   large function just to discover that only a small part of it
+== %%   remains.
+== %% - clearer performance model. it's hard for programmer to guess
+== %%   when the compiler will statically evaluate an arbitrary expression
+== %% - allows defining semantics about things that are optimized, but
+== %%   *not* compile-time constants.
+== %%   method table can be (ab)used as a mutable lookup table structure.
+== 
+== %Finally, it is often the case that a seemingly minor
+== %modification to a type system makes type checking undecidable. Rejecting
+== %such a system is totally reasonable. However if we are willing to
+== %accept undecidable checking from the beginning, opportunities arise to
+== %simplify and increase the power of the language.
+== 
+== % one of our main innovations is a way to deftly navigate between two
+== % problems
+== 
+== %% \subsection{The excess power problem}
+== 
+== %% We claim that the amount of information that can be statically inferred
+== %% exceeds most dynamic languages' capacity to exploit it.
+== %% Much work has been done on program analysis and optimization techniques
+== %% for dynamically typed languages.
+== %% When static analyses (often incorporating run time information) are applied
+== %% to dynamically typed programs, it is typically possible to recover a
+== %% significant amount of type information (e.g. \cite{druby}).
+== %% What, then, can one do with this information?
+== %% If the goal is performance, various partial evaluations can be done:
+== %% generating code without type checks, removing branches, type-specializing
+== %% the storage of variables, and compile time method lookup are all valuable
+== %% and yield large real-world gains.
+== 
+== %and might use multiple dispatch \emph{internally} to select implementations
+== %at run time.
+== %% Arguably, if method calls are dispatched on the first argument, but the types of all
+== %% arguments can be inferred, some power has been ``left on the table'' ---
+== %% we could have had multimethods for little extra cost.
+== %% This argument does not apply equally to statically typed languages, since they
+== %% cannot simply ``switch'' their functions to generic functions without significant
+== %% consequences for type checking.
+== 
+== %% This ``excess power'' problem applies to data structures as well.
+== %% For example, static or run time analysis might reveal that a certain array
+== %% can be represented as a native \texttt{Int32} array \cite{Bolz2013}.
+== %% If this information is not reflected in the source language, then
+== %% certain uses like passing data to native code become unnecessarily more
+== %% complicated.
+== %% And if one is going to implement homogeneous arrays anyway, why not
+== %% let programmers request them?
+== 
+== %% Some levels of performance are difficult to reach with implicitly
+== %% specialized code and data.
+== %% Given the knowledge that an array contains only \texttt{Int32} data,
+== %% we might want to go beyond essential optimizations like storing intermediate
+== %% values in registers, and actually use different algorithms.
+== %% For example, in Miller-Rabin primality testing~\cite{Rabin1980128}, checking
+== %% three ``witness'' values suffices for all 32-bit arguments, but up to seven
+== %% values might be needed for 64-bit arguments.
+== %% In cryptographic applications, exploiting this difference in an inner loop
+== %% could bring significant benefits.
+== 
+== 
+== %\subsection{The divergence problem}
+== 
+== The remaining question is what exactly we should dispatch on.
+== Naturally, it might be nice to be able to dispatch on any criteria
+== at all.
+== However there is a balancing act to perform: if dispatch signatures
+== become too specific, it becomes difficult to predict whether they
+== will be resolved statically.
+== At one end of the spectrum are mechanisms like static overloading
+== in C++, where the compiler simply insists that it be possible to
+== resolve definitions at compile time.
+== At the other end of the spectrum, we might dispatch on arbitrary
+== predicates (as in the Scmutils system~\cite{Sussman:2001:SIC:375178}).
+== % TODO more about scmutils
+== We do neither of these.
+== Instead, we only try to make it \emph{more likely} that types can be
+== statically inferred.
+== We do this by considering the kinds of types that arise in data flow
+== type inference, and allowing dispatch on those.
+== This will be developed in detail in section~\ref{sec:typesystem}.
+== 
+== %Instead, our dispatch is based on \emph{sets of values that are robust
+== %under evaluation}: abstract evaluation over such sets is less likely
+== %to diverge.
+== 
+== % TODO: needs to be clearer
+== %% For example, consider the set $\{1,2\}$.
+== %% This set is not closed under ``natural'' functions.
+== %% As we evaluate a recursive function over this abstract value, the
+== %% set will typically grow, and the fixed point will be much larger
+== %% than the original set.
+== %% So while specializing a method for $\{1,2\}$ could in some rare
+== %% cases be useful, it also leads to unpredictable performance.
+== %% To find reasonably robust sets to dispatch on, we
+== %% begin with structured type tags and take the closure under data flow
+== %% operations.
+== 
+== %However as a dispatch system gets more powerful, its utility as a
+== %performance model degrades.
+== % TODO: introduce before this how dispatch can be a performance model
+== 
+== %% Another problem that occurs when analyzing programs with complex
+== %% type behavior is divergence: the analysis is likely to infer an
+== %% overly large result from failing to eliminate enough possible
+== %% behaviors.
+== %% Narrowing the inferred types requires some extra source of type
+== %% information.
+== %% Multimethod signatures work well for this purpose.
+== 
+== %% past approaches include: optional user annotations, or a built-in
+== %% database of function type behavior, determined empirically or
+== %% analytically.
+== %% to solve the problem in general, library behavior should not be
+== %% built-in to the compiler.
+== %% however, when functions that are both highly complex and performance
+== %% critical are implemented at the library level it can be difficult
+== %% to ensure they are sufficiently optimized.
+== 
+== % specializer must decide when to widen, when to stop going around
+== % loops, etc.
+== % this is an opaque process.
+== % there is an essential divide between what it will statically
+== % evaluated, and what it won't.
+== 
+== %% However the divergence problem also places a limit on what
+== %% kinds of dispatch specifications are useful to program analyses:
+== %% some sets of values tend to be more robust under execution
+== %% than others.
+== 
+== 
+== % TODO:
+== % claim dispatch works better on approximate type info than branches
+== % when you have unionall types.
+== % dispatch is also extensible and declarative.
+== 
+== % doing analysis only, you can use arbitrarily complex types, but
+== % you are then limited by what the language can ``consume'', or
+== % by the sophistication of the t-functions you write.
+== % adding dispatch, the types become an abstraction under user
+== % control, so need to be meaningful.
+== 
+== %% what to dispatch on? dispatch power has been extended in many ways, but
+== %% there is no real limit to what somebody might want to dispatch on.
+== %% so what to do?
+== %% some sets of values are more robust under computation than others
+== %% (closure properties).
+== %% identify those sets using data flow concerns.
+== 
+== %% say we have a method defined for integers, and also for the special cases
+== %% ``2'' and ``odd integers''. a realistic implementation
+== %% will group all of these under ``integer'', and ideally generate a couple
+== %% branches to handle the other cases. we argue the concept of ``integer''
+== %% here is a more robust set, and so a more fundamental language concept.
+== 
+== %- vs predicate dispatch: we extend dispatch power in a different direction,
+== %guided by semantic subtyping. goal is maximum power that still yields high
+== %likelihood of resolving many calls to a single implementation.
+== 
+== 
+== \section{Staged programming}
+== 
+== In demanding applications, selecting the right algorithm might not
+== be enough, and we might need to automatically \emph{generate} code
+== to handle different situations.
+== While these cases are relatively rare in most kinds of programming,
+== they are remarkably common in technical computing.
+== Code generation, also known as \emph{staged programming}, raises
+== several complexities:
+== 
+== \vspace{-3ex}
+== \begin{singlespace}
+== \begin{itemize}
+== \item What is the input to the code generator?
+== \item When and how is code generation invoked?
+== \item How is the generated code incorporated into an application?
+== \end{itemize}
+== \end{singlespace}
+== 
+== \noindent
+== These questions lead to practical problems like ad hoc custom syntax,
+== extra build steps, and excessive development effort (writing parsers and
+== code generators might take more work than the core problem).
+== If code needs to be generated based on run time information, then a
+== % TODO cite julia GPU paper that did this
+== staged library might need to implement its own dispatch mechanism
+== for invoking its generated code.
+== 
+== We find that our style of dynamic type-based dispatch provides
+== an unusually convenient substrate for staged programming.
+== The reason is that the types we dispatch on contain enough
+== information to drive code generation for a useful class of problems,
+== while also allowing
+== the dispatch mechanism to be reused for caching and invoking staged code.
+== Code generators are invoked automatically by
+== the compiler, and the results can be called directly or even inlined
+== into user code.
+== Libraries can switch to staged implementations with method-level granularity
+== without affecting client code.
+== 
+== %past (static) type systems for dispatch were designed to ensure the absence of
+== %no-method errors and ambiguities (completeness and uniqueness). our goal
+== %is instead to statically resolve methods. this is inherently heuristic and
+== %best-effort. since static types shouldn't affect program behavior, we
+== %conclude that the dispatch must be dynamic, which is happily the same
+== %conclusion you would reach if you simply wanted dynamic typing.
+== 
+== %it is quite possible that some static type system will work well for this
+== %however we defer this question.
+== %interesting variants:
+== %- require static single method matches
+== %- reject programs with no-method errors
+== %- reject programs that yield Unions
+== 
+== %%%%%%
+== 
+== \section{Summary of contributions}
+== 
+== \iffalse
+== We began with a belief that we could design a technical computing language
+== sufficiently novel and powerful that it could gain popularity
+== in real applications.
+== The key idea was that language level abstractions could bring ease of use,
+== performance, and wider applicability to technical computation.
+== It is far from trivial to analyze and design this right set of abstractions
+== This thesis contributes a deep analysis of our findings.  
+== 
+== At the very core, the novel idea in this
+== thesis is the very notion that technical computing is amenable to deep language
+== analysis.
+== As simple as this may sound, many in the technical computing world did not
+== understand how a computer science approach to technical computing could be
+== useful to them.
+== Our personal experience describing the research plan to
+== the computer science world might be
+== characterized by the view that this space consists of library
+== functions such as FFTs and matmuls and would not be as interesting
+== to analyze.
+== Despite the early discouraging viewpoints, five years later,
+== the power of language analysis is manifesting itself
+== theoretically, opening new research directions, and practically in that Julia
+== has worldwide name recognition and worldwide adaption.
+== \fi
+== 
+== \iffalse
+== Our first contribution is a discussion of the nature of technical computing
+== that suggests which language-level abstractions might best support its use
+== cases.
+== Simply put technical computing has by and large happened
+== without sufficient probing and analysis as to what it is.
+== 
+== Based on the theory that technical computing is characterized by complex
+== operators and particular combinations of binding time behavior.
+== \fi
+== 
+== At a high level, our contribution is to identify the priorities
+== that have been implicit in the designs of technical computing systems,
+== and suggest fundamental changes that would better serve those
+== priorities.
+== In the process, we make the following specific contributions:
+== 
+== \begin{itemize}
+== \item To our knowledge, the first complete technical computing system
+== developed by applying automatic type specialization over libraries
+== written in a single high-level language.
+== Our system is the first to combine by-default specialization on all
+== arguments with type widening to automatically limit specialization.
+== %Past systems have applied specialization to a set of user-level routines.
+== %We show that it can be used for an entire system.
+== 
+== \item A novel dispatch system that supports a form of set-theoretic types
+== including variadic methods.
+== We contribute an answer to the question of how powerful a dynamic dispatch
+== system should be: even if type checking is not done, dispatch should still
+== use types that support decidable subtyping.
+== %The resulting system is both more and less powerful than most previous
+== %dispatch systems.
+== %should be, by suggesting that they reflect types discoverable by flow
+== %analysis.
+== %Interestingly, the resulting system seems to fall just short of the trap
+== %of undecidable subtyping.
+== 
+== %We introduce the idea of integrated code selection and specialization.
+== %This leads to a dispatch system that provides a novel combination of
+== %performance and expressiveness.
+== 
+== %It provides ``diagonal dispatch''
+== %Using data flow types to drive the design leads to novel dispatch features:
+== %- diagonal dispatch
+== %- unifying variadic methods with regular types
+== %- predictable performance without giving up flexibility
+== 
+== %This leads to easy-to-use polymorphism, prioritizing
+== %flexibility and performance over nearly all else.
+== 
+== % Something about dispatch for performance. Given a performance kernel, it takes
+== % a lot of info to describe when it is applicable.
+== 
+== % dispatch on everything, not just classes
+== 
+== % ?? % \item Easy polymorphism
+== 
+== %- library writers can decide what to put at the type level without affecting users,
+== %  dropping type parameters
+== %- a single mechanism to cover overloading, dispatch, and specialization
+== %%%- using types, but mostly for dispatch, where they can be used gradually
+== %- specialize by default (makes static polymorphism less of a black art)
+== %- types as ordinary values
+== 
+== \item A subtyping algorithm for our system, including a straightforward
+== implementation.
+== This subtyping system is adoptable by dynamically typed languages that might
+== benefit from a richer abstract value domain, for example for
+== describing method applicability or performance-critical aspects of data structures.
+== 
+== % we design a type system for this. and introduce the ``evaluate softly
+== % and carry a big subtype relation'' school of thought.
+== 
+== % we provide a straightforward implementation that should be easy to
+== % translate to other languages.
+== 
+== % at this point, certain language implementation techniques have been fairly widely
+== % disseminated: how to write a parser, how to write a bytecode VM, how to
+== % design an object system, etc.
+== % subtyping systems are still relatively esoteric, often not even mentioned
+== % in introductory texts.
+== 
+== %\item a novel form of staged programming?
+== 
+== \item We demonstrate a novel combination of staged programming with generic
+== functions that allows staging to be invoked implicitly, leading to improved
+== usability.
+== 
+== 
+== \item We show how to implement key features of technical computing languages
+== using our dispatch system, eliminating the need for them to be built in.
+== We preserve flexibility while gaining efficiency and extensibility.
+== (James Morris eloquently observed that
+== ``One of the most fruitful techniques of language analysis is explication through
+== elimination.
+== The basic idea is that one explains a linguistic feature by showing
+== how one could do without it.''~\cite{morris})
+== 
+== %the application of our approach to
+== %features of technical computing environments that have not been subject to such
+== %analysis before.
+== %We provide an example application that shows how to use our language to
+== %more easily solve a difficult computational problem.
+== 
+== % hopefully will provide useful examples for evaluating future dispatch
+== % systems, object systems, and type systems
+== 
+== \item Finally, we contribute the Julia software system, currently a
+== growing free software project, demonstrating that our approach is both practical
+== and appealing to a significant number of users.
+== 
+== \end{itemize}

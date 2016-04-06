@@ -1,0 +1,278 @@
+++ \chapter{결론}
+-- \chapter{Conclusion}
+== 
+== %% A generation of dynamic languages have been designed by trying variants of
+== %% the class-based object oriented paradigm. This process has been aided by
+== %% the development of standard techniques (e.g. bytecode VMs) and reusable
+== %% infrastructure such as code generators, garbage collectors, and whole VMs
+== %% like the JVM and CLR.
+== 
+== %% It is possible to envision a future generation of languages that generalize
+== %% this design to set-theoretic subtyping instead of just classes. This next
+== %% generation will require its own new tools, such as partial evaluators (already
+== %% under development in PyPy and Truffle). One can also imagine these future
+== %% language designers wanting reusable program analyses, and tools for
+== %% developing lattices and their operators.
+== 
+++ 테크니컬 컴퓨팅이 무엇이다고 정확히 정의하기는 어려운 일이다.
+++ 그런 이유로, 우리는 목표를 ``특정 영역''에 한정되게 잡지 않았다.
+++ 프로그래밍 언어는 어떠한 목적으로도 사용할 수 있는 보편성이 중요하다고
+++ 프로그래밍 언어 도입\cite{Meyerovich:2013:EAP:2509136.2509515} 을 주제로 한 최근의 논문은 말한다.
+++ 특수한 분야에서만 쓰이는 언어는 보통 그 분야에 제일 잘나가는 언어가 아니다.
+++ 여기서도 역시 보편적인 언어가 선호되며 너른 인기를 끌고 있다.
+-- It is probably not possible to define technical computing precisely.
+-- That is just as well, since being ``domain specific'' is not our goal.
+-- Programming languages want to be general purpose, and evidence suggests
+-- people want them to be as well.
+-- Recent analysis of programming language adoption~\cite{Meyerovich:2013:EAP:2509136.2509515}
+-- found that when a language is popular only within a certain niche, it is not
+-- usually the most popular language in that niche --- broadly popular,
+-- general languages are still preferred.
+++ 시장을 지배할 만큼 잘 만드는게 결코 쉽지 않다는 것은, 우리가 만드는
+++ 보편적인 언어에서 이를 개선할 여지가 많이 있음을 반증한다.
+++ 서두에서 언급한 것 처럼, 테크니컬 컴퓨팅의 모습은 부정확하게 정의되었고, 그저 되는 대로 만들어졌을 뿐이다.
+++ 이제 보다 보편적인 틀에서 이 분야를 이해하기 위한 한걸음을 내딛어 보자.
+-- We speculate that wherever this property fails to hold, there is an opportunity
+-- to improve our general purpose languages.
+-- As noted in the introduction, at least some forms of technical computing,
+-- however imprecisely defined, have surely been just such a case.
+-- This dissertation takes a small step towards understanding this niche in a
+-- more general framework.
+== 
+== %we see it as a motivation, not a target
+== %want to be more general, not domain specific
+== 
+== %``I've yet to hear anyone explain how you decide what are the boundaries of a `domain-specific' language. Isn't the `domain' mathematics and science itself?''~\cite{bobharperdsl}
+== 
+== %tc is not a domain, and doesnt need to be:
+== % \cite{meyerovich2012socio} about appealing to some domain first
+== % technical computing was ripe for such a treatment
+== 
+++ 테크니컬 컴퓨팅 사용자들은 우선 처리할 일을 프로그래밍 언어로서 직접 기술하는게
+++ 드물다. 우리는 이런 상황을 지켜보며 이 프로젝트를 시작하였다.
+++ 현재 많은 수의 테크니컬 컴퓨팅 언어가 이런 기능을 나열하고 있긴 하지만 말이다.
+-- We began by observing that technical computing users have priorities
+-- that have rarely been addressed directly by programming languages.
+-- Arguably, even many of the current technical computing languages only
+-- address these priorities for a subset of cases.
+== % in particular, they want flexible notation, and code specialized
+== % for information regardless of when that information is known.
+++ 어떻게 보면 부분적인 정보(partial information)를 표기할 적절한 방법이 없는 문제다.
+++ 부분적인 정보는 여러 상황에서 쓸 수 있다.
+++ 각종 값을 설명하고 코드에 적용할 때나
+++ 컴파일러가 결정할 성능 모델에 영향을 줄 각종 정보를 다룰 때.
+++ 스테이지 프로그래밍을 이끌 때: 코드 생성은 전체를 대상으로 하는게 아닌, 계산을 필요로 하는 지점만을 파악한다,
+++ 그래서 생성된 코드는 능히 재사용 할 수 있게 된다.
+-- In some sense all that was missing was an appropriate notion of
+-- partial information.
+-- Partial information has many uses.
+-- It describes sets of values, and therefore code applicability.
+-- It describes what sorts of information a compiler can determine,
+-- contributing to a performance model.
+-- It leads to staged programming: generating code requires
+-- knowing something about what needs to be computed, but not everything, so that
+-- generated code can be reused enough to be worthwhile.
+++ 이는 결국 타입 시스템이 하는 일이다.
+++ 그렇지만 우리가 관심을 갖는 영역의 프로그래머, 동적 언어를 쓰는 사람이
+++ 강하게 거부하는 것이기도 하다.
+++ 보다 많이 타입을 사용하도록 만들 수 있으며 그러한 변화가 곳곳에서 발견되고 지지되고 있다.
+++ 물론 부분적인 정보를 기반으로 런타임에 유용한 행위를 얻는 다른 많은 방법이 있다.
+++
+++ 이 장에서 다루지 못한 것은 더 진행을 하면서 반영할 것이다.
+-- Of course, this sounds a lot like a type system.
+-- However programmers in our area of interest, and working in dynamic languages
+-- generally, have resisted this.
+-- In our view this can change as more uses of types are discovered and
+-- advocated.
+-- Surely there are many more ways to obtain useful run time behavior based on
+-- partial information.
+-- 
+-- The rest of this concluding chapter will reflect on what more could be done.
+== 
+== % what's wrong with dynamic languages is not just a lack of static
+== % guarantees, but that they don't seem to be pareto optimal.
+== % actually not enough is done with dynamic typing: you give up type
+== % checking, and all you get is untyped dictionaries in return?
+== 
+== % we know these programs need more organization and type info.
+== % this is the first truly viable approach
+== %   - bad that they need to think about type stability, but
+== %     also good that is relatively easy to grasp, and it gets
+== %     people thinking about it who wouldn't normally
+== %     - the types give people the tools to deal with it
+== % - can't pretend that people wont have to worry about this stuff;
+== %   it's fundamental
+== 
+== %exploiting partial information is key.
+== %dispatch was an especially natural way to do this,
+== %are there others?
+== %What else can we do with partial information as part of a programming
+== %model?
+== % somehow being dual to ML-family languages; what's hard for them is
+== % easy for us and vice versa.
+== 
+++ \section{성능}
+-- \section{Performance}
+== 
+++ 추상화에 관심이 있다면, 성능을 위해서 우선 타입 최적화(type specialization)를 해야 한다.
+++ 하지만 크게 보면 성능을 끌어내기 위해서는 더욱 많은 것을 다뤄야 한다.
+++ \emph{알고리즘 선별}~\cite{Ansel:2009:PLC:1542476.1542481,Ansel:2014:OEF:2628071.2628092} 아이디어에서
+++ 다루는 ``코드 선택(code selection)''을 보면, 예를 들어 프로그램의 어떤 지점에 몇몇의 알고리즘을 선별해서 가장 빠른 것을 자동으로 고른다.
+++ 줄리아는 작은 단위로 간결하게 함수를 작성하고, 적용하고 있는데
+++ 자연스레 이러한 기능과 맞아 떨어진다.
+++ 객체의 실행 단위별로 디스패치 하는 것도 시도해 볼 만하다.
+-- If we are interested in abstraction, then type specialization is the
+-- first priority for getting performance.
+-- However in a broader view there is much more to performance.
+-- For example ``code selection'' appears in a different guise in the
+-- idea of \emph{algorithmic choice}~\cite{Ansel:2009:PLC:1542476.1542481,Ansel:2014:OEF:2628071.2628092}.
+-- At any point in a program, we might have a choice of several algorithms and
+-- want to automatically pick the fastest one.
+-- Julia's emphasis on writing functions in small pieces and describing
+-- applicability seems naturally suited to this functionality.
+-- A possible approach could be to dispatch on components of an execution plan
+-- object.
+== 
+++ Spiral~\cite{Puschel:2004:SGP:1080647.1080687} 과 같은 고성능 코드 생성기는
+++ 데이터의 크기를 최적화 한다.
+++ 줄리아는 배열 크기를 표현하기 쉽도록 타입 시스템이 고안되어 있으므로, 코드를 최적화하는
+++ 동적 디스패치 패턴으로서 이를 적용해 볼 수 있다.
+-- High-performance code generators such as Spiral~\cite{Puschel:2004:SGP:1080647.1080687}
+-- often specialize on data size.
+-- Julia makes it easy to represent array sizes in the type system, and the
+-- usual pattern of dynamic dispatch to specialized code could be applicable
+-- in these cases as well.
+== % immutable arrays, specializing on size
+== 
+== %There are several key aspects of performance programming that our design
+== %does not directly address, e.g. storage and in-place optimizations.
+== 
+++ 줄리아는 분산 컴퓨팅 라이브러리를 포함하고 있으며, 메모리 공유 방식의 병렬화에 대한
+++ 탐색은 아직 충분히 하지 못하였다. Cilk 모델~\cite{Joerg96,Randall98} 은 우리가 목표로 하는
+++ 성능과 추상화에 대한 좋은 본보기다.
+-- While Julia includes a distributed computing library, we have not
+-- sufficiently explored shared memory parallelism.
+-- The Cilk model~\cite{Joerg96,Randall98} would be a good match for the
+-- level of performance and abstraction we aim for.
+== 
+== 
+++ \section{앞으로 할 작업들}
+-- \section{Other future work}
+== 
+++ 실무용 시스템에서는, 초기 디자인에서 버려둔 것을 다시 돌아보는 작업을 해야 한다.
+++ 최적화를 기반으로 하는 다변성(polymorphism)에서 우리는 분할 컴파일(separate compilation) 기능을 지원하지 않고 있다.
+++ 다행히 그런 시도를 멈춘 적은 없다: C++ 템플릿은 같은 문제를 갖고 있는데,
+++ 다만 컴파일된 모듈을 개별적으로 생성할 수는 있다.
+++ 우리는 같은 방식으로 해 낼 계획인데, 각 모듈의 관련 코드를 다시-분석하는 수고만으로 말이다.
+++ 또 다른 접근법은 모듈을 분리하는 대신 단계(layer)를 사용하는 것이다.
+++ ``봉인한(sealed)'' 단계라 더 이상 기능 확장이 안되게 ---
+++ 이는 언어의 한 기능으로도 적합하다.
+++ 이 라이브러리를 사용하는 애플리케이션은 보다 효율적으로 컴파일 할 수 있다.
+++ 단계를 추가하여(느린 것부터 바꾸는) 특정 상황에 적절한 지원을 한다. 
+++ ``텔레스코핑 언어''는 이것을 핵심~\cite{telescoping} 으로 다룬다.
+-- As with any practical system, we must begin the process of trying to get back
+-- what our design initially trades away.
+-- For example, the specialization-based polymorphism we use does not support
+-- separate compilation.
+-- Fortunately that's never stopped anyone before: C++ templates have the same
+-- problem, but separately compiled modules can still be generated.
+-- We plan to do the same, with the same cost of re-analyzing all relevant code
+-- for each module.
+-- Another approach is to use layering instead of separate modules.
+-- Starting with the core language, one next identifies and compiles a useful base
+-- library.
+-- That layer is then considered ``sealed'' and can no longer be extended ---
+-- it effectively becomes part of the language.
+-- Applications using this library can be compiled more efficiently.
+-- More layers can be added (slowest-changing first) to support more specific
+-- use cases.
+-- This is essentially the ``telescoping languages'' approach~\cite{telescoping}.
+== 
+++ 줄리아에서 고차원적 프로그래밍을 하는 이상적인 접근은 난제로 남아 있다.
+++ ~\ref{sec:implementingmap} 의 \texttt{map} 함수는 \texttt{Bottom} 타입을
+++ 원소로 하는 배열을 돌려준다. 입력이 비어있는 경우를 대처할 수 있지만 여전히
+++ 많은 프로그래머들을 헤깔리게 하고 당황하게 만든다.
+++ 애로우 타입(nominal arrow types)을 위한 별도의 문법을 지원하여
+++ 이를 처리할 수 있을 것이다.
+-- An ideal approach to higher-order programming in Julia remains somewhat
+-- elusive.
+-- For example the \texttt{map} function in section~\ref{sec:implementingmap}
+-- always returns an array of element type \texttt{Bottom} when the input
+-- array is empty, which is fully defensible but still confusing and surprising
+-- to many programmers.
+-- It is possible the situation could be improved by some syntactic sugar for
+-- nominal arrow types.
+== 
+++ 정적 타입 점검 또한 생각해 볼 문제다.
+++ 이건 굉장히 중요한 문제라 중요도 순으로: 첫째는 타입 정보를 나타내도록 하고,
+++ 점진적으로 점검해 나가며 안전성을 향상해 간다.
+++ 예컨데, 언어적으로 더 나은 대안을 찾으려 한다면 제어 흐름(control flow)과
+++ 맞물리는 타입을 찾아낼 필요가 있다.
+++ \texttt{TypeCheck.jl}~\cite{typecheckjl} 와 같은 도구는 추론할 수 있는
+++ 타입 정보로 무엇이든 이를 활용해 쓸 수 있다.
+-- Approaches to static type checking are also worth thinking about.
+-- Most importantly, we feel we have the priorities right: first introduce
+-- at least some kind of type information, then gradually add checks and
+-- tooling to improve safety.
+-- For example, a useful alternative form of the language could require
+-- types to match when control flow edges meet.
+-- Tools like \texttt{TypeCheck.jl}~\cite{typecheckjl} can be used to take
+-- better advantage of whatever type information we are able to infer.
+== 
+== %There are many opportunities to incorporate more detailed static analysis.
+== 
+== % higher resolution type info degrades SNR
+== 
+== %% \begin{itemize}
+== %% \item formalize more details of dispatch, meet, join, widen
+== %% \item product domains, how to incorporate finer types more smoothly
+== %% *\item how to incorporate static checks? \cite{typecheckjl}
+== %% *\item separate compilation
+== %% *\item function types
+== %% \item shared memory, cilk
+== %% \item can we implement BLAS?
+== %% *\item incorporate autotuning?
+== %% \end{itemize}
+== 
+== % oscar:
+== % - what we have now is the ``minimal julia''
+== % - ``easy to write code that's easy to analyze statically''
+== % - got non-programmer people to write easy to analyze code
+== 
+== % mention lines of code
+== %% How much of the past 30 years of handwritten Matlab internals can
+== %% be autogenerated with a compiler? (A lot)
+== %% 70kLOC julia, 34kLOC c/c++, 6kLOC scheme
+== % but this includes a REPL, package manager
+== 
+== % easy polymorphism.
+== % - starts with a very simple HLL
+== % - performs well because of underlying mechanisms,
+== %   which then unfold gradually when you want more control over performance
+== 
+== % making everything a method, and everything glued together by types
+== % gives certain reflective properties.
+== 
+== 
+++ \section{프로젝트 상황}
+-- \section{Project status}
+== 
+++ 줄리아는 자유 소프트웨어이며, 우리는 대부분의 코드를 작성하고 읽고 고치는 과정을
+++ 진두지휘 하고 있다. 줄리아의 대부분은 라이브러리로서 존재하며, 시스템을 아울러
+++ 누구나 기여를 할 수 있게 진입 장벽을 낮추었다.
+++ 현재 590개의 패키지가 패키지 관리 시스템에 등록되어 있고, 대부분 줄리아로 쓰여졌다.
+-- Not only is Julia free software, but we want to make
+-- the most of it by facilitating reading and modifying its code.
+-- Most of Julia is defined in libraries, lowering the barrier to contributing
+-- to more aspects of the system.
+-- There are currently 590 packages listed in our package management system,
+-- and the majority of them are written entirely in Julia.
+== 
+== 
+== %over 350 contributors
+== 
+== 
+== % something about how ``information hiding'' is anathema to science,
+== % and coincidentally is not the focus of t.c. languages or rigorous
+== % functional languages.
+== 
